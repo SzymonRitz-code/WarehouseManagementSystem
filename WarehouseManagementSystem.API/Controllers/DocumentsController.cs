@@ -30,9 +30,9 @@ namespace WarehouseManagementSystem.API.Controllers
 
         // GET: api/Documents/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Document>> GetDocument(Guid id)
+        public async Task<ActionResult<Document>> GetDocument(Guid documentId)
         {
-            var document = await _context.Documents.FindAsync(id);
+            var document = await _context.Documents.FindAsync(documentId);
 
             if (document == null)
             {
@@ -45,9 +45,9 @@ namespace WarehouseManagementSystem.API.Controllers
         // PUT: api/Documents/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutDocument(Guid id, Document document)
+        public async Task<IActionResult> PutDocument(Guid documentId, Document document)
         {
-            if (id != document.Id)
+            if (documentId != document.Id)
             {
                 return BadRequest();
             }
@@ -60,7 +60,7 @@ namespace WarehouseManagementSystem.API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!DocumentExists(id))
+                if (!DocumentExists(documentId))
                 {
                     return NotFound();
                 }
@@ -74,7 +74,6 @@ namespace WarehouseManagementSystem.API.Controllers
         }
 
         // POST: api/Documents
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Document>> PostDocument(Document document)
         {
@@ -86,9 +85,9 @@ namespace WarehouseManagementSystem.API.Controllers
 
         // DELETE: api/Documents/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDocument(Guid id)
+        public async Task<IActionResult> DeleteDocument(Guid documentId)
         {
-            var document = await _context.Documents.FindAsync(id);
+            var document = await _context.Documents.FindAsync(documentId);
             if (document == null)
             {
                 return NotFound();

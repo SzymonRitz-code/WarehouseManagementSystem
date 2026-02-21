@@ -10,7 +10,7 @@ using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 
 namespace WarehouseManagementSystem.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Documents/{documentId}/[controller]")]
     [ApiController]
     public class DocumentItemsController : ControllerBase
     {
