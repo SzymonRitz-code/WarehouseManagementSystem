@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Extensions;
 using WarehouseManagementSystem.DataAccessLayer;
-using WarehouseManagementSystem.Domain.Model.AuditDomain;
-using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,10 +16,7 @@ builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
 
 builder.Services.AddAutoMapper(cfg =>
 {
-    cfg.CreateMap<AuditLog, AuditLogDto>()
-        .ForMember(dto => dto.PerformedByName, opt => opt.MapFrom(a => a.PerformedBy.Name))
-        .ForMember(dto => dto.PerformedByEmail, opt => opt.MapFrom(a => a.PerformedBy.Email)).ReverseMap();
-    cfg.CreateMap<Stock, StockDto>().ReverseMap();
+    cfg.AddWmsMappings();
 });
 
 var app = builder.Build();
