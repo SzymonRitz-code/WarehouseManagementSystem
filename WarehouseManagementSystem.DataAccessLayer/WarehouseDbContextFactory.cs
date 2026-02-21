@@ -10,7 +10,7 @@ namespace WarehouseManagementSystem.DataAccessLayer
             var optionsBuilder = new DbContextOptionsBuilder<WarehouseManagementSystemDbContext>();
 
             // Tutaj podajesz connection string do swojej bazy
-            optionsBuilder.UseSqlServer("Server=.;Database=WarehouseDb;Trusted_Connection=True;");
+            optionsBuilder.UseSqlServer("Server=DESKTOP-1209KTE\\SQLEXPRESS;Database=WarehouseDb;Trusted_Connection=True;TrustServerCertificate=True;");
 
             return new WarehouseManagementSystemDbContext(optionsBuilder.Options);
         }
