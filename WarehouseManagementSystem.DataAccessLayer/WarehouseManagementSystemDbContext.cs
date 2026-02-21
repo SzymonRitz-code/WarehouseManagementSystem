@@ -106,6 +106,9 @@ namespace WarehouseManagementSystem.DataAccessLayer
             builder.Property(x => x.ExpiresAt)
                    .IsRequired(false);
 
+            builder.Property(x => x.Status)
+                   .HasConversion<string>();
+
             builder.HasIndex(x => x.StockId);
             builder.HasIndex(x => x.ExpiresAt);
             builder.HasIndex(x => x.Status);
@@ -188,8 +191,9 @@ namespace WarehouseManagementSystem.DataAccessLayer
                    .HasMaxLength(100);
 
             builder.Property(x => x.TemperatureType)
-                   .IsRequired()
-                   .HasMaxLength(50);
+                   .HasConversion<string>()
+                   .HasMaxLength(20)
+                   .IsRequired();
 
             builder.HasIndex(x => new { x.WarehouseId, x.Code }).IsUnique();
 

@@ -24,10 +24,10 @@ namespace WarehouseManagementSystem.API.Controllers
         }
 
         // GET: api/Stocks/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Stock>> GetStock(Guid id)
+        [HttpGet("{stockId}")]
+        public async Task<ActionResult<Stock>> GetStock(Guid stockId)
         {
-            var stock = await _context.Stocks.FindAsync(id);
+            var stock = await _context.Stocks.FindAsync(stockId);
 
             if (stock == null)
             {
@@ -39,10 +39,10 @@ namespace WarehouseManagementSystem.API.Controllers
 
         // PUT: api/Stocks/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutStock(Guid id, Stock stock)
+        [HttpPut("{stockId}")]
+        public async Task<IActionResult> PutStock(Guid stockId, Stock stock)
         {
-            if (id != stock.Id)
+            if (stockId != stock.Id)
             {
                 return BadRequest();
             }
@@ -55,7 +55,7 @@ namespace WarehouseManagementSystem.API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!StockExists(id))
+                if (!StockExists(stockId))
                 {
                     return NotFound();
                 }
@@ -80,10 +80,10 @@ namespace WarehouseManagementSystem.API.Controllers
         }
 
         // DELETE: api/Stocks/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStock(Guid id)
+        [HttpDelete("{stockId}")]
+        public async Task<IActionResult> DeleteStock(Guid stockId)
         {
-            var stock = await _context.Stocks.FindAsync(id);
+            var stock = await _context.Stocks.FindAsync(stockId);
             if (stock == null)
             {
                 return NotFound();

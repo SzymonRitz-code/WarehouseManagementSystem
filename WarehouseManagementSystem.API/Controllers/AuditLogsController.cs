@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.DataAccessLayer;
 using WarehouseManagementSystem.Domain.Model.AuditDomain;
 
@@ -10,22 +12,25 @@ namespace WarehouseManagementSystem.API.Controllers
     public class AuditLogsController : ControllerBase
     {
         private readonly WarehouseManagementSystemDbContext _context;
+        private readonly IMapper _autoMapper;
 
-        public AuditLogsController(WarehouseManagementSystemDbContext context)
+        public AuditLogsController(WarehouseManagementSystemDbContext context, IMapper autoMapper)
         {
             _context = context;
+            _autoMapper = autoMapper;
         }
 
         // GET: api/AuditLogs
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AuditLog>>> GetAuditLogs()
+        public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetAuditLogs()
         {
-            return await _context.AuditLogs.ToListAsync();
+            var audits = await _context.AuditLogs.ToListAsync();
+            return Ok(_autoMapper.Map<IEnumerable<AuditLogDto>>(audits));
         }
 
         // GET: api/AuditLogs/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<AuditLog>> GetAuditLog(Guid id)
+        public async Task<ActionResult<AuditLogDto>> GetAuditLog(Guid id)
         {
             var auditLog = await _context.AuditLogs.FindAsync(id);
 
@@ -34,20 +39,22 @@ namespace WarehouseManagementSystem.API.Controllers
                 return NotFound();
             }
 
-            return auditLog;
+            return Ok(_autoMapper.Map<AuditLogDto>(auditLog));
         }
 
         // PUT: api/AuditLogs/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // TODO poprawić walidacje oraz zaimplementować PUT
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAuditLog(Guid id, AuditLog auditLog)
+        public async Task<IActionResult> PutAuditLog(Guid id, AuditLogDto auditLog)
         {
             if (id != auditLog.Id)
             {
                 return BadRequest();
             }
-
-            _context.Entry(auditLog).State = EntityState.Modified;
+            if (ModelState.IsValid == false) { return BadRequest(auditLog); }
+            var entry = _autoMapper.Map<AuditLog>(auditLog);
+            _context.Update(entry);
 
             try
             {
@@ -71,12 +78,14 @@ namespace WarehouseManagementSystem.API.Controllers
         // POST: api/AuditLogs
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<AuditLog>> PostAuditLog(AuditLog auditLog)
+        public async Task<ActionResult<AuditLog>> PostAuditLog(AuditLogDto auditLog)
         {
-            _context.AuditLogs.Add(auditLog);
+            if (ModelState.IsValid == false) { return BadRequest(auditLog); }
+            var entry = _autoMapper.Map<AuditLog>(auditLog);
+            _context.AuditLogs.Add(entry);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetAuditLog", new { id = auditLog.Id }, auditLog);
+            return CreatedAtRoute("GetAuditLog", new { id = auditLog.Id }, auditLog);
         }
 
         // DELETE: api/AuditLogs/5

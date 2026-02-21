@@ -5,7 +5,7 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 namespace WarehouseManagementSystem.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Stocks/{stockId}/[controller]")]
     [ApiController]
     public class StockReservationsController : ControllerBase
     {

@@ -24,7 +24,7 @@ namespace WarehouseManagementSystem.API.Controllers
         }
 
         // GET: api/Documents/5
-        [HttpGet("{id}")]
+        [HttpGet("{documentId}")]
         public async Task<ActionResult<Document>> GetDocument(Guid documentId)
         {
             var document = await _context.Documents.FindAsync(documentId);
@@ -39,7 +39,7 @@ namespace WarehouseManagementSystem.API.Controllers
 
         // PUT: api/Documents/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [HttpPut("{documentId}")]
         public async Task<IActionResult> PutDocument(Guid documentId, Document document)
         {
             if (documentId != document.Id)
@@ -79,7 +79,7 @@ namespace WarehouseManagementSystem.API.Controllers
         }
 
         // DELETE: api/Documents/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{documentId}")]
         public async Task<IActionResult> DeleteDocument(Guid documentId)
         {
             var document = await _context.Documents.FindAsync(documentId);
