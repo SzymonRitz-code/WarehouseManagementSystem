@@ -19,9 +19,9 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
             _context.Stocks.Add(entity);
         }
 
-        public IEnumerable<Stock> All()
+        public async Task<IEnumerable<Stock>> All()
         {
-            return _context.Stocks;
+            return await _context.Stocks.ToListAsync();
         }
 
         public bool Any(Expression<Func<Stock, bool>> predicate)

@@ -52,7 +52,6 @@ namespace WarehouseManagementSystem.API.Controllers
             return NoContent();
         }
 
-        // POST: api/Documents
         [HttpPost]
         public async Task<ActionResult<Document>> PostDocument(Document document)
         {
@@ -62,7 +61,6 @@ namespace WarehouseManagementSystem.API.Controllers
             return CreatedAtAction("GetDocument", new { id = document.Id }, document);
         }
 
-        // DELETE: api/Documents/5
         [HttpDelete("{documentId}")]
         public async Task<IActionResult> DeleteDocument(Guid documentId)
         {

@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -10,34 +12,39 @@ namespace WarehouseManagementSystem.API.Controllers
     public class StockReservationsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _autoMapper;
 
-        public StockReservationsController(IUnitOfWork context)
+        public StockReservationsController(IUnitOfWork context, IMapper autoMapper)
         {
             _unitOfWork = context;
+            _autoMapper = autoMapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<StockReservation>>> GetStockReservations()
+        public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations()
         {
-            return Ok(await _unitOfWork.StockReservations.AllAsync());
+            return Ok(_autoMapper.Map<IEnumerable<StockReservationDto>>(await _unitOfWork.StockReservations.AllAsync()));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<StockReservation>> GetStockReservation(Guid id)
+        public async Task<ActionResult<StockReservationDto>> GetStockReservation(Guid id)
         {
-            var stockReservation = await _unitOfWork.StockReservations.FindAsync(id);
+            var stockReservationEntity = await _unitOfWork.StockReservations.FindAsync(id);
 
-            if (stockReservation == null) { return NotFound(); }
+            if (stockReservationEntity == null) { return NotFound(); }
+
+            var stockReservation = _autoMapper.Map<StockReservationDto>(stockReservationEntity);
 
             return stockReservation;
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutStockReservation(Guid id, StockReservation stockReservation)
+        public async Task<IActionResult> PutStockReservation(Guid id, StockReservationDto stockReservation)
         {
             if (id != stockReservation.Id) { return BadRequest(); }
 
-            _unitOfWork.StockReservations.Update(stockReservation);
+            var stockReservationEntity = _autoMapper.Map<StockReservation>(stockReservation);
+            _unitOfWork.StockReservations.Update(stockReservationEntity);
 
             try
             {
@@ -53,9 +60,10 @@ namespace WarehouseManagementSystem.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<StockReservation>> PostStockReservation(StockReservation stockReservation)
+        public async Task<ActionResult<StockReservationDto>> PostStockReservation(StockReservationDto stockReservation)
         {
-            _unitOfWork.StockReservations.Add(stockReservation);
+            var stockReservationEntity = _autoMapper.Map<StockReservation>(stockReservation);
+            _unitOfWork.StockReservations.Add(stockReservationEntity);
             await _unitOfWork.SaveChangesAsync();
 
             return CreatedAtAction("GetStockReservation", new { id = stockReservation.Id }, stockReservation);

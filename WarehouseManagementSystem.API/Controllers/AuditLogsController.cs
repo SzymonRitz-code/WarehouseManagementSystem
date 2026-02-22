@@ -20,7 +20,6 @@ namespace WarehouseManagementSystem.API.Controllers
             _autoMapper = autoMapper;
         }
 
-        // GET: api/AuditLogs
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetAuditLogs()
         {
@@ -28,7 +27,6 @@ namespace WarehouseManagementSystem.API.Controllers
             return Ok(_autoMapper.Map<IEnumerable<AuditLogDto>>(audits));
         }
 
-        // GET: api/AuditLogs/5
         [HttpGet("{id}")]
         public async Task<ActionResult<AuditLogDto>> GetAuditLog(Guid id)
         {
@@ -42,8 +40,6 @@ namespace WarehouseManagementSystem.API.Controllers
             return Ok(_autoMapper.Map<AuditLogDto>(auditLog));
         }
 
-        // PUT: api/AuditLogs/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         // TODO poprawić walidacje oraz zaimplementować PUT
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAuditLog(Guid id, AuditLogDto auditLog)
@@ -75,8 +71,6 @@ namespace WarehouseManagementSystem.API.Controllers
             return NoContent();
         }
 
-        // POST: api/AuditLogs
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<AuditLog>> PostAuditLog(AuditLogDto auditLog)
         {
@@ -88,7 +82,6 @@ namespace WarehouseManagementSystem.API.Controllers
             return CreatedAtRoute("GetAuditLog", new { id = auditLog.Id }, auditLog);
         }
 
-        // DELETE: api/AuditLogs/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuditLog(Guid id)
         {

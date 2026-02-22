@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -10,34 +12,40 @@ namespace WarehouseManagementSystem.API.Controllers
     public class StocksController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _autoMapper;
 
-        public StocksController(IUnitOfWork unitOfWork)
+        public StocksController(IUnitOfWork unitOfWork, IMapper autoMapper)
         {
             _unitOfWork = unitOfWork;
+            _autoMapper = autoMapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Stock>>> GetStocks()
+        public async Task<ActionResult<IEnumerable<StockDto>>> GetStocks()
         {
-            return Ok(await Task.FromResult(_unitOfWork.Stocks.All().ToList()));
+            return Ok(_autoMapper.Map<IEnumerable<StockDto>>(await _unitOfWork.Stocks.All()));
         }
 
         [HttpGet("{stockId}")]
-        public async Task<ActionResult<Stock>> GetStock(Guid stockId)
+        public async Task<ActionResult<StockDto>> GetStock(Guid stockId)
         {
-            var stock = await _unitOfWork.Stocks.FindAsync(stockId);
+            var stockEntity = await _unitOfWork.Stocks.FindAsync(stockId);
 
-            if (stock == null) { return NotFound(); }
+            if (stockEntity == null) { return NotFound(); }
+
+            var stock = _autoMapper.Map<StockDto>(stockEntity);
 
             return stock;
         }
 
         [HttpPut("{stockId}")]
-        public async Task<IActionResult> PutStock(Guid stockId, Stock stock)
+        public async Task<IActionResult> PutStock(Guid stockId, StockDto stock)
         {
             if (stockId != stock.Id) { return BadRequest(); }
 
-            _unitOfWork.Stocks.Update(stock);
+            var stockEntity = _autoMapper.Map<Stock>(stock);
+
+            _unitOfWork.Stocks.Update(stockEntity);
 
             try
             {
@@ -53,9 +61,10 @@ namespace WarehouseManagementSystem.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Stock>> PostStock(Stock stock)
+        public async Task<ActionResult<Stock>> PostStock(StockDto stock)
         {
-            _unitOfWork.Stocks.Add(stock);
+            var stockEntity = _autoMapper.Map<Stock>(stock);
+            _unitOfWork.Stocks.Add(stockEntity);
             await _unitOfWork.SaveChangesAsync();
 
             return CreatedAtAction("GetStock", new { id = stock.Id }, stock);
