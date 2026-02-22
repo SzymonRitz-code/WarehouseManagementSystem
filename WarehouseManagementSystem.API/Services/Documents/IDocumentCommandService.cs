@@ -1,5 +1,5 @@
 ﻿namespace WarehouseManagementSystem.API.Services.Documents;
 
-public class DocumentCommandService : IDocumentCommandService
+public interface IDocumentCommandService
 {
 }

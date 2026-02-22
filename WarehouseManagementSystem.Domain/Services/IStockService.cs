@@ -1,5 +1,5 @@
 ﻿namespace WarehouseManagementSystem.Domain.Services;
 
-internal interface IStockService
+public interface IStockService
 {
 }

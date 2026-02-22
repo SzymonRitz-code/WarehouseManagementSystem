@@ -1,6 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.Extensions;
+using WarehouseManagementSystem.API.Services.Documents;
+using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Reservations;
+using WarehouseManagementSystem.API.Services.Stock;
 using WarehouseManagementSystem.DataAccessLayer;
+using WarehouseManagementSystem.Domain.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +18,23 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("WarehouseManagementSystemConnection")));
+
+// Services
+builder.Services.AddScoped<IDocumentCommandService,DocumentCommandService>();
+builder.Services.AddScoped<IGoodsIssueService,GoodsIssueService>();
+builder.Services.AddScoped<IGoodsReceiptService,GoodsReceiptService>();
+builder.Services.AddScoped<IStockTransferService,StockTransferService>();
+
+
+builder.Services.AddScoped<IDocumentQueryService,DocumentQueryService>();
+builder.Services.AddScoped<IStockQueryService,StockQueryService>();
+
+
+builder.Services.AddScoped<IStockReservationService,StockReservationService>();
+
+builder.Services.AddScoped<IStockService,StockService>();
+
+
 
 builder.Services.AddAutoMapper(cfg =>
 {

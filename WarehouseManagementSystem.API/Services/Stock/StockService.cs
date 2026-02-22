@@ -1,5 +1,7 @@
-﻿namespace WarehouseManagementSystem.API.Services.Stock;
+﻿using WarehouseManagementSystem.Domain.Services;
 
-public class StockService
+namespace WarehouseManagementSystem.API.Services.Stock;
+
+public class StockService : IStockService
 {
 }

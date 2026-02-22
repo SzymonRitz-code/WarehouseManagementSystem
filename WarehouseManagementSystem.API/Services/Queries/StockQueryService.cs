@@ -1,5 +1,6 @@
 ﻿namespace WarehouseManagementSystem.API.Services.Queries;
 
-public class StockQueryService
+public class StockQueryService : IStockQueryService
 {
 }
+
