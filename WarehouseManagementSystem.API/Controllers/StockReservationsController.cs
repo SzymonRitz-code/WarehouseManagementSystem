@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers
 {
@@ -9,95 +9,73 @@ namespace WarehouseManagementSystem.API.Controllers
     [ApiController]
     public class StockReservationsController : ControllerBase
     {
-        private readonly WarehouseManagementSystemDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public StockReservationsController(WarehouseManagementSystemDbContext context)
+        public StockReservationsController(IUnitOfWork context)
         {
-            _context = context;
+            _unitOfWork = context;
         }
 
-        // GET: api/StockReservations
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StockReservation>>> GetStockReservations()
         {
-            return await _context.StockReservations.ToListAsync();
+            return Ok(await _unitOfWork.StockReservations.AllAsync());
         }
 
-        // GET: api/StockReservations/5
         [HttpGet("{id}")]
         public async Task<ActionResult<StockReservation>> GetStockReservation(Guid id)
         {
-            var stockReservation = await _context.StockReservations.FindAsync(id);
+            var stockReservation = await _unitOfWork.StockReservations.FindAsync(id);
 
-            if (stockReservation == null)
-            {
-                return NotFound();
-            }
+            if (stockReservation == null) { return NotFound(); }
 
             return stockReservation;
         }
 
-        // PUT: api/StockReservations/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutStockReservation(Guid id, StockReservation stockReservation)
         {
-            if (id != stockReservation.Id)
-            {
-                return BadRequest();
-            }
+            if (id != stockReservation.Id) { return BadRequest(); }
 
-            _context.Entry(stockReservation).State = EntityState.Modified;
+            _unitOfWork.StockReservations.Update(stockReservation);
 
             try
             {
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!StockReservationExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (!StockReservationExists(id)) { return NotFound(); }
+                else { throw; }
             }
 
             return NoContent();
         }
 
-        // POST: api/StockReservations
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<StockReservation>> PostStockReservation(StockReservation stockReservation)
         {
-            _context.StockReservations.Add(stockReservation);
-            await _context.SaveChangesAsync();
+            _unitOfWork.StockReservations.Add(stockReservation);
+            await _unitOfWork.SaveChangesAsync();
 
             return CreatedAtAction("GetStockReservation", new { id = stockReservation.Id }, stockReservation);
         }
 
-        // DELETE: api/StockReservations/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteStockReservation(Guid id)
         {
-            var stockReservation = await _context.StockReservations.FindAsync(id);
-            if (stockReservation == null)
-            {
-                return NotFound();
-            }
+            var stockReservation = await _unitOfWork.StockReservations.FindAsync(id);
+            if (stockReservation == null) { return NotFound(); }
 
-            _context.StockReservations.Remove(stockReservation);
-            await _context.SaveChangesAsync();
+            _unitOfWork.StockReservations.Delete(stockReservation);
+            await _unitOfWork.SaveChangesAsync();
 
             return NoContent();
         }
 
         private bool StockReservationExists(Guid id)
         {
-            return _context.StockReservations.Any(e => e.Id == id);
+            return _unitOfWork.StockReservations.Any(e => e.Id == id);
         }
     }
 }

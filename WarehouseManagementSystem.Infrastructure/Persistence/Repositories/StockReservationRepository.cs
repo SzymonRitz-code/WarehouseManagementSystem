@@ -20,6 +20,11 @@ public class StockReservationRepository : IStockReservationRepository
         _context.StockReservations.Add(entity);
     }
 
+    public async Task<IEnumerable<StockReservation>> AllAsync()
+    {
+        return await _context.StockReservations.ToListAsync();
+    }
+
     public bool Any(Expression<Func<StockReservation, bool>> predicate)
     {
         return _context.StockReservations.Any(predicate);

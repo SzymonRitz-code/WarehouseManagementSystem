@@ -5,5 +5,6 @@ namespace WarehouseManagementSystem.Domain.Interfaces.Repositories;
 
 public interface IStockRepository : IRepository<Stock>
 {
+    IEnumerable<Stock> All();
     Task<Stock?> GetByProductAndWarehouseAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId);
 }

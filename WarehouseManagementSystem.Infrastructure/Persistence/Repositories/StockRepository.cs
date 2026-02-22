@@ -19,6 +19,11 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
             _context.Stocks.Add(entity);
         }
 
+        public IEnumerable<Stock> All()
+        {
+            return _context.Stocks;
+        }
+
         public bool Any(Expression<Func<Stock, bool>> predicate)
         {
             return _context.Stocks.Any(predicate);
