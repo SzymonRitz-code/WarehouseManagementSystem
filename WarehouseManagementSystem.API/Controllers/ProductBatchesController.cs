@@ -16,36 +16,26 @@ namespace WarehouseManagementSystem.API.Controllers
             _context = context;
         }
 
-        // GET: api/ProductBatches
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductBatch>>> GetProductBatches()
         {
             return await _context.ProductBatches.ToListAsync();
         }
 
-        // GET: api/ProductBatches/5
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductBatch>> GetProductBatch(Guid id)
         {
             var productBatch = await _context.ProductBatches.FindAsync(id);
 
-            if (productBatch == null)
-            {
-                return NotFound();
-            }
+            if (productBatch == null) { return NotFound(); }
 
             return productBatch;
         }
 
-        // PUT: api/ProductBatches/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProductBatch(Guid id, ProductBatch productBatch)
         {
-            if (id != productBatch.Id)
-            {
-                return BadRequest();
-            }
+            if (id != productBatch.Id) { return BadRequest(); }
 
             _context.Entry(productBatch).State = EntityState.Modified;
 
@@ -55,21 +45,13 @@ namespace WarehouseManagementSystem.API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!ProductBatchExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (!ProductBatchExists(id)) { return NotFound(); }
+                else { throw; }
             }
 
             return NoContent();
         }
 
-        // POST: api/ProductBatches
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<ProductBatch>> PostProductBatch(ProductBatch productBatch)
         {
@@ -79,15 +61,11 @@ namespace WarehouseManagementSystem.API.Controllers
             return CreatedAtAction("GetProductBatch", new { id = productBatch.Id }, productBatch);
         }
 
-        // DELETE: api/ProductBatches/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProductBatch(Guid id)
         {
             var productBatch = await _context.ProductBatches.FindAsync(id);
-            if (productBatch == null)
-            {
-                return NotFound();
-            }
+            if (productBatch == null) { return NotFound(); }
 
             _context.ProductBatches.Remove(productBatch);
             await _context.SaveChangesAsync();

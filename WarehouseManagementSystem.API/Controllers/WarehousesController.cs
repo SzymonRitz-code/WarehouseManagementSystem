@@ -16,36 +16,26 @@ namespace WarehouseManagementSystem.API.Controllers
             _context = context;
         }
 
-        // GET: api/Warehouses
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Warehouse>>> GetWarehouses()
         {
             return await _context.Warehouses.ToListAsync();
         }
 
-        // GET: api/Warehouses/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Warehouse>> GetWarehouse(Guid id)
         {
             var warehouse = await _context.Warehouses.FindAsync(id);
 
-            if (warehouse == null)
-            {
-                return NotFound();
-            }
+            if (warehouse == null) { return NotFound(); }
 
             return warehouse;
         }
 
-        // PUT: api/Warehouses/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutWarehouse(Guid id, Warehouse warehouse)
         {
-            if (id != warehouse.Id)
-            {
-                return BadRequest();
-            }
+            if (id != warehouse.Id) { return BadRequest(); }
 
             _context.Entry(warehouse).State = EntityState.Modified;
 
@@ -55,21 +45,13 @@ namespace WarehouseManagementSystem.API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!WarehouseExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (!WarehouseExists(id)) { return NotFound(); }
+                else { throw; }
             }
 
             return NoContent();
         }
 
-        // POST: api/Warehouses
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Warehouse>> PostWarehouse(Warehouse warehouse)
         {
@@ -79,15 +61,11 @@ namespace WarehouseManagementSystem.API.Controllers
             return CreatedAtAction("GetWarehouse", new { id = warehouse.Id }, warehouse);
         }
 
-        // DELETE: api/Warehouses/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteWarehouse(Guid id)
         {
             var warehouse = await _context.Warehouses.FindAsync(id);
-            if (warehouse == null)
-            {
-                return NotFound();
-            }
+            if (warehouse == null) { return NotFound(); }
 
             _context.Warehouses.Remove(warehouse);
             await _context.SaveChangesAsync();

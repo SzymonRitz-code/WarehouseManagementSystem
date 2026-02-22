@@ -16,36 +16,26 @@ namespace WarehouseManagementSystem.API.Controllers
             _context = context;
         }
 
-        // GET: api/Documents
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Document>>> GetDocuments()
         {
             return await _context.Documents.ToListAsync();
         }
 
-        // GET: api/Documents/5
         [HttpGet("{documentId}")]
         public async Task<ActionResult<Document>> GetDocument(Guid documentId)
         {
             var document = await _context.Documents.FindAsync(documentId);
 
-            if (document == null)
-            {
-                return NotFound();
-            }
+            if (document == null) { return NotFound(); }
 
             return document;
         }
 
-        // PUT: api/Documents/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{documentId}")]
         public async Task<IActionResult> PutDocument(Guid documentId, Document document)
         {
-            if (documentId != document.Id)
-            {
-                return BadRequest();
-            }
+            if (documentId != document.Id) { return BadRequest(); }
 
             _context.Entry(document).State = EntityState.Modified;
 
@@ -55,14 +45,8 @@ namespace WarehouseManagementSystem.API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!DocumentExists(documentId))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                if (!DocumentExists(documentId)) { return NotFound(); }
+                else { throw; }
             }
 
             return NoContent();
@@ -83,10 +67,7 @@ namespace WarehouseManagementSystem.API.Controllers
         public async Task<IActionResult> DeleteDocument(Guid documentId)
         {
             var document = await _context.Documents.FindAsync(documentId);
-            if (document == null)
-            {
-                return NotFound();
-            }
+            if (document == null) { return NotFound(); }
 
             _context.Documents.Remove(document);
             await _context.SaveChangesAsync();
