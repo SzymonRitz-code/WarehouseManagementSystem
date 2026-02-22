@@ -5,8 +5,6 @@ VisualStudioVersion = 17.14.36930.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.API", "WarehouseManagementSystem.API\WarehouseManagementSystem.API.csproj", "{96FF4A98-26A9-427C-86EA-5B443337D9E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.DataAccessLayer", "WarehouseManagementSystem.DataAccessLayer\WarehouseManagementSystem.DataAccessLayer.csproj", "{AEE45907-00FB-4657-8AAB-0420EBC8A198}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.Domain", "WarehouseManagementSystem.Domain\WarehouseManagementSystem.Domain.csproj", "{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.Idp", "WarehouseManagementSystem.Idp\WarehouseManagementSystem.Idp.csproj", "{A8E02431-F272-41E2-BA9B-7938F4DB9E62}"
@@ -30,10 +28,6 @@ Global
 		{96FF4A98-26A9-427C-86EA-5B443337D9E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96FF4A98-26A9-427C-86EA-5B443337D9E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96FF4A98-26A9-427C-86EA-5B443337D9E3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Release|Any CPU.Build.0 = Release|Any CPU
 		{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -70,6 +70,26 @@ public class StockReservation
 
         ExpiresAt = expiresAt;
     }
+    public void Increase(decimal quantity)
+    {
+        ValidatePositive(quantity);
+
+        _quantity += quantity;
+    }
+    public void Decrease(decimal quantity)
+    {
+        ValidatePositive(quantity);
+
+        if (_quantity < quantity)
+            throw new InvalidOperationException("Cannot decrease more than reserved quantity.");
+
+        _quantity -= quantity;
+    }
+
+    public void MarkAsReleased()
+    {
+        Status = ReservationStatus.Released;
+    }
 
     public void Release()
     {
@@ -110,4 +130,11 @@ public class StockReservation
         if (Status != ReservationStatus.Active)
             throw new ArgumentException("Reservation is not active.");
     }
+
+    private void ValidatePositive(decimal quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity must be greater than zero.");
+    }
+
 }

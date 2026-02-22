@@ -1,0 +1,37 @@
+﻿using WarehouseManagementSystem.Domain.Interfaces;
+using WarehouseManagementSystem.Domain.Interfaces.Repositories;
+using WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
+
+namespace WarehouseManagementSystem.Infrastructure.Persistence;
+
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservationRepository _stockReservationRepository;
+    private readonly WarehouseManagementSystemDbContext _context;
+
+    public UnitOfWork(WarehouseManagementSystemDbContext context)
+    {
+        _context = context ?? throw new NullReferenceException();
+    }
+
+    public IStockRepository Stocks { get { return _stockRepository ?? new StockRepository(_context); } }
+
+    public IStockReservationRepository StockReservations { get { return _stockReservationRepository ?? new StockReservationRepository(_context); } }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
+
+    public int SaveChanges()
+    {
+        return _context.SaveChanges();
+    }
+
+    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return _context.SaveChangesAsync(cancellationToken);
+    }
+}
+

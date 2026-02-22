@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WarehouseManagementSystem.DataAccessLayer;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
+using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers
 {

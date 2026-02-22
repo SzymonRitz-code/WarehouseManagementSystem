@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace WarehouseManagementSystem.DataAccessLayer
+namespace WarehouseManagementSystem.Infrastructure.Persistence
 {
     internal class WarehouseDbContextFactory : IDesignTimeDbContextFactory<WarehouseManagementSystemDbContext>
     {

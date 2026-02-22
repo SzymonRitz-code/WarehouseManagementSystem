@@ -6,7 +6,7 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.SecurityDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
-namespace WarehouseManagementSystem.DataAccessLayer
+namespace WarehouseManagementSystem.Infrastructure.Persistence
 {
     public class WarehouseManagementSystemDbContext : DbContext
     {

@@ -91,6 +91,16 @@ public class Stock
         _quantityReserved += quantity;
         Touch();
     }
+    public void Unreserve(decimal quantity)
+    {
+        ValidatePositive(quantity);
+
+        if (_quantityReserved < quantity)
+            throw new InvalidOperationException("Cannot unreserve more than reserved.");
+
+        _quantityReserved -= quantity;
+        Touch();
+    }
 
     public void ReleaseReservation(decimal quantity)
     {

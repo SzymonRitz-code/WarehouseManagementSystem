@@ -1,5 +1,20 @@
-﻿namespace WarehouseManagementSystem.Domain.Services;
+﻿using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+
+namespace WarehouseManagementSystem.Domain.Services;
 
 public interface IStockService
 {
+    Task<Stock> GetOrCreateAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId);
+
+    Task IncreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId);
+
+    Task DecreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId);
+
+    Task ReserveStockAsync(Guid stockId, decimal quantity, string reservationSource, Guid createdBy, DateTimeOffset? expiresAt = null);
+
+    Task ReleaseReservationAsync(Guid stockId, decimal quantity);
+
+    Task<bool> IsAvailableAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal requiredQuantity, Guid? batchId);
+
+    Task MoveStockAsync(Guid productId, Guid sourceWarehouseId, Guid sourceZoneId, Guid targetWarehouseId, Guid targetZoneId, decimal quantity, Guid? batchId);
 }

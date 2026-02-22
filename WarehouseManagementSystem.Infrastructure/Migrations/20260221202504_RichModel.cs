@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace WarehouseManagementSystem.DataAccessLayer.Migrations
+namespace WarehouseManagementSystem.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class RichModel : Migration

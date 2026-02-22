@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.DataAccessLayer;
 using WarehouseManagementSystem.Domain.Model.AuditDomain;
+using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers
 {

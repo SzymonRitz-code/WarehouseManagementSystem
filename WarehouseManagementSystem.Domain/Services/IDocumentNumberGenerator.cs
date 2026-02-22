@@ -1,5 +1,19 @@
-﻿namespace WarehouseManagementSystem.Domain.Services;
+﻿using WarehouseManagementSystem.Domain.Enums;
 
-internal interface IDocumentNumberGenerator
+namespace WarehouseManagementSystem.Domain.Services;
+
+public interface IDocumentNumberGenerator
 {
+    Task<string> GenerateAsync(DocumentType type);
+
+    Task<string> GenerateAsync(
+        DocumentType type,
+        Guid? warehouseId,
+        DateTime documentDate);
+
+    string FormatPreview(
+        DocumentType type,
+        int sequence,
+        DateTime documentDate,
+        string? warehouseCode = null);
 }

@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using WarehouseManagementSystem.DataAccessLayer;
+using WarehouseManagementSystem.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace WarehouseManagementSystem.DataAccessLayer.Migrations
+namespace WarehouseManagementSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(WarehouseManagementSystemDbContext))]
     [Migration("20260221202504_RichModel")]
