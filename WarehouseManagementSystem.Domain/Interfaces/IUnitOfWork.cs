@@ -6,6 +6,7 @@ public interface IUnitOfWork : IDisposable
 {
     IStockRepository Stocks { get; }
     IStockReservationRepository StockReservations { get; }
+    IDocumentRepository Documents { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     int SaveChanges();

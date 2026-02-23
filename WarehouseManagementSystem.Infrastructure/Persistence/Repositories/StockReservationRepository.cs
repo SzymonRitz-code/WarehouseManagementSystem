@@ -56,6 +56,28 @@ public class StockReservationRepository : IStockReservationRepository
         return (await _context.StockReservations.Where(r => r.Status == ReservationStatus.Active && r.ExpiresAt.HasValue && r.ExpiresAt <= currentTime)
                     .OrderBy(r => r.ExpiresAt).AsNoTracking().ToListAsync()).AsReadOnly();
     }
+    public async Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId)
+    {
+        var reservations = await (
+            from item in _context.DocumentItems
+            join stock in _context.Stocks
+                on new { item.ProductId, item.ProductBatchId, WarehouseZoneId = item.SourceZoneId ?? Guid.Empty }
+                   equals new { stock.ProductId, stock.ProductBatchId, WarehouseZoneId = stock.WarehouseZoneId }
+                into stockJoin
+            from stock in stockJoin.DefaultIfEmpty()
+            join reservation in _context.StockReservations
+                on stock.Id equals reservation.StockId
+            where item.DocumentId == documentId
+                  && reservation.Status == ReservationStatus.Active
+                  && (
+                      (stock.WarehouseId == item.Document.SourceWarehouseId)
+                      || (stock.WarehouseId == item.Document.TargetWarehouseId)
+                  )
+            select reservation
+        ).ToListAsync();
+
+        return reservations;
+    }
 
     public StockReservation Update(StockReservation entity)
     {

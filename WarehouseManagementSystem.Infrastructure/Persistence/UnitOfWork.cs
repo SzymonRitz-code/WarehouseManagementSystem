@@ -8,6 +8,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly IStockRepository _stockRepository;
     private readonly IStockReservationRepository _stockReservationRepository;
+    private readonly IDocumentRepository _documentRepository;
     private readonly WarehouseManagementSystemDbContext _context;
 
     public UnitOfWork(WarehouseManagementSystemDbContext context)
@@ -18,6 +19,8 @@ public class UnitOfWork : IUnitOfWork
     public IStockRepository Stocks { get { return _stockRepository ?? new StockRepository(_context); } }
 
     public IStockReservationRepository StockReservations { get { return _stockReservationRepository ?? new StockReservationRepository(_context); } }
+
+    public IDocumentRepository Documents { get { return _documentRepository ?? new DocumentRepository(_context); } }
 
     public void Dispose()
     {

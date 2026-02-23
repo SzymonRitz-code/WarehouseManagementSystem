@@ -1,16 +1,19 @@
 ﻿using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
+using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.API.Services.Reservations;
 
 public class StockReservationService : IStockReservationService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISystemClock clock;
 
-    public StockReservationService(IUnitOfWork unitOfWork)
+    public StockReservationService(IUnitOfWork unitOfWork, ISystemClock clock)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        this.clock = clock;
     }
 
     public async Task<StockReservation> CreateReservationAsync(Guid stockId, decimal quantity, string source, Guid createdBy, DateTimeOffset? expiresAt = null)
@@ -93,7 +96,7 @@ public class StockReservationService : IStockReservationService
 
     public async Task ExpireReservationsAsync()
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         var expiredReservations = await _unitOfWork.StockReservations.GetExpiredReservationsAsync(now);
 
         foreach (var reservation in expiredReservations)

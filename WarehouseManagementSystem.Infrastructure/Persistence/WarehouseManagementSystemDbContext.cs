@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 using WarehouseManagementSystem.Domain.Model.AuditDomain;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
+using WarehouseManagementSystem.Domain.Model.Documents;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.SecurityDomain;
@@ -17,6 +20,7 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
         public DbSet<Product> Products { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<DocumentItem> DocumentItems { get; set; }
+        public DbSet<DocumentSequence> DocumentSequences { get; set; }
         public DbSet<ProductBatch> ProductBatches { get; set; }
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<StockReservation> StockReservations { get; set; }
@@ -42,6 +46,7 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
 
             ConfigureDocument(modelBuilder);
             ConfigureDocumentItem(modelBuilder);
+            ConfigureDocumentSequence(modelBuilder);
 
             ConfigureUser(modelBuilder);
             ConfigureAuditLog(modelBuilder);
@@ -325,6 +330,25 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
             builder.HasIndex(x => x.ProductBatchId);
             builder.HasIndex(x => x.SourceZoneId);
             builder.HasIndex(x => x.TargetZoneId);
+        }
+        public void ConfigureDocumentSequence(ModelBuilder modelBuilder)
+        {
+            var builder = modelBuilder.Entity<DocumentSequence>();
+            builder.ToTable("DocumentSequences");
+
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.Type)
+                .IsRequired();
+
+            builder.Property(x => x.Year)
+                .IsRequired();
+
+            builder.Property(x => x.LastNumber)
+                .IsRequired();
+
+            builder.HasIndex(x => new { x.Type, x.Year, x.WarehouseId })
+                .IsUnique();
         }
 
         // ================= SECURITY =================

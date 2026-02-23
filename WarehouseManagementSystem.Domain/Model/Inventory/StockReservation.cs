@@ -21,7 +21,6 @@ public class StockReservation
     public Guid StockId { get; private set; }
     public Stock Stock { get; private set; }
 
-    // EF Core
     private StockReservation() { }
 
     public StockReservation(
@@ -47,10 +46,6 @@ public class StockReservation
 
         Status = ReservationStatus.Active;
     }
-
-    // ========================
-    // DOMAIN BEHAVIOR
-    // ========================
 
     public void SetReservationSource(string source)
     {

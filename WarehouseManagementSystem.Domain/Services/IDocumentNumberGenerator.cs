@@ -9,11 +9,11 @@ public interface IDocumentNumberGenerator
     Task<string> GenerateAsync(
         DocumentType type,
         Guid? warehouseId,
-        DateTime documentDate);
+        DateTimeOffset documentDate);
 
     string FormatPreview(
         DocumentType type,
         int sequence,
-        DateTime documentDate,
+        DateTimeOffset documentDate,
         string? warehouseCode = null);
 }

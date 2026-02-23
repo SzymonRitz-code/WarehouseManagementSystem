@@ -7,13 +7,13 @@ using WarehouseManagementSystem.API.Services.Stocks;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Infrastructure.Persistence;
+using WarehouseManagementSystem.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -37,6 +37,8 @@ builder.Services.AddScoped<IStockService, StockService>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+builder.Services.AddHostedService<ReservationExpirationJob>();
+builder.Services.AddSingleton<ISystemClock, SystemClock>();
 
 
 builder.Services.AddAutoMapper(cfg =>
