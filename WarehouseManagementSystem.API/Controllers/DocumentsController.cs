@@ -16,10 +16,7 @@ public class DocumentController : ControllerBase
     private readonly IDocumentQueryService _queryService;
     private readonly IMapper _mapper;
 
-    public DocumentController(
-        IDocumentCommandService commandService,
-        IDocumentQueryService queryService,
-        IMapper mapper)
+    public DocumentController(IDocumentCommandService commandService, IDocumentQueryService queryService, IMapper mapper)
     {
         _commandService = commandService;
         _queryService = queryService;

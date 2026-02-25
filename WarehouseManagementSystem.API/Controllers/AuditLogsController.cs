@@ -12,9 +12,7 @@ public class AuditLogsController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public AuditLogsController(
-        IUnitOfWork unitOfWork,
-        IMapper mapper)
+    public AuditLogsController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;

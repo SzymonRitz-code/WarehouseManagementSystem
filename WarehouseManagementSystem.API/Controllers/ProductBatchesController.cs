@@ -1,80 +1,85 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using WarehouseManagementSystem.Infrastructure.Persistence;
 
-namespace WarehouseManagementSystem.API.Controllers;
-
-[Route("api/[controller]")]
-[ApiController]
-public class ProductBatchesController : ControllerBase
+namespace WarehouseManagementSystem.API.Controllers
 {
-    private readonly WarehouseManagementSystemDbContext _context;
-
-    public ProductBatchesController(WarehouseManagementSystemDbContext context) 
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProductBatchesController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductBatch>>> GetProductBatches()
-    {
-        return await _context.ProductBatches.ToListAsync();
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ProductBatch>> GetProductBatch(Guid id)
-    {
-        var productBatch = await _context.ProductBatches.FindAsync(id);
-
-        if (productBatch == null) { return NotFound(); }
-
-        return productBatch;
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutProductBatch(Guid id, ProductBatch productBatch)
-    {
-        if (id != productBatch.Id) { return BadRequest(); }
-
-        _context.Entry(productBatch).State = EntityState.Modified;
-
-        try
+        public ProductBatchesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!ProductBatchExists(id)) { return NotFound(); }
-            else { throw; }
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        return NoContent();
-    }
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProductBatchDto>>> GetProductBatches()
+        {
+            var batches = await _unitOfWork.ProductBatches.AllAsync();
+            return Ok(_mapper.Map<IEnumerable<ProductBatchDto>>(batches));
+        }
 
-    [HttpPost]
-    public async Task<ActionResult<ProductBatch>> PostProductBatch(ProductBatch productBatch)
-    {
-        _context.ProductBatches.Add(productBatch);
-        await _context.SaveChangesAsync();
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ProductBatchDto>> GetProductBatch(Guid id)
+        {
+            var batch = await _unitOfWork.ProductBatches.FindAsync(id);
+            if (batch == null) return NotFound();
 
-        return CreatedAtAction("GetProductBatch", new { id = productBatch.Id }, productBatch);
-    }
+            return Ok(_mapper.Map<ProductBatchDto>(batch));
+        }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProductBatch(Guid id)
-    {
-        var productBatch = await _context.ProductBatches.FindAsync(id);
-        if (productBatch == null) { return NotFound(); }
+        [HttpPost]
+        public async Task<ActionResult<ProductBatchDto>> CreateProductBatch(ProductBatchDto batchDto)
+        {
+            if (!ModelState.IsValid) return BadRequest(batchDto);
 
-        _context.ProductBatches.Remove(productBatch);
-        await _context.SaveChangesAsync();
+            var batch = _mapper.Map<ProductBatch>(batchDto);
 
-        return NoContent();
-    }
+            if(_unitOfWork.ProductBatches.Any(p => p.Id == batchDto.ProductId) == false) { return BadRequest(batchDto); }
 
-    private bool ProductBatchExists(Guid id)
-    {
-        return _context.ProductBatches.Any(e => e.Id == id);
+            _unitOfWork.ProductBatches.Add(batch);
+            await _unitOfWork.SaveChangesAsync();
+
+            var createdDto = _mapper.Map<ProductBatchDto>(batch);
+            return CreatedAtAction(nameof(GetProductBatch), new { id = batch.Id }, createdDto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProductBatch(Guid id, ProductBatchDto batchDto)
+        {
+            if (id != batchDto.Id) return BadRequest();
+
+  
+
+            var batch = await _unitOfWork.ProductBatches.FindAsync(id);
+            if (batch == null) return NotFound();
+            if (_unitOfWork.ProductBatches.Any(p => p.Id == batchDto.ProductId) == false) { return BadRequest(batchDto); }
+
+            _mapper.Map(batchDto, batch);
+
+            _unitOfWork.ProductBatches.Update(batch);
+            await _unitOfWork.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProductBatch(Guid id)
+        {
+            var batch = await _unitOfWork.ProductBatches.FindAsync(id);
+            if (batch == null) return NotFound();
+
+            _unitOfWork.ProductBatches.Delete(batch);
+            await _unitOfWork.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }
