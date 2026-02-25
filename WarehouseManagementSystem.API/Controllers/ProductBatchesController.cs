@@ -26,10 +26,10 @@ public class ProductBatchesController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<ProductBatchDto>>(batches));
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<ProductBatchDto>> GetProductBatch(Guid id)
+    [HttpGet("{productBatchId}")]
+    public async Task<ActionResult<ProductBatchDto>> GetProductBatch(Guid productBatchId)
     {
-        var batch = await _unitOfWork.ProductBatches.FindAsync(id);
+        var batch = await _unitOfWork.ProductBatches.FindAsync(productBatchId);
         if (batch == null) return NotFound();
 
         return Ok(_mapper.Map<ProductBatchDto>(batch));
@@ -38,7 +38,7 @@ public class ProductBatchesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ProductBatchDto>> CreateProductBatch(ProductBatchDto batchDto)
     {
-        if (!ModelState.IsValid) return BadRequest(batchDto);
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var batch = _mapper.Map<ProductBatch>(batchDto);
 
@@ -51,14 +51,14 @@ public class ProductBatchesController : ControllerBase
         return CreatedAtAction(nameof(GetProductBatch), new { id = batch.Id }, createdDto);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProductBatch(Guid id, ProductBatchDto batchDto)
+    [HttpPut("{productBatchId}")]
+    public async Task<IActionResult> UpdateProductBatch(Guid productBatchId, ProductBatchDto batchDto)
     {
-        if (id != batchDto.Id) return BadRequest();
+        if (productBatchId != batchDto.Id) return BadRequest();
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
 
-
-        var batch = await _unitOfWork.ProductBatches.FindAsync(id);
+        var batch = await _unitOfWork.ProductBatches.FindAsync(productBatchId);
         if (batch == null) return NotFound();
         if (_unitOfWork.ProductBatches.Any(p => p.Id == batchDto.ProductId) == false) { return BadRequest(batchDto); }
 
@@ -70,10 +70,10 @@ public class ProductBatchesController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProductBatch(Guid id)
+    [HttpDelete("{productBatchId}")]
+    public async Task<IActionResult> DeleteProductBatch(Guid productBatchId)
     {
-        var batch = await _unitOfWork.ProductBatches.FindAsync(id);
+        var batch = await _unitOfWork.ProductBatches.FindAsync(productBatchId);
         if (batch == null) return NotFound();
 
         _unitOfWork.ProductBatches.Delete(batch);

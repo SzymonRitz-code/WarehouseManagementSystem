@@ -16,5 +16,5 @@ public record struct CreateDocumentDto(
     [StringLength(1000)]
     string? Notes,
     [Required, MinLength(1, ErrorMessage = "Document must have at least one item.")]
-    List<StockDto> Items
+    List<DocumentItemDto> Items
 );

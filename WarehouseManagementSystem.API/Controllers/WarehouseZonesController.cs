@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
@@ -9,72 +11,81 @@ namespace WarehouseManagementSystem.API.Controllers;
 [ApiController]
 public class WarehouseZonesController : ControllerBase
 {
-    private readonly WarehouseManagementSystemDbContext _context;
+    private readonly WarehouseManagementSystemDbContext _unitOfWork;
+    private readonly IMapper _mapper;
 
-    public WarehouseZonesController(WarehouseManagementSystemDbContext context)
+
+    // TODO zamienić DbContext na IUnitOfWork
+    public WarehouseZonesController(WarehouseManagementSystemDbContext unitOfWork, IMapper mapper)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WarehouseZone>>> GetWarehouseZones()
+    public async Task<ActionResult<IEnumerable<WarehouseZoneDto>>> GetWarehouseZones()
     {
-        return await _context.WarehouseZones.ToListAsync();
+        var zones = await _unitOfWork.WarehouseZones.ToListAsync();
+        return Ok(_mapper.Map<IEnumerable<WarehouseZoneDto>>(zones));
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<WarehouseZone>> GetWarehouseZone(Guid id)
+    [HttpGet("{warehouseZoneId}")]
+    public async Task<ActionResult<WarehouseZoneDto>> GetWarehouseZone(Guid warehouseZoneId)
     {
-        var warehouseZone = await _context.WarehouseZones.FindAsync(id);
+        var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
+        if (zone == null) return NotFound();
 
-        if (warehouseZone == null) { return NotFound(); }
-
-        return warehouseZone;
+        return Ok(_mapper.Map<WarehouseZoneDto>(zone));
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutWarehouseZone(Guid id, WarehouseZone warehouseZone)
+    [HttpPut("{warehouseZoneId}")]
+    public async Task<IActionResult> PutWarehouseZone(Guid warehouseZoneId, WarehouseZoneDto zoneDto)
     {
-        if (id != warehouseZone.Id) { return BadRequest(); }
+        if (warehouseZoneId != zoneDto.Id) return BadRequest();
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        _context.Entry(warehouseZone).State = EntityState.Modified;
+        var zoneEntity = _mapper.Map<WarehouseZone>(zoneDto);
+        _unitOfWork.Entry(zoneEntity).State = EntityState.Modified;
 
         try
         {
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!WarehouseZoneExists(id)) { return NotFound(); }
-            else { throw; }
+            if (!WarehouseZoneExists(warehouseZoneId)) return NotFound();
+            throw;
         }
 
         return NoContent();
     }
 
     [HttpPost]
-    public async Task<ActionResult<WarehouseZone>> PostWarehouseZone(WarehouseZone warehouseZone)
+    public async Task<ActionResult<WarehouseZoneDto>> PostWarehouseZone(WarehouseZoneDto zoneDto)
     {
-        _context.WarehouseZones.Add(warehouseZone);
-        await _context.SaveChangesAsync();
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        return CreatedAtAction("GetWarehouseZone", new { id = warehouseZone.Id }, warehouseZone);
+        var zoneEntity = _mapper.Map<WarehouseZone>(zoneDto);
+        _unitOfWork.WarehouseZones.Add(zoneEntity);
+        await _unitOfWork.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zoneEntity.Id }, zoneDto);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteWarehouseZone(Guid id)
+    [HttpDelete("{warehouseZoneId}")]
+    public async Task<IActionResult> DeleteWarehouseZone(Guid warehouseZoneId)
     {
-        var warehouseZone = await _context.WarehouseZones.FindAsync(id);
-        if (warehouseZone == null) { return NotFound(); }
+        var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
+        if (zone == null) return NotFound();
 
-        _context.WarehouseZones.Remove(warehouseZone);
-        await _context.SaveChangesAsync();
+        _unitOfWork.WarehouseZones.Remove(zone);
+        await _unitOfWork.SaveChangesAsync();
 
         return NoContent();
     }
 
-    private bool WarehouseZoneExists(Guid id)
+    private bool WarehouseZoneExists(Guid warehouseZoneId)
     {
-        return _context.WarehouseZones.Any(e => e.Id == id);
+        return _unitOfWork.WarehouseZones.Any(z => z.Id == warehouseZoneId);
     }
 }

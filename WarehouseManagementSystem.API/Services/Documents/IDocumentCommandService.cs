@@ -1,6 +1,7 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Services.Documents;
 
@@ -25,10 +26,11 @@ public interface IDocumentCommandService
          DocumentType type,
          Guid createdById,
          Guid sourceWarehouseId,
-         IEnumerable<Stock> items,
+         IEnumerable<DocumentItemDraft> items,
          DateTime documentDate,
          Guid? targetWarehouseId = null,
-         string? notes = null);
+         string? notes = null,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Potwierdza dokument.

@@ -4,18 +4,19 @@ using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class DocumentController : ControllerBase
+public class DocumentsController : ControllerBase
 {
     private readonly IDocumentCommandService _commandService;
     private readonly IDocumentQueryService _queryService;
     private readonly IMapper _mapper;
 
-    public DocumentController(IDocumentCommandService commandService, IDocumentQueryService queryService, IMapper mapper)
+    public DocumentsController(IDocumentCommandService commandService, IDocumentQueryService queryService, IMapper mapper)
     {
         _commandService = commandService;
         _queryService = queryService;
@@ -35,27 +36,39 @@ public class DocumentController : ControllerBase
     }
 
     /// <summary>
-    /// Tworzy dokument wraz z pozycjami (Stocks → DocumentItems)
+    /// Tworzy dokument wraz z pozycjami (DocumentItemDraft → DocumentItem)
     /// </summary>
     [HttpPost]
     public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto request)
     {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
         if (request.Items == null || !request.Items.Any())
             return BadRequest("Document must have at least one item.");
 
-        var stocks = _mapper.Map<List<Stock>>(request.Items);
+        // Mapujemy DTO → ValueObject (DocumentItemDraft)
+        var itemDrafts = request.Items.Select(i => new DocumentItemDraft(
+            productId: i.ProductId,
+            quantity: i.Quantity,
+            productBatchId: i.ProductBatchId,
+            sourceZoneId: i.SourceZoneId,
+            targetZoneId: i.TargetZoneId
+        )).ToList();
 
+        // Tworzymy dokument poprzez serwis domenowy
         var document = await _commandService.CreateDocumentAsync(
-            request.Type,
-            request.CreatedById,
-            request.SourceWarehouseId,
-            stocks,
-            request.DocumentDate,
-            request.TargetWarehouseId,
-            request.Notes
+            type: request.Type,
+            createdById: request.CreatedById,
+            sourceWarehouseId: request.SourceWarehouseId,
+            items: itemDrafts,
+            documentDate: request.DocumentDate,
+            targetWarehouseId: request.TargetWarehouseId,
+            notes: request.Notes
         );
 
+        // Mapujemy agregat domenowy → DTO do zwrócenia
         var documentDto = _mapper.Map<DocumentDto>(document);
+
         return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, documentDto);
     }
 
@@ -65,6 +78,7 @@ public class DocumentController : ControllerBase
     [HttpPut("{documentId}/confirm")]
     public async Task<IActionResult> ConfirmDocument(Guid documentId, [FromQuery] Guid confirmedById)
     {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
         await _commandService.ConfirmDocumentAsync(documentId, confirmedById);
         return NoContent();
     }
@@ -75,6 +89,7 @@ public class DocumentController : ControllerBase
     [HttpPut("{documentId}/cancel")]
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
         await _commandService.CancelDocumentAsync(documentId);
         return NoContent();
     }

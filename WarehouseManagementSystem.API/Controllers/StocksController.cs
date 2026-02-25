@@ -14,10 +14,7 @@ public class StocksController : ControllerBase
     private readonly IStockQueryService _stockQuery;
     private readonly IMapper _mapper;
 
-    public StocksController(
-        IStockService stockService,
-        IStockQueryService stockQuery,
-        IMapper mapper)
+    public StocksController(IStockService stockService, IStockQueryService stockQuery, IMapper mapper)
     {
         _stockService = stockService;
         _stockQuery = stockQuery;
@@ -32,13 +29,6 @@ public class StocksController : ControllerBase
         if (stock == null) return NotFound();
 
         return Ok(_mapper.Map<StockDto>(stock));
-    }
-
-    [HttpGet("warehouse/{warehouseId}/available")]
-    public async Task<ActionResult<IEnumerable<StockDto>>> GetAvailableForPicking(Guid warehouseId)
-    {
-        var stocks = await _stockQuery.GetAvailableForPickingAsync(warehouseId);
-        return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
     [HttpPost("increase")]

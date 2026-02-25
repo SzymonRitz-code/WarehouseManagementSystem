@@ -1,8 +1,8 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
-using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Services.Documents;
 
@@ -29,15 +29,19 @@ public class DocumentCommandService : IDocumentCommandService
         DocumentType type,
         Guid createdById,
         Guid sourceWarehouseId,
-        IEnumerable<Stock> items,
+        IEnumerable<DocumentItemDraft> items,
         DateTime documentDate,
         Guid? targetWarehouseId = null,
-        string? notes = null)
+        string? notes = null,
+        CancellationToken ct = default)
     {
-        if (!items.Any())
+        if (items == null || !items.Any())
             throw new ArgumentException("Document must have at least one item.", nameof(items));
 
-        var documentNumber = await _numberGenerator.GenerateAsync(type, sourceWarehouseId, documentDate);
+        var documentNumber = await _numberGenerator.GenerateAsync(
+            type,
+            sourceWarehouseId,
+            documentDate);
 
         var document = new Document(
             number: documentNumber,
@@ -49,21 +53,21 @@ public class DocumentCommandService : IDocumentCommandService
             notes: notes
         );
 
-        foreach (var stock in items)
+        foreach (var draft in items)
         {
             var item = new DocumentItem(
-                productId: stock.ProductId,
-                quantity: stock.Available,
-                productBatchId: stock.ProductBatchId,
-                sourceZoneId: stock.WarehouseZoneId,
-                targetZoneId: stock.WarehouseZoneId
+                productId: draft.ProductId,
+                quantity: draft.Quantity,
+                productBatchId: draft.ProductBatchId,
+                sourceZoneId: draft.SourceZoneId,
+                targetZoneId: draft.TargetZoneId
             );
 
             document.AddItem(item);
         }
 
         _unitOfWork.Documents.Add(document);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
 
         return document;
     }

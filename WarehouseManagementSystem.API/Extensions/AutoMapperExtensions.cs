@@ -21,6 +21,7 @@
             cfg.AddDocumentItemMappings();
             cfg.AddWarehouseMappings();
             cfg.AddWarehouseZoneMappings();
+            cfg.AddCreateDocumentMappings(); // nowo dodane dla CreateDocumentDto
         }
 
         public static void AddAuditLogMappings(this IMapperConfigurationExpression cfg)
@@ -88,6 +89,19 @@
             cfg.CreateMap<WarehouseZone, WarehouseZoneDto>()
                 .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(wz => wz.Warehouse.Name))
                 .ReverseMap();
+        }
+
+        public static void AddCreateDocumentMappings(this IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<CreateDocumentDto, Document>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+                .ForMember(dest => dest.CreatedById, opt => opt.MapFrom(src => src.CreatedById))
+                .ForMember(dest => dest.SourceWarehouseId, opt => opt.MapFrom(src => src.SourceWarehouseId))
+                .ForMember(dest => dest.TargetWarehouseId, opt => opt.MapFrom(src => src.TargetWarehouseId))
+                .ForMember(dest => dest.DocumentDate, opt => opt.MapFrom(src => src.DocumentDate))
+                .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Notes))
+                // pozycje dokumentu mapujemy ręcznie w serwisie, nie przez AutoMapper
+                .ForMember(dest => dest.Items, opt => opt.Ignore());
         }
     }
 }

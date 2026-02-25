@@ -41,7 +41,7 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ProductDto>> CreateProduct(ProductDto productDto)
     {
-        if (!ModelState.IsValid) return BadRequest(productDto);
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var product = _mapper.Map<Product>(productDto);
 
@@ -57,7 +57,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> UpdateProduct(Guid productId, ProductDto productDto)
     {
         if (productId != productDto.Id) return BadRequest();
-        if (!ModelState.IsValid) return BadRequest(productDto);
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var product = await _unitOfWork.Products.FindAsync(productId);
         if (product == null) return NotFound();

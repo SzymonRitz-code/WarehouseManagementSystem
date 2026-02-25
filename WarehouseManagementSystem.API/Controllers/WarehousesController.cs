@@ -16,12 +16,18 @@ public class WarehousesController : ControllerBase
     private readonly WarehouseManagementSystemDbContext _unitOfWork;
     private readonly IMapper _mapper;
 
+
+    //TODO zamienić DbContext na IUnitOfWork
     public WarehousesController(IStockQueryService stockQueryService, WarehouseManagementSystemDbContext unitOfWork, IMapper mapper)
     {
-        this._stockQueryService = stockQueryService;
+        _stockQueryService = stockQueryService;
         _unitOfWork = unitOfWork;
-        this._mapper = mapper;
+        _mapper = mapper;
     }
+
+    /// <summary>
+    /// Pobranie wszystkich stocków w magazynie
+    /// </summary>
     [HttpGet("{warehouseId}/stocks")]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksInWarehouse(Guid warehouseId)
     {
@@ -29,34 +35,40 @@ public class WarehousesController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Warehouse>>> GetWarehouses()
+    /// <summary>
+    /// Pobranie stocków dostępnych do kompletacji w magazynie
+    /// </summary>
+    [HttpGet("{warehouseId}/stocks/available-for-picking")]
+    public async Task<ActionResult<IEnumerable<StockDto>>> GetAvailableForPicking(Guid warehouseId)
     {
-        return await _unitOfWork.Warehouses.ToListAsync();
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Warehouse>> GetWarehouse(Guid id)
-    {
-        var warehouse = await _unitOfWork.Warehouses.FindAsync(id);
-
-        if (warehouse == null) { return NotFound(); }
-
-        return warehouse;
-    }
-    [HttpGet("{warehouseId}/stocks")]
-    public async Task<ActionResult<IEnumerable<StockDto>>> GetAvailableStocksInWarehouse(Guid warehouseId)
-    {
-        var stocks = await _stockQueryService.GetByWarehouseAsync(warehouseId);
+        var stocks = await _stockQueryService.GetAvailableForPickingAsync(warehouseId);
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutWarehouse(Guid id, Warehouse warehouse)
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<WarehouseDto>>> GetWarehouses()
     {
-        if (id != warehouse.Id) { return BadRequest(); }
+        var warehouses = await _unitOfWork.Warehouses.ToListAsync();
+        return Ok(_mapper.Map<IEnumerable<WarehouseDto>>(warehouses));
+    }
 
-        _unitOfWork.Entry(warehouse).State = EntityState.Modified;
+    [HttpGet("{warehouseId}")]
+    public async Task<ActionResult<WarehouseDto>> GetWarehouse(Guid warehouseId)
+    {
+        var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
+        if (warehouse == null) return NotFound();
+
+        return Ok(_mapper.Map<WarehouseDto>(warehouse));
+    }
+
+    [HttpPut("{warehouseId}")]
+    public async Task<IActionResult> PutWarehouse(Guid warehouseId, WarehouseDto warehouseDto)
+    {
+        if (warehouseId != warehouseDto.Id) return BadRequest();
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var warehouseEntity = _mapper.Map<Warehouse>(warehouseDto);
+        _unitOfWork.Entry(warehouseEntity).State = EntityState.Modified;
 
         try
         {
@@ -64,27 +76,30 @@ public class WarehousesController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!WarehouseExists(id)) { return NotFound(); }
-            else { throw; }
+            if (!WarehouseExists(warehouseId)) return NotFound();
+            throw;
         }
 
         return NoContent();
     }
 
     [HttpPost]
-    public async Task<ActionResult<Warehouse>> PostWarehouse(Warehouse warehouse)
+    public async Task<ActionResult<WarehouseDto>> PostWarehouse(WarehouseDto warehouseDto)
     {
-        _unitOfWork.Warehouses.Add(warehouse);
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var warehouseEntity = _mapper.Map<Warehouse>(warehouseDto);
+        _unitOfWork.Warehouses.Add(warehouseEntity);
         await _unitOfWork.SaveChangesAsync();
 
-        return CreatedAtAction("GetWarehouse", new { id = warehouse.Id }, warehouse);
+        return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouseEntity.Id }, warehouseDto);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteWarehouse(Guid id)
+    [HttpDelete("{warehouseId}")]
+    public async Task<IActionResult> DeleteWarehouse(Guid warehouseId)
     {
-        var warehouse = await _unitOfWork.Warehouses.FindAsync(id);
-        if (warehouse == null) { return NotFound(); }
+        var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
+        if (warehouse == null) return NotFound();
 
         _unitOfWork.Warehouses.Remove(warehouse);
         await _unitOfWork.SaveChangesAsync();
@@ -92,8 +107,8 @@ public class WarehousesController : ControllerBase
         return NoContent();
     }
 
-    private bool WarehouseExists(Guid id)
+    private bool WarehouseExists(Guid warehouseId)
     {
-        return _unitOfWork.Warehouses.Any(e => e.Id == id);
+        return _unitOfWork.Warehouses.Any(w => w.Id == warehouseId);
     }
 }
