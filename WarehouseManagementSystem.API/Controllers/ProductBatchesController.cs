@@ -3,79 +3,78 @@ using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
-namespace WarehouseManagementSystem.API.Controllers
+namespace WarehouseManagementSystem.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class ProductBatchesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductBatchesController : ControllerBase
+    private readonly WarehouseManagementSystemDbContext _context;
+
+    public ProductBatchesController(WarehouseManagementSystemDbContext context) 
     {
-        private readonly WarehouseManagementSystemDbContext _context;
+        _context = context;
+    }
 
-        public ProductBatchesController(WarehouseManagementSystemDbContext context)
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ProductBatch>>> GetProductBatches()
+    {
+        return await _context.ProductBatches.ToListAsync();
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ProductBatch>> GetProductBatch(Guid id)
+    {
+        var productBatch = await _context.ProductBatches.FindAsync(id);
+
+        if (productBatch == null) { return NotFound(); }
+
+        return productBatch;
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutProductBatch(Guid id, ProductBatch productBatch)
+    {
+        if (id != productBatch.Id) { return BadRequest(); }
+
+        _context.Entry(productBatch).State = EntityState.Modified;
+
+        try
         {
-            _context = context;
-        }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductBatch>>> GetProductBatches()
-        {
-            return await _context.ProductBatches.ToListAsync();
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ProductBatch>> GetProductBatch(Guid id)
-        {
-            var productBatch = await _context.ProductBatches.FindAsync(id);
-
-            if (productBatch == null) { return NotFound(); }
-
-            return productBatch;
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutProductBatch(Guid id, ProductBatch productBatch)
-        {
-            if (id != productBatch.Id) { return BadRequest(); }
-
-            _context.Entry(productBatch).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductBatchExists(id)) { return NotFound(); }
-                else { throw; }
-            }
-
-            return NoContent();
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<ProductBatch>> PostProductBatch(ProductBatch productBatch)
-        {
-            _context.ProductBatches.Add(productBatch);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetProductBatch", new { id = productBatch.Id }, productBatch);
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProductBatch(Guid id)
+        catch (DbUpdateConcurrencyException)
         {
-            var productBatch = await _context.ProductBatches.FindAsync(id);
-            if (productBatch == null) { return NotFound(); }
-
-            _context.ProductBatches.Remove(productBatch);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            if (!ProductBatchExists(id)) { return NotFound(); }
+            else { throw; }
         }
 
-        private bool ProductBatchExists(Guid id)
-        {
-            return _context.ProductBatches.Any(e => e.Id == id);
-        }
+        return NoContent();
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ProductBatch>> PostProductBatch(ProductBatch productBatch)
+    {
+        _context.ProductBatches.Add(productBatch);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction("GetProductBatch", new { id = productBatch.Id }, productBatch);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProductBatch(Guid id)
+    {
+        var productBatch = await _context.ProductBatches.FindAsync(id);
+        if (productBatch == null) { return NotFound(); }
+
+        _context.ProductBatches.Remove(productBatch);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private bool ProductBatchExists(Guid id)
+    {
+        return _context.ProductBatches.Any(e => e.Id == id);
     }
 }

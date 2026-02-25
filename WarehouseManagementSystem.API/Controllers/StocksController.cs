@@ -1,90 +1,113 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.Domain.Interfaces;
-using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.Domain.Services;
 
-namespace WarehouseManagementSystem.API.Controllers
+namespace WarehouseManagementSystem.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class StocksController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class StocksController : ControllerBase
+    private readonly IStockService _stockService;
+    private readonly IStockQueryService _stockQuery;
+    private readonly IStockReservationService _reservationService;
+    private readonly IMapper _mapper;
+
+    public StocksController(
+        IStockService stockService,
+        IStockQueryService stockQuery,
+        IStockReservationService reservationService,
+        IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _autoMapper;
+        _stockService = stockService;
+        _stockQuery = stockQuery;
+        _reservationService = reservationService;
+        _mapper = mapper;
+    }
 
-        public StocksController(IUnitOfWork unitOfWork, IMapper autoMapper)
-        {
-            _unitOfWork = unitOfWork;
-            _autoMapper = autoMapper;
-        }
+    // ===== QUERY OPERATIONS =====
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<StockDto>>> GetStocks()
-        {
-            return Ok(_autoMapper.Map<IEnumerable<StockDto>>(await _unitOfWork.Stocks.All()));
-        }
+    [HttpGet("{stockId}")]
+    public async Task<ActionResult<StockDto>> GetStock(Guid stockId)
+    {
+        var stock = await _stockQuery.GetByIdAsync(stockId);
+        if (stock == null) return NotFound();
 
-        [HttpGet("{stockId}")]
-        public async Task<ActionResult<StockDto>> GetStock(Guid stockId)
-        {
-            var stockEntity = await _unitOfWork.Stocks.FindAsync(stockId);
+        return Ok(_mapper.Map<StockDto>(stock));
+    }
 
-            if (stockEntity == null) { return NotFound(); }
+    [HttpGet("product/{productId}")]
+    public async Task<ActionResult<IEnumerable<StockDto>>> GetByProduct(Guid productId)
+    {
+        var stocks = await _stockQuery.GetByProductAsync(productId);
+        return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
+    }
 
-            var stock = _autoMapper.Map<StockDto>(stockEntity);
+    [HttpGet("warehouse/{warehouseId}/available")]
+    public async Task<ActionResult<IEnumerable<StockDto>>> GetAvailableForPicking(Guid warehouseId)
+    {
+        var stocks = await _stockQuery.GetAvailableForPickingAsync(warehouseId);
+        return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
+    }
 
-            return stock;
-        }
+    [HttpGet("product/{productId}/warehouse/{warehouseId}")]
+    public async Task<ActionResult<decimal>> GetAvailableQuantity(
+        Guid productId,
+        Guid warehouseId,
+        [FromQuery] Guid? batchId = null,
+        [FromQuery] Guid? zoneId = null)
+    {
+        var available = await _stockQuery.GetAvailableQuantityAsync(
+            productId, batchId, warehouseId, zoneId);
+        return Ok(available);
+    }
 
-        [HttpPut("{stockId}")]
-        public async Task<IActionResult> PutStock(Guid stockId, StockDto stock)
-        {
-            if (stockId != stock.Id) { return BadRequest(); }
+    // ===== COMMAND OPERATIONS =====
 
-            var stockEntity = _autoMapper.Map<Stock>(stock);
+    [HttpPost("increase")]
+    public async Task<IActionResult> IncreaseStock([FromBody] StockChangeDto dto)
+    {
+        await _stockService.IncreaseStockAsync(
+            dto.ProductId, dto.WarehouseId, dto.WarehouseZoneId, dto.Quantity, dto.ProductBatchId);
+        return NoContent();
+    }
 
-            _unitOfWork.Stocks.Update(stockEntity);
+    [HttpPost("decrease")]
+    public async Task<IActionResult> DecreaseStock([FromBody] StockChangeDto dto)
+    {
+        await _stockService.DecreaseStockAsync(
+            dto.ProductId, dto.WarehouseId, dto.WarehouseZoneId, dto.Quantity, dto.ProductBatchId);
+        return NoContent();
+    }
 
-            try
-            {
-                await _unitOfWork.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!StockExists(stockId)) { return NotFound(); }
-                else { throw; }
-            }
+    [HttpPost("move")]
+    public async Task<IActionResult> MoveStock([FromBody] StockMoveDto dto)
+    {
+        await _stockService.MoveStockAsync(
+            dto.ProductId,
+            dto.SourceWarehouseId,
+            dto.SourceZoneId,
+            dto.TargetWarehouseId,
+            dto.TargetZoneId,
+            dto.Quantity,
+            dto.ProductBatchId);
+        return NoContent();
+    }
 
-            return NoContent();
-        }
+    [HttpPost("reserve")]
+    public async Task<IActionResult> ReserveStock([FromBody] StockReservationRequestDto dto)
+    {
+        await _stockService.ReserveStockAsync(
+            dto.StockId, dto.Quantity, dto.ReservationSource, dto.CreatedBy, dto.ExpiresAt);
+        return NoContent();
+    }
 
-        [HttpPost]
-        public async Task<ActionResult<Stock>> PostStock(StockDto stock)
-        {
-            var stockEntity = _autoMapper.Map<Stock>(stock);
-            _unitOfWork.Stocks.Add(stockEntity);
-            await _unitOfWork.SaveChangesAsync();
-
-            return CreatedAtAction("GetStock", new { id = stock.Id }, stock);
-        }
-
-        [HttpDelete("{stockId}")]
-        public async Task<IActionResult> DeleteStock(Guid stockId)
-        {
-            var stock = await _unitOfWork.Stocks.FindAsync(stockId);
-            if (stock == null) { return NotFound(); }
-
-            _unitOfWork.Stocks.Delete(stock);
-            await _unitOfWork.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool StockExists(Guid id)
-        {
-            return _unitOfWork.Stocks.Any(e => e.Id == id);
-        }
+    [HttpPost("release")]
+    public async Task<IActionResult> ReleaseReservation([FromBody] StockReservationReleaseDto dto)
+    {
+        await _stockService.ReleaseReservationAsync(dto.StockId, dto.Quantity);
+        return NoContent();
     }
 }

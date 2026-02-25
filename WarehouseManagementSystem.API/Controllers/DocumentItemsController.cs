@@ -1,81 +1,56 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
-using WarehouseManagementSystem.Infrastructure.Persistence;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.Queries;
 
-namespace WarehouseManagementSystem.API.Controllers
+namespace WarehouseManagementSystem.API.Controllers;
+
+[Route("api/Documents/{documentId}/[controller]")]
+[ApiController]
+public class DocumentItemsController : ControllerBase
 {
-    [Route("api/Documents/{documentId}/[controller]")]
-    [ApiController]
-    public class DocumentItemsController : ControllerBase
+    private readonly IDocumentQueryService _documentQueryService;
+    private readonly IMapper _mapper;
+
+    public DocumentItemsController(IDocumentQueryService documentQueryService, IMapper mapper)
     {
-        private readonly WarehouseManagementSystemDbContext _context;
+        _documentQueryService = documentQueryService;
+        _mapper = mapper;
+    }
 
-        public DocumentItemsController(WarehouseManagementSystemDbContext context)
-        {
-            _context = context;
-        }
+    /// <summary>
+    /// Pobiera wszystkie pozycje dokumentu.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<DocumentItemDto>>> GetAllItems(Guid documentId)
+    {
+        var document = await _documentQueryService.GetByIdAsync(documentId);
+        if (document == null)
+            return NotFound();
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<DocumentItem>>> GetDocumentItems()
-        {
-            return await _context.DocumentItems.ToListAsync();
-        }
+        var items = document.Items;
+        var itemsDto = _mapper.Map<IEnumerable<DocumentItemDto>>(items);
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<DocumentItem>> GetDocumentItem(Guid id)
-        {
-            var documentItem = await _context.DocumentItems.FindAsync(id);
+        return Ok(itemsDto);
+    }
 
-            if (documentItem == null) { return NotFound(); }
+    /// <summary>
+    /// Pobiera konkretną pozycję dokumentu po Id.
+    /// </summary>
+    [HttpGet("{itemId}")]
+    public async Task<ActionResult<DocumentItemDto>> GetItemById(Guid documentId, Guid itemId)
+    {
+        var document = await _documentQueryService.GetByIdAsync(documentId);
+        if (document == null)
+            return NotFound();
 
-            return documentItem;
-        }
+        var item = document.Items.FirstOrDefault(i => i.Id == itemId);
+        if (item == null)
+            return NotFound();
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutDocumentItem(Guid id, DocumentItem documentItem)
-        {
-            if (id != documentItem.Id) { return BadRequest(); }
-
-            _context.Entry(documentItem).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DocumentItemExists(id)) { return NotFound(); }
-                else { throw; }
-            }
-
-            return NoContent();
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<DocumentItem>> PostDocumentItem(DocumentItem documentItem)
-        {
-            _context.DocumentItems.Add(documentItem);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetDocumentItem", new { id = documentItem.Id }, documentItem);
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDocumentItem(Guid id)
-        {
-            var documentItem = await _context.DocumentItems.FindAsync(id);
-            if (documentItem == null) { return NotFound(); }
-
-            _context.DocumentItems.Remove(documentItem);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool DocumentItemExists(Guid id)
-        {
-            return _context.DocumentItems.Any(e => e.Id == id);
-        }
+        var itemDto = _mapper.Map<DocumentItemDto>(item);
+        return Ok(itemDto);
     }
 }
+
+

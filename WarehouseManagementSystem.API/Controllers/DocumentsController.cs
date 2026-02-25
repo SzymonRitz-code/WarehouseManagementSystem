@@ -1,81 +1,131 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
-using WarehouseManagementSystem.Infrastructure.Persistence;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.Documents;
+using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.Services;
 
-namespace WarehouseManagementSystem.API.Controllers
+namespace WarehouseManagementSystem.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class DocumentController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class DocumentsController : ControllerBase
+    private readonly IDocumentCommandService _commandService;
+    private readonly IDocumentQueryService _queryService;
+    private readonly IMapper _mapper;
+
+    public DocumentController(
+        IDocumentCommandService commandService,
+        IDocumentQueryService queryService,
+        IMapper mapper)
     {
-        private readonly WarehouseManagementSystemDbContext _context;
+        _commandService = commandService;
+        _queryService = queryService;
+        _mapper = mapper;
+    }
 
-        public DocumentsController(WarehouseManagementSystemDbContext context)
-        {
-            _context = context;
-        }
+    /// <summary>
+    /// Pobranie dokumentu po Id
+    /// </summary>
+    [HttpGet("{documentId}")]
+    public async Task<ActionResult<DocumentDto>> GetDocumentById(Guid documentId)
+    {
+        var document = await _queryService.GetByIdAsync(documentId);
+        if (document == null) return NotFound();
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Document>>> GetDocuments()
-        {
-            return await _context.Documents.ToListAsync();
-        }
+        return Ok(_mapper.Map<DocumentDto>(document));
+    }
 
-        [HttpGet("{documentId}")]
-        public async Task<ActionResult<Document>> GetDocument(Guid documentId)
-        {
-            var document = await _context.Documents.FindAsync(documentId);
+    /// <summary>
+    /// Tworzy dokument wraz z pozycjami (Stocks → DocumentItems)
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto request)
+    {
+        if (request.Items == null || !request.Items.Any())
+            return BadRequest("Document must have at least one item.");
 
-            if (document == null) { return NotFound(); }
+        var stocks = _mapper.Map<List<Stock>>(request.Items);
 
-            return document;
-        }
+        var document = await _commandService.CreateDocumentAsync(
+            request.Type,
+            request.CreatedById,
+            request.SourceWarehouseId,
+            stocks,
+            request.DocumentDate,
+            request.TargetWarehouseId,
+            request.Notes
+        );
 
-        [HttpPut("{documentId}")]
-        public async Task<IActionResult> PutDocument(Guid documentId, Document document)
-        {
-            if (documentId != document.Id) { return BadRequest(); }
+        var documentDto = _mapper.Map<DocumentDto>(document);
+        return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, documentDto);
+    }
 
-            _context.Entry(document).State = EntityState.Modified;
+    /// <summary>
+    /// Potwierdza dokument
+    /// </summary>
+    [HttpPut("{documentId}/confirm")]
+    public async Task<IActionResult> ConfirmDocument(Guid documentId, [FromQuery] Guid confirmedById)
+    {
+        await _commandService.ConfirmDocumentAsync(documentId, confirmedById);
+        return NoContent();
+    }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DocumentExists(documentId)) { return NotFound(); }
-                else { throw; }
-            }
+    /// <summary>
+    /// Anuluje dokument
+    /// </summary>
+    [HttpPut("{documentId}/cancel")]
+    public async Task<IActionResult> CancelDocument(Guid documentId)
+    {
+        await _commandService.CancelDocumentAsync(documentId);
+        return NoContent();
+    }
 
-            return NoContent();
-        }
+    /// <summary>
+    /// Pobranie dokumentów wg typu i statusu
+    /// </summary>
+    [HttpGet("byTypeAndStatus")]
+    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetByTypeAndStatus(
+        [FromQuery] string type,
+        [FromQuery] string status)
+    {
+        if (!Enum.TryParse<Domain.Enums.DocumentType>(type, true, out var docType) ||
+            !Enum.TryParse<Domain.Enums.DocumentStatus>(status, true, out var docStatus))
+            return BadRequest("Invalid type or status.");
 
-        [HttpPost]
-        public async Task<ActionResult<Document>> PostDocument(Document document)
-        {
-            _context.Documents.Add(document);
-            await _context.SaveChangesAsync();
+        var documents = await _queryService.GetByTypeAndStatusAsync(docType, docStatus);
+        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(documents));
+    }
 
-            return CreatedAtAction("GetDocument", new { id = document.Id }, document);
-        }
+    /// <summary>
+    /// Pobranie dokumentów w statusie Draft
+    /// </summary>
+    [HttpGet("drafts")]
+    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDrafts()
+    {
+        var drafts = await _queryService.GetDraftsAsync();
+        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(drafts));
+    }
 
-        [HttpDelete("{documentId}")]
-        public async Task<IActionResult> DeleteDocument(Guid documentId)
-        {
-            var document = await _context.Documents.FindAsync(documentId);
-            if (document == null) { return NotFound(); }
+    /// <summary>
+    /// Pobranie dokumentów oczekujących potwierdzenia
+    /// </summary>
+    [HttpGet("pending")]
+    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetPendingConfirmation()
+    {
+        var pending = await _queryService.GetPendingConfirmationAsync();
+        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(pending));
+    }
 
-            _context.Documents.Remove(document);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool DocumentExists(Guid id)
-        {
-            return _context.Documents.Any(e => e.Id == id);
-        }
+    /// <summary>
+    /// Pobranie ostatnich dokumentów (np. dashboard)
+    /// </summary>
+    [HttpGet("recent")]
+    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecent([FromQuery] int take = 10)
+    {
+        var recent = await _queryService.GetRecentAsync(take);
+        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(recent));
     }
 }
