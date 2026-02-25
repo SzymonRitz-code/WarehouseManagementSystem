@@ -74,7 +74,7 @@ public class StockReservationRepository : IStockReservationRepository
                       || (stock.WarehouseId == item.Document.TargetWarehouseId)
                   )
             select reservation
-        ).ToListAsync();
+        ).AsNoTracking().ToListAsync();
 
         return reservations;
     }
@@ -87,6 +87,14 @@ public class StockReservationRepository : IStockReservationRepository
     public void UpdateRange(IEnumerable<StockReservation> entities)
     {
         _context.StockReservations.UpdateRange(entities);
+    }
+
+    public async Task<IReadOnlyList<StockReservation>> FindByStockIdAsync(Guid stockId)
+    {
+        return await _context.StockReservations
+            .AsNoTracking()
+            .Where(s => s.StockId == stockId)
+            .ToListAsync();
     }
 }
 

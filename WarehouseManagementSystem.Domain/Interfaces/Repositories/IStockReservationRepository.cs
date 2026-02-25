@@ -9,4 +9,5 @@ public interface IStockReservationRepository : IRepository<StockReservation>
     Task<IEnumerable<StockReservation>> GetActiveReservationsAsync(Guid stockId);
     Task<IReadOnlyCollection<StockReservation>> GetExpiredReservationsAsync(DateTimeOffset currentTime);
     Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId);
+    Task<IReadOnlyList<StockReservation>> FindByStockIdAsync(Guid stockId);
 }

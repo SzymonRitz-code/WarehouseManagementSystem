@@ -22,6 +22,12 @@ public class WarehousesController : ControllerBase
         _unitOfWork = unitOfWork;
         this._mapper = mapper;
     }
+    [HttpGet("{warehouseId}/stocks")]
+    public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksInWarehouse(Guid warehouseId)
+    {
+        var stocks = await _stockQueryService.GetByWarehouseAsync(warehouseId);
+        return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
+    }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Warehouse>>> GetWarehouses()

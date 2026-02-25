@@ -96,4 +96,5 @@ public class ProductsController : ControllerBase
         var available = await _stockQueryService.GetAvailableQuantityAsync(productId, null, warehouseId, null);
         return Ok(available);
     }
+
 }

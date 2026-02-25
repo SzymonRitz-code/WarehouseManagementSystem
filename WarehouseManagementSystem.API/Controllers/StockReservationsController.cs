@@ -1,88 +1,49 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
-using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
-namespace WarehouseManagementSystem.API.Controllers;
-
-[Route("api/Stocks/{stockId}/[controller]")]
-[ApiController]
-public class StockReservationsController : ControllerBase
+namespace WarehouseManagementSystem.API.Controllers
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _autoMapper;
-
-    public StockReservationsController(IUnitOfWork context, IMapper autoMapper)
+    [Route("api/Stocks/{stockId}/[controller]")]
+    [ApiController]
+    public class StockReservationsController : ControllerBase
     {
-        _unitOfWork = context;
-        _autoMapper = autoMapper;
-    }
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations()
-    {
-        return Ok(_autoMapper.Map<IEnumerable<StockReservationDto>>(await _unitOfWork.StockReservations.AllAsync()));
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<StockReservationDto>> GetStockReservation(Guid id)
-    {
-        var stockReservationEntity = await _unitOfWork.StockReservations.FindAsync(id);
-
-        if (stockReservationEntity == null) { return NotFound(); }
-
-        var stockReservation = _autoMapper.Map<StockReservationDto>(stockReservationEntity);
-
-        return stockReservation;
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutStockReservation(Guid id, StockReservationDto stockReservation)
-    {
-        if (id != stockReservation.Id) { return BadRequest(); }
-
-        var stockReservationEntity = _autoMapper.Map<StockReservation>(stockReservation);
-        _unitOfWork.StockReservations.Update(stockReservationEntity);
-
-        try
+        public StockReservationsController(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            await _unitOfWork.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!StockReservationExists(id)) { return NotFound(); }
-            else { throw; }
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        return NoContent();
-    }
+        /// <summary>
+        /// Pobiera wszystkie rezerwacje dla danego stocka
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations(Guid stockId)
+        {
+            var reservations = await _unitOfWork.StockReservations.FindByStockIdAsync(stockId);
 
-    [HttpPost]
-    public async Task<ActionResult<StockReservationDto>> PostStockReservation(StockReservationDto stockReservation)
-    {
-        var stockReservationEntity = _autoMapper.Map<StockReservation>(stockReservation);
-        _unitOfWork.StockReservations.Add(stockReservationEntity);
-        await _unitOfWork.SaveChangesAsync();
+            return Ok(_mapper.Map<IEnumerable<StockReservationDto>>(reservations));
+        }
 
-        return CreatedAtAction("GetStockReservation", new { id = stockReservation.Id }, stockReservation);
-    }
+        /// <summary>
+        /// Pobiera konkretną rezerwację dla danego stocka
+        /// </summary>
+        [HttpGet("{reservationId}")]
+        public async Task<ActionResult<StockReservationDto>> GetStockReservation(
+            Guid stockId,
+            Guid reservationId)
+        {
+            var reservation = await _unitOfWork.StockReservations
+                .FindAsync(reservationId);
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteStockReservation(Guid id)
-    {
-        var stockReservation = await _unitOfWork.StockReservations.FindAsync(id);
-        if (stockReservation == null) { return NotFound(); }
+            if (reservation == null || reservation.StockId != stockId)
+                return NotFound();
 
-        _unitOfWork.StockReservations.Delete(stockReservation);
-        await _unitOfWork.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    private bool StockReservationExists(Guid id)
-    {
-        return _unitOfWork.StockReservations.Any(e => e.Id == id);
+            return Ok(_mapper.Map<StockReservationDto>(reservation));
+        }
     }
 }
