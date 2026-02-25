@@ -1,10 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
-using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
@@ -12,17 +11,78 @@ namespace WarehouseManagementSystem.API.Controllers;
 [ApiController]
 public class ProductsController : ControllerBase
 {
-    private readonly IStockQueryService _stockQueryService;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly WarehouseManagementSystemDbContext _unitOfWork;
+    private readonly IStockQueryService _stockQueryService;
 
-    public ProductsController(IStockQueryService stockQueryService,
-        IMapper mapper, WarehouseManagementSystemDbContext unitOfWork)
+    public ProductsController(IUnitOfWork unitOfWork, IMapper mapper, IStockQueryService stockQueryService)
     {
-        _stockQueryService = stockQueryService;
-        _mapper = mapper;
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
+        _stockQueryService = stockQueryService;
     }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
+    {
+        var products = await _unitOfWork.Products.AllAsync();
+        return Ok(_mapper.Map<IEnumerable<ProductDto>>(products));
+    }
+
+    [HttpGet("{productId}")]
+    public async Task<ActionResult<ProductDto>> GetProduct(Guid productId)
+    {
+        var product = await _unitOfWork.Products.FindAsync(productId);
+        if (product == null) return NotFound();
+
+        return Ok(_mapper.Map<ProductDto>(product));
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ProductDto>> CreateProduct(ProductDto productDto)
+    {
+        if (!ModelState.IsValid) return BadRequest(productDto);
+
+        var product = _mapper.Map<Product>(productDto);
+
+        // TODO Tutaj można dodać walidację biznesową np. unikalne SKU
+        _unitOfWork.Products.Add(product);
+        await _unitOfWork.SaveChangesAsync();
+
+        var createdDto = _mapper.Map<ProductDto>(product);
+        return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, createdDto);
+    }
+
+    [HttpPut("{productId}")]
+    public async Task<IActionResult> UpdateProduct(Guid productId, ProductDto productDto)
+    {
+        if (productId != productDto.Id) return BadRequest();
+        if (!ModelState.IsValid) return BadRequest(productDto);
+
+        var product = await _unitOfWork.Products.FindAsync(productId);
+        if (product == null) return NotFound();
+
+        _mapper.Map(productDto, product);
+        _unitOfWork.Products.Update(product);
+        await _unitOfWork.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{productId}")]
+    public async Task<IActionResult> DeleteProduct(Guid productId)
+    {
+        var product = await _unitOfWork.Products.FindAsync(productId);
+        if (product == null) return NotFound();
+
+        _unitOfWork.Products.Delete(product);
+        await _unitOfWork.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    private bool ProductExists(Guid id) => _unitOfWork.Products.Any(p => p.Id == id);
+
     [HttpGet("{productId}/stocks")]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksForProduct(Guid productId)
     {
@@ -30,72 +90,10 @@ public class ProductsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
-    // GET: api/Products/{productId}/stocks/available?warehouseId=...
     [HttpGet("{productId}/stocks/available")]
     public async Task<ActionResult<decimal>> GetAvailableQuantityForProduct(Guid productId, [FromQuery] Guid warehouseId)
     {
         var available = await _stockQueryService.GetAvailableQuantityAsync(productId, null, warehouseId, null);
         return Ok(available);
-    }
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
-    {
-        return await _unitOfWork.Products.ToListAsync();
-    }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Product>> GetProduct(Guid id)
-    {
-        var product = await _unitOfWork.Products.FindAsync(id);
-
-        if (product == null) { return NotFound(); }
-
-        return product;
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutProduct(Guid id, Product product)
-    {
-        if (id != product.Id) { return BadRequest(); }
-
-        _unitOfWork.Entry(product).State = EntityState.Modified;
-
-        try
-        {
-            await _unitOfWork.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!ProductExists(id)) { return NotFound(); }
-            else { throw; }
-        }
-
-        return NoContent();
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<Product>> PostProduct(Product product)
-    {
-        _unitOfWork.Products.Add(product);
-        await _unitOfWork.SaveChangesAsync();
-
-        return CreatedAtAction("GetProduct", new { id = product.Id }, product);
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProduct(Guid id)
-    {
-        var product = await _unitOfWork.Products.FindAsync(id);
-        if (product == null) { return NotFound(); }
-
-        _unitOfWork.Products.Remove(product);
-        await _unitOfWork.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    private bool ProductExists(Guid id)
-    {
-        return _unitOfWork.Products.Any(e => e.Id == id);
     }
 }

@@ -7,7 +7,7 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 {
     internal class ProductBatchRepository : IProductBatchRepository
     {
-        private WarehouseManagementSystemDbContext _context;
+        private readonly WarehouseManagementSystemDbContext _context;
 
         public ProductBatchRepository(WarehouseManagementSystemDbContext context)
         {
