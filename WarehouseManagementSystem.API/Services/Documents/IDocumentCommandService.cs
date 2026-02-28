@@ -33,6 +33,13 @@ public interface IDocumentCommandService
         CancellationToken ct = default);
 
     /// <summary>
+    /// Rozpoczyna transwer.
+    /// </summary>
+    /// <param name="documentId"></param>
+    /// <param name="userId"></param>
+    Task StartTransferAsync(Guid documentId, Guid userId);
+
+    /// <summary>
     /// Potwierdza dokument.
     /// </summary>
     Task ConfirmDocumentAsync(Guid documentId, Guid confirmedById);

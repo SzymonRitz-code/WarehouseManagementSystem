@@ -1,8 +1,11 @@
-﻿using WarehouseManagementSystem.Domain.Enums;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
+using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
+using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.API.Services.Documents;
 
@@ -12,17 +15,20 @@ public class DocumentCommandService : IDocumentCommandService
     private readonly IStockService _stockService;
     private readonly IStockReservationService _reservationService;
     private readonly IDocumentNumberGenerator _numberGenerator;
+    private readonly ISystemClock _clock;
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
         IStockService stockService,
         IStockReservationService reservationService,
-        IDocumentNumberGenerator numberGenerator)
+        IDocumentNumberGenerator numberGenerator,
+        ISystemClock systemClock)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         _reservationService = reservationService ?? throw new ArgumentNullException(nameof(reservationService));
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
+        this._clock = systemClock;
     }
 
     public async Task<Document> CreateDocumentAsync(
@@ -72,6 +78,14 @@ public class DocumentCommandService : IDocumentCommandService
         return document;
     }
 
+    public async Task StartTransferAsync(Guid documentId, Guid userId)
+    {
+        var document = await _unitOfWork.Documents.FindAsync(documentId)
+                       ?? throw new InvalidOperationException("Document not found.");
+        document.StartTransfer(userId, _clock.UtcNow);
+
+        await _unitOfWork.SaveChangesAsync();
+    }
     public async Task ConfirmDocumentAsync(Guid documentId, Guid confirmedById)
     {
         var document = await _unitOfWork.Documents.FindAsync(documentId)

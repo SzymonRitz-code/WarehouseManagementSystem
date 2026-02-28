@@ -260,6 +260,10 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
                    .IsRequired(false)
                    .HasColumnType("datetimeoffset");
 
+            builder.Property(x => x.TransferStartedAt)
+                   .IsRequired(false)
+                   .HasColumnType("datetimeoffset");
+
             builder.Property(x => x.RowVersion)
                    .IsRowVersion();
 
@@ -272,6 +276,11 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
             builder.HasOne(x => x.ConfirmedBy)
                    .WithMany()
                    .HasForeignKey(x => x.ConfirmedById)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.TransferStartedBy)
+                   .WithMany()
+                   .HasForeignKey(x => x.TransferStartedById)
                    .OnDelete(DeleteBehavior.Restrict);
 
             // Relacje do magazynów

@@ -12,6 +12,8 @@ public enum DocumentStatus
 {
     Draft,
     Confirmed,
+    Transfer,
+    Completed,
     Cancelled
 }
 public enum ReservationStatus

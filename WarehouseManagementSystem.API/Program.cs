@@ -37,6 +37,7 @@ builder.Services.AddScoped<IStockService, StockService>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+builder.Services.AddTransient<IDocumentNumberGenerator,DocumentNumberGenerator>();
 builder.Services.AddHostedService<ReservationExpirationJob>();
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
 

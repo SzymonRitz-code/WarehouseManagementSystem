@@ -44,12 +44,17 @@ public class Document
     public string? Notes { get; private set; }
     public DateTimeOffset? CreatedAt { get; private set; }
     public DateTimeOffset? ConfirmedAt { get; private set; }
+    public DateTimeOffset? TransferStartedAt { get; private set; }
+
 
     public Guid CreatedById { get; private set; }
     public User CreatedBy { get; private set; }
 
     public Guid? ConfirmedById { get; private set; }
     public User? ConfirmedBy { get; private set; }
+
+    public Guid? TransferStartedById { get; private set; }
+    public User? TransferStartedBy { get; private set; }
 
     public Guid? SourceWarehouseId { get; private set; }
     public Warehouse? SourceWarehouse { get; private set; }
@@ -106,7 +111,15 @@ public class Document
 
         _items.Remove(item);
     }
+    public void StartTransfer(Guid userId, DateTimeOffset now)
+    {
+        if (Status != DocumentStatus.Confirmed)
+            throw new InvalidOperationException("Only confirmed document can be transferred.");
 
+        Status = DocumentStatus.Transfer;
+        TransferStartedAt = now;
+        TransferStartedById = userId;
+    }
     public void Confirm(Guid confirmedById)
     {
         if (!_items.Any())
@@ -114,6 +127,9 @@ public class Document
 
         if (Status != DocumentStatus.Draft)
             throw new InvalidOperationException("Only draft document can be confirmed.");
+
+        if (Status != DocumentStatus.Transfer)
+            throw new InvalidOperationException("Only transferred document can be completed.");
 
         Status = DocumentStatus.Confirmed;
         ConfirmedById = confirmedById;

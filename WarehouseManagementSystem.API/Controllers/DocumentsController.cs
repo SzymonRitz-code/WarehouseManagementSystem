@@ -71,7 +71,16 @@ public class DocumentsController : ControllerBase
 
         return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, documentDto);
     }
-
+    /// <summary>
+    /// Potwierdza dokument
+    /// </summary>
+    [HttpPut("{documentId}/transfer")]
+    public async Task<IActionResult> TransferDocument(Guid documentId, [FromQuery] Guid transferStartedById)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        await _commandService.StartTransferAsync(documentId, transferStartedById);
+        return NoContent();
+    }
     /// <summary>
     /// Potwierdza dokument
     /// </summary>
