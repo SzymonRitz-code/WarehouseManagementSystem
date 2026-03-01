@@ -8,7 +8,13 @@
   "projects": {
     "WarehouseManagementSystemClient": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "standalone": true,
+          "prefix": "app",
+          "flat": false
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "wms",
