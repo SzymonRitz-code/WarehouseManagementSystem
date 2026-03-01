@@ -1,11 +1,23 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SidebarService } from '../../services/sidebar-service';
 
 @Component({
   selector: 'app-backdrop',
-  imports: [],
+  imports: [
+    CommonModule,
+  ],
   templateUrl: './backdrop.component.html',
-  styleUrl: './backdrop.component.css',
 })
-export class BackdropComponent {
 
+export class BackdropComponent {
+  readonly isMobileOpen$;
+
+  constructor(private sidebarService: SidebarService) {
+    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+  }
+
+  closeSidebar() {
+    this.sidebarService.setMobileOpen(false);
+  }
 }

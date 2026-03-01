@@ -865,3 +865,99 @@ pre[class*="language-"] {
 pre[class*="language-"].line-numbers {
   padding-left: 2.8em !important;
 }
+
+/* Sidebar - płynne rozwijanie/minimalizowanie */
+.sidebar {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Menu item - płynne hover efekty */
+.menu-item,
+.menu-dropdown-item {
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+/* Tasky - płynny drag */
+.task {
+  @apply transition-transform duration-200 ease-in-out;
+}
+
+/* Flatpickr - płynne hover dni */
+.flatpickr-day:hover,
+.flatpickr-day:focus {
+  @apply transition-colors duration-150 ease-in-out;
+}
+
+/* ApexCharts - płynne tooltipy */
+.apexcharts-tooltip {
+  @apply transition-all duration-150 ease-in-out;
+}
+
+/* Scrollbar Simplebar - płynne pojawianie się */
+.simplebar-scrollbar::before {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Code blocks - delikatne przejście tła dla light/dark */
+pre[class*="language-"] {
+  @apply transition-colors duration-200 ease-in-out;
+}
+
+/* Płynne przejścia dla sidebar i hoverów w menu */
+.menu-item,
+.menu-dropdown-item,
+.menu-dropdown-badge,
+.menu-dropdown-badge-pro,
+.task,
+.fc-button,
+.carouselTwo .swiper-button-next,
+.carouselTwo .swiper-button-prev,
+.carouselThree .swiper-pagination-bullet,
+.carouselFour .swiper-pagination-bullet {
+  transition: all 0.25s ease-in-out;
+}
+
+/* Subtelne animacje Flatpickr */
+.flatpickr-day,
+.flatpickr-day.inRange,
+.flatpickr-day.selected,
+.flatpickr-day:hover {
+  transition: all 0.25s ease-in-out;
+}
+
+/* Tooltipy ApexCharts */
+.apexcharts-tooltip {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Animacja pojawiania się tasków */
+.task {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* Efekt „hover lift” dla tasków */
+.task:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0px 4px 8px rgba(16, 24, 40, 0.15),
+              0px 2px 4px rgba(16, 24, 40, 0.1);
+}
+
+/* Subtelne powiększenie dla aktywnych elementów menu */
+.menu-item-active,
+.menu-dropdown-item-active,
+.menu-dropdown-badge-active,
+.menu-dropdown-badge-pro-active {
+  transform: scale(1.02);
+}
+
+/* Płynne pojawianie się carousel bullets */
+.carouselThree .swiper-pagination-bullet,
+.carouselFour .swiper-pagination-bullet {
+  transition: all 0.25s ease-in-out;
+}
+.carouselThree .swiper-pagination-bullet-active,
+.carouselFour .swiper-pagination-bullet-active {
+  transform: scale(1.25);
+}
