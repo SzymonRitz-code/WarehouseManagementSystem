@@ -1,19 +1,100 @@
 import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { HomeComponent } from './features/home/home.component';
+import { ProductListComponent } from './features/products/product-list/product-list.component';
+import { ProductDetailComponent } from './features/products/product-detail/product-detail.component';
+import { WarehouseListComponent } from './features/warehouses/warehouse-list/warehouse-list.component';
+import { WarehouseFormComponent } from './features/warehouses/warehouse-form/warehouse-form.component';
+import { WarehouseDetailComponent } from './features/warehouses/warehouse-detail/warehouse-detail.component';
+import { ZonesComponent } from './features/warehouses/zones/zones.component';
+import { ProductFormComponent } from './features/products/product-form/product-form.component';
+import { StockListComponent } from './features/stocks/stock-list/stock-list.component';
+import { StockAvailabilityComponent } from './features/stocks/stock-availability/stock-availability.component';
+import { ReservationsComponent } from './features/stocks/reservations/reservations.component';
+import { StockMoveComponent } from './features/stocks/stock-move/stock-move.component';
+import { AuditLogListComponent } from './features/audit/audit-log-list/audit-log-list.component';
+import { DocumentListComponent } from './features/documents/document-list/document-list.component';
+import { DocumentFormComponent } from './features/documents/document-form/document-form.component';
+import { DocumentDetailComponent } from './features/documents/document-detail/document-detail.component';
+import { DocumentItemsComponent } from './features/documents/document-items/document-items.component';
+import { AdjustmentListComponent } from './features/inventory-adjustments/adjustment-list/adjustment-list.component';
+import { AdjustmentCreateComponent } from './features/inventory-adjustments/adjustment-create/adjustment-create.component';
+import { UserListComponent } from './features/users/user-list/user-list.component';
+import { UserFormComponent } from './features/users/user-form/user-form.component';
+import { UserDetailComponentnent } from './features/users/user-detail/user-detail.component';
+
 
 export const routes: Routes = [
-    {
-        path: '',
-        component: AppLayoutComponent,
+  {
+    path: '',
+    component: AppLayoutComponent,
+    children: [
+      //Home
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+      { path: 'home', component: HomeComponent, title: 'WMS | Dashboard' },
+
+      //Audit
+      {
+        path: 'audit',
+        component: AuditLogListComponent
+      },
+      // Documents
+      {
+        path: 'documents',
         children: [
-            {
-                path: '',
-                component: DashboardComponent,
-                pathMatch: 'full',
-                title:
-                    'WMS | Admin Dashboard',
-            }
+          { path: '', component: DocumentListComponent },
+          { path: 'form', component: DocumentFormComponent },
+          { path: 'detail/:id', component: DocumentDetailComponent },
+          { path: 'items', component: DocumentItemsComponent }
         ]
-    }
+      },
+      // Inventory Adjustments
+      {
+        path: 'adjustments',
+        children: [
+          { path: '', component: AdjustmentListComponent },
+          { path: 'form', component: AdjustmentCreateComponent }
+        ]
+      },
+      // Products
+      {
+        path: 'products',
+        children: [
+          { path: '', component: ProductListComponent },
+          { path: 'detail/:id', component: ProductDetailComponent },
+          { path: 'form', component: ProductFormComponent },
+        ],
+      },
+      // Stocks
+      {
+        path: 'stocks',
+        children: [
+          { path: '', component: StockListComponent },
+          { path: 'availability', component: StockAvailabilityComponent },
+          { path: 'reservations', component: ReservationsComponent },
+          { path: 'move', component: StockMoveComponent }
+        ],
+      },
+      // Users
+      {
+        path: 'users',
+        children: [
+          { path: '', component: UserListComponent },
+          { path: 'form', component: UserFormComponent },
+          { path: 'detail/:id', component: UserDetailComponentnent }
+        ],
+      },
+      // Warehouses
+      {
+        path: 'warehouses',
+        children: [
+          { path: '', component: WarehouseListComponent },
+          { path: 'form', component: WarehouseFormComponent },
+          { path: 'detail/:id', component: WarehouseDetailComponent },
+          { path: 'zones', component: ZonesComponent }
+        ],
+      },
+
+    ]
+  }
 ];
