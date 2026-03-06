@@ -2,6 +2,7 @@
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
 namespace WarehouseManagementSystem.Domain.Model.InventoryDomain;
+
 public class Stock
 {
     public Guid Id { get; private set; }
@@ -33,7 +34,6 @@ public class Stock
     private readonly List<StockReservation> _reservations = new();
     public IReadOnlyCollection<StockReservation> Reservations => _reservations;
 
-    // EF Core constructor
     private Stock() { }
 
     public Stock(
@@ -58,15 +58,12 @@ public class Stock
         LastUpdated = DateTimeOffset.UtcNow;
     }
 
-    // ========================
-    // DOMAIN OPERATIONS
-    // ========================
-
     public void Increase(decimal quantity)
     {
         ValidatePositive(quantity);
 
         _quantityTotal += quantity;
+
         Touch();
     }
 
@@ -75,41 +72,10 @@ public class Stock
         ValidatePositive(quantity);
 
         if (quantity > Available)
-            throw new ArgumentException("Not enough available stock.");
+            throw new InvalidOperationException("Not enough available stock.");
 
         _quantityTotal -= quantity;
-        Touch();
-    }
 
-    public void Reserve(decimal quantity)
-    {
-        ValidatePositive(quantity);
-
-        if (quantity > Available)
-            throw new ArgumentException("Not enough stock available to reserve.");
-
-        _quantityReserved += quantity;
-        Touch();
-    }
-    public void Unreserve(decimal quantity)
-    {
-        ValidatePositive(quantity);
-
-        if (_quantityReserved < quantity)
-            throw new InvalidOperationException("Cannot unreserve more than reserved.");
-
-        _quantityReserved -= quantity;
-        Touch();
-    }
-
-    public void ReleaseReservation(decimal quantity)
-    {
-        ValidatePositive(quantity);
-
-        if (quantity > _quantityReserved)
-            throw new ArgumentException("Cannot release more than reserved.");
-
-        _quantityReserved -= quantity;
         Touch();
     }
 
@@ -119,10 +85,95 @@ public class Stock
             throw new ArgumentException("Total quantity cannot be negative.");
 
         if (newTotal < _quantityReserved)
-            throw new ArgumentException("Total cannot be lower than reserved quantity.");
+            throw new InvalidOperationException("Total cannot be lower than reserved quantity.");
 
         _quantityTotal = newTotal;
+
         Touch();
+    }
+
+    public StockReservation CreateReservation(
+        decimal quantity,
+        string source,
+        Guid createdBy,
+        DateTimeOffset? expiresAt = null)
+    {
+        ValidatePositive(quantity);
+
+        if (quantity > Available)
+            throw new InvalidOperationException("Not enough stock available to reserve.");
+
+        var reservation = new StockReservation(
+            Id,
+            quantity,
+            source,
+            createdBy,
+            expiresAt);
+
+        _reservations.Add(reservation);
+
+        _quantityReserved += quantity;
+
+        Touch();
+
+        return reservation;
+    }
+
+    public void ReleaseReservation(Guid reservationId)
+    {
+        var reservation = GetReservation(reservationId);
+
+        reservation.Release();
+
+        _quantityReserved -= reservation.Quantity;
+
+        Touch();
+    }
+
+    public void FulfillReservation(Guid reservationId)
+    {
+        var reservation = GetReservation(reservationId);
+
+        reservation.Fulfill();
+
+        _quantityReserved -= reservation.Quantity;
+        _quantityTotal -= reservation.Quantity;
+
+        Touch();
+    }
+
+    public void CancelReservation(Guid reservationId)
+    {
+        var reservation = GetReservation(reservationId);
+
+        reservation.Cancel();
+
+        _quantityReserved -= reservation.Quantity;
+
+        Touch();
+    }
+
+    public void ExpireReservation(Guid reservationId)
+    {
+        var reservation = GetReservation(reservationId);
+
+        reservation.Expire();
+
+        if (reservation.Status == Domain.Enums.ReservationStatus.Expired)
+        {
+            _quantityReserved -= reservation.Quantity;
+            Touch();
+        }
+    }
+
+    private StockReservation GetReservation(Guid reservationId)
+    {
+        var reservation = _reservations.FirstOrDefault(x => x.Id == reservationId);
+
+        if (reservation is null)
+            throw new InvalidOperationException("Reservation not found.");
+
+        return reservation;
     }
 
     private void ValidatePositive(decimal quantity)

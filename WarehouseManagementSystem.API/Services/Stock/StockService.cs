@@ -3,7 +3,7 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
 
 namespace WarehouseManagementSystem.API.Services.Stocks;
-
+//TODO poprawić serwis o aktualizację klasy Stock
 public class StockService : IStockService
 {
     private readonly IUnitOfWork _unitOfWork;

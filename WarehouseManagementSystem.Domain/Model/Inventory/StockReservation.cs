@@ -80,12 +80,6 @@ public class StockReservation
 
         _quantity -= quantity;
     }
-
-    public void MarkAsReleased()
-    {
-        Status = ReservationStatus.Released;
-    }
-
     public void Release()
     {
         EnsureActive();
