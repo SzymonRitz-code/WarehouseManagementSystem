@@ -1,13 +1,13 @@
 import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
 import { HomeComponent } from './features/home/home.component';
-import { ProductListComponent } from './features/products/product-list/product-list.component';
-import { ProductDetailComponent } from './features/products/product-detail/product-detail.component';
+import { ProductListComponent } from './features/products/pages/product-list/product-list.component';
+import { ProductDetailComponent } from './features/products/pages/product-detail/product-detail.component';
 import { WarehouseListComponent } from './features/warehouses/warehouse-list/warehouse-list.component';
 import { WarehouseFormComponent } from './features/warehouses/warehouse-form/warehouse-form.component';
 import { WarehouseDetailComponent } from './features/warehouses/warehouse-detail/warehouse-detail.component';
 import { ZonesComponent } from './features/warehouses/zones/zones.component';
-import { ProductFormComponent } from './features/products/product-form/product-form.component';
+import { ProductFormComponent } from './features/products/pages/product-form/product-form.component';
 import { StockListComponent } from './features/stocks/stock-list/stock-list.component';
 import { StockAvailabilityComponent } from './features/stocks/stock-availability/stock-availability.component';
 import { ReservationsComponent } from './features/stocks/reservations/reservations.component';

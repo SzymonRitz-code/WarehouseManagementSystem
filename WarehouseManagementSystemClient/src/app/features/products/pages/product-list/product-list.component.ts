@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { ComponentCardComponent } from "../../../shared/components/common/component-card/component-card.component";
-import { TableComponent } from "../../../shared/components/table/table.component";
+import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
+import { TableComponent } from "../../../../shared/components/table/table.component";
 import { Router } from '@angular/router';
 
 @Component({
