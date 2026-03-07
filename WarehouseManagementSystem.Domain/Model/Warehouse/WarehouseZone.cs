@@ -7,7 +7,7 @@ public class WarehouseZone
 {
     private WarehouseZone() { } // EF
 
-    internal WarehouseZone(
+    public WarehouseZone(
         string code,
         string name,
         TemperatureType temperatureType,
