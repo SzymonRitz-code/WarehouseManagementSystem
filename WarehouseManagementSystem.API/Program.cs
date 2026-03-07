@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.Extensions;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
-using WarehouseManagementSystem.API.Services.Reservations;
 using WarehouseManagementSystem.API.Services.Stocks;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Services;
@@ -31,7 +30,7 @@ builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
 builder.Services.AddScoped<IStockQueryService, StockQueryService>();
 
 
-builder.Services.AddScoped<IStockReservationService, StockReservationService>();
+//builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 
 builder.Services.AddScoped<IStockService, StockService>();
 

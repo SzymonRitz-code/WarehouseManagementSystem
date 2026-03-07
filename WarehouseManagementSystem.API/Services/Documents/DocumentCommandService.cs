@@ -149,8 +149,7 @@ public class DocumentCommandService : IDocumentCommandService
         switch (document.Type)
         {
             case DocumentType.WZ: // Wydanie towaru – mogły być rezerwacje
-                var reservations = await _unitOfWork.StockReservations
-                                        .GetActiveReservationsByDocumentIdAsync(document.Id);
+                var reservations = await _unitOfWork.Stocks.GetActiveReservationsByDocumentIdAsync(document.Id);
 
                 foreach (var reservation in reservations)
                 {
@@ -160,8 +159,7 @@ public class DocumentCommandService : IDocumentCommandService
                 break;
 
             case DocumentType.MM: // Przesunięcie magazynowe – jeśli rezerwacje były
-                var mmReservations = await _unitOfWork.StockReservations
-                                        .GetActiveReservationsByDocumentIdAsync(document.Id);
+                var mmReservations = await _unitOfWork.Stocks.GetActiveReservationsByDocumentIdAsync(document.Id);
 
                 foreach (var reservation in mmReservations)
                 {

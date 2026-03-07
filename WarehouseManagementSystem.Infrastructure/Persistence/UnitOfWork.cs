@@ -10,7 +10,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly IProductRepository _products;
     private readonly IProductBatchRepository _productBatches;
     private readonly IStockRepository _stockRepository;
-    private readonly IStockReservationRepository _stockReservationRepository;
+    //private readonly IStockReservationRepository _stockReservationRepository;
     private readonly IDocumentRepository _documentRepository;
     private readonly WarehouseManagementSystemDbContext _context;
 
@@ -22,7 +22,6 @@ public class UnitOfWork : IUnitOfWork
     public IProductRepository Products { get { return _products ?? new ProductRepository(_context); } }
     public IProductBatchRepository ProductBatches { get { return _productBatches ?? new ProductBatchRepository(_context); } }
     public IStockRepository Stocks { get { return _stockRepository ?? new StockRepository(_context); } }
-    public IStockReservationRepository StockReservations { get { return _stockReservationRepository ?? new StockReservationRepository(_context); } }
     public IDocumentRepository Documents { get { return _documentRepository ?? new DocumentRepository(_context); } }
 
 

@@ -112,7 +112,7 @@ public class StocksController : ControllerBase
 
         try
         {
-            await _stockService.ReleaseReservationAsync(dto.StockId, dto.Quantity);
+            await _stockService.ReleaseReservationAsync(dto.StockId, dto.ReservationId);
             return NoContent();
         }
         catch (Exception ex)

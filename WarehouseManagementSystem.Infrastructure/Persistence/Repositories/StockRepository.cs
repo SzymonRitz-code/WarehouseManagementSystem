@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -14,35 +15,21 @@ internal class StockRepository : IStockRepository
         _context = context;
     }
 
-    public void Add(Stock entity)
-    {
-        _context.Stocks.Add(entity);
-    }
+    // ===========================
+    // COMMAND METHODS (StockService)
+    // ===========================
 
-    public async Task<IEnumerable<Stock>> All()
-    {
-        return await _context.Stocks.ToListAsync();
-    }
+    public void Add(Stock entity) => _context.Stocks.Add(entity);
 
-    public bool Any(Expression<Func<Stock, bool>> predicate)
-    {
-        return _context.Stocks.Any(predicate);
-    }
+    public Stock Update(Stock entity) => _context.Stocks.Update(entity).Entity;
 
-    public void Delete(Stock entity)
-    {
-        _context.Remove(entity);
-    }
+    public void UpdateRange(IEnumerable<Stock> entities) => _context.Stocks.UpdateRange(entities);
 
-    public Stock Find(Guid id)
-    {
-        return _context.Stocks.Find(id);
-    }
+    public void Delete(Stock entity) => _context.Remove(entity);
 
-    public async Task<Stock> FindAsync(Guid id)
-    {
-        return await _context.Stocks.FindAsync(id);
-    }
+    public async Task<Stock> FindAsync(Guid id) => await _context.Stocks.FindAsync(id);
+
+    public Stock Find(Guid id) => _context.Stocks.Find(id);
 
     public async Task<Stock?> GetByProductAndWarehouseAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId)
     {
@@ -54,13 +41,85 @@ internal class StockRepository : IStockRepository
                 s.ProductBatchId == batchId);
     }
 
-    public Stock Update(Stock entity)
+    // ===========================
+    // QUERY METHODS (StockQueryService)
+    // ===========================
+
+    public async Task<IEnumerable<Stock>> AllAsNoTrackingAsync()
     {
-        return _context.Stocks.Update(entity).Entity;
+        return await _context.Stocks.AsNoTracking().ToListAsync();
+    }
+    public async Task<IEnumerable<Stock>> All()
+    {
+        return await _context.Stocks.AsNoTracking().ToListAsync();
     }
 
-    public void UpdateRange(IEnumerable<Stock> entities)
+    public bool Any(Expression<Func<Stock, bool>> predicate)
     {
-        _context.Stocks.UpdateRange(entities);
+        return _context.Stocks.AsNoTracking().Any(predicate);
+    }
+
+    public async Task<Stock?> GetByProductAndWarehouseAsNoTrackingAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId)
+    {
+        return await _context.Stocks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s =>
+                s.ProductId == productId &&
+                s.WarehouseId == warehouseId &&
+                s.WarehouseZoneId == warehouseZoneId &&
+                s.ProductBatchId == batchId);
+    }
+
+    // ===========================
+    // STOCK RESERVATIONS QUERIES
+    // ===========================
+
+    public async Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsAsync(Guid stockId)
+    {
+        return await _context.StockReservations
+            .Where(r => r.StockId == stockId && r.Status == ReservationStatus.Active)
+            .OrderBy(r => r.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync()
+            .ContinueWith(t => t.Result.AsReadOnly());
+    }
+
+    public async Task<IReadOnlyCollection<StockReservation>> GetExpiredReservationsAsync(DateTimeOffset currentTime)
+    {
+        return await _context.StockReservations
+            .Where(r => r.Status == ReservationStatus.Active && r.ExpiresAt.HasValue && r.ExpiresAt <= currentTime)
+            .OrderBy(r => r.ExpiresAt)
+            .AsNoTracking()
+            .ToListAsync()
+            .ContinueWith(t => t.Result.AsReadOnly());
+    }
+
+    public async Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId)
+    {
+        var reservations = await (
+            from item in _context.DocumentItems
+            join stock in _context.Stocks
+                on new { item.ProductId, item.ProductBatchId, WarehouseZoneId = item.SourceZoneId ?? Guid.Empty }
+                   equals new { stock.ProductId, stock.ProductBatchId, WarehouseZoneId = stock.WarehouseZoneId }
+                into stockJoin
+            from stock in stockJoin.DefaultIfEmpty()
+            join reservation in _context.StockReservations
+                on stock.Id equals reservation.StockId
+            where item.DocumentId == documentId
+                  && reservation.Status == ReservationStatus.Active
+                  && (stock.WarehouseId == item.Document.SourceWarehouseId
+                      || stock.WarehouseId == item.Document.TargetWarehouseId)
+            select reservation
+        ).AsNoTracking().ToListAsync();
+
+        return reservations;
+    }
+
+    public async Task<IReadOnlyList<StockReservation>> FindReservationsByStockIdAsync(Guid stockId)
+    {
+        return await _context.StockReservations
+            .AsNoTracking()
+            .Where(s => s.StockId == stockId)
+            .ToListAsync();
     }
 }

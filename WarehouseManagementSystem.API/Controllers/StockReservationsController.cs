@@ -24,7 +24,7 @@ namespace WarehouseManagementSystem.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations(Guid stockId)
         {
-            var reservations = await _unitOfWork.StockReservations.FindByStockIdAsync(stockId);
+            var reservations = await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId);
 
             return Ok(_mapper.Map<IEnumerable<StockReservationDto>>(reservations));
         }
@@ -37,8 +37,7 @@ namespace WarehouseManagementSystem.API.Controllers
             Guid stockId,
             Guid reservationId)
         {
-            var reservation = await _unitOfWork.StockReservations
-                .FindAsync(reservationId);
+            var reservation = (await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId)).First(r => r.Id == reservationId );
 
             if (reservation == null || reservation.StockId != stockId)
                 return NotFound();

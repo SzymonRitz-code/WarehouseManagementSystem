@@ -10,9 +10,20 @@ public interface IStockService
 
     Task DecreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId);
 
-    Task ReserveStockAsync(Guid stockId, decimal quantity, string reservationSource, Guid createdBy, DateTimeOffset? expiresAt = null);
+    Task<StockReservation> ReserveStockAsync(
+        Guid stockId,
+        decimal quantity,
+        string reservationSource,
+        Guid createdBy,
+        DateTimeOffset? expiresAt = null);
 
-    Task ReleaseReservationAsync(Guid stockId, decimal quantity);
+    Task ReleaseReservationAsync(Guid stockId, Guid reservationId);
+
+    Task CancelReservationAsync(Guid reservationId);
+
+    Task ConfirmReservationAsync(Guid reservationId);
+
+    Task ExpireReservationsAsync();
 
     Task<bool> IsAvailableAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal requiredQuantity, Guid? batchId);
 

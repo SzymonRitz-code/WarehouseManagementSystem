@@ -142,6 +142,17 @@ public class Stock
         Touch();
     }
 
+    public void ConfirmReservation(Guid reservationId)
+    {
+        var reservation = _reservations.FirstOrDefault(r => r.Id == reservationId);
+        if (reservation == null) throw new InvalidOperationException("Reservation not found.");
+
+        // zmniejszamy fizycznie QuantityTotal
+        Decrease(reservation.Quantity);
+        reservation.Release(); // status zmieniony na Released
+        Touch();
+    }
+
     public void CancelReservation(Guid reservationId)
     {
         var reservation = GetReservation(reservationId);
@@ -181,7 +192,10 @@ public class Stock
         if (quantity <= 0)
             throw new ArgumentException("Quantity must be greater than zero.");
     }
-
+    public bool IsAvailable(decimal quantity)
+    {
+        return Available >= quantity;
+    }
     private void Touch()
     {
         LastUpdated = DateTimeOffset.UtcNow;

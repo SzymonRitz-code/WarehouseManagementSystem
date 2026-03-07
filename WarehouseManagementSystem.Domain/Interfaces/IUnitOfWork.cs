@@ -8,7 +8,6 @@ public interface IUnitOfWork : IDisposable
     IProductRepository Products { get; }
     IProductBatchRepository ProductBatches { get; }
     IStockRepository Stocks { get; }
-    IStockReservationRepository StockReservations { get; }
     IDocumentRepository Documents { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

@@ -2,5 +2,5 @@
 {
     public record struct StockReservationReleaseDto(
         Guid StockId,
-        decimal Quantity);
+        Guid ReservationId);
 }
