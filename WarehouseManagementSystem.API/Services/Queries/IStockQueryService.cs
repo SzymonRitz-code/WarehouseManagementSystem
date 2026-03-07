@@ -66,7 +66,7 @@ public interface IStockQueryService
     /// <summary>
     /// Pobiera stany magazynowe w konkretnej strefie magazynowej.
     /// </summary>
-    Task<IReadOnlyList<Stock>> GetByZoneAsync(
+    Task<IReadOnlyList<Stock>> GetByWarehouseZoneAsync(
         Guid warehouseZoneId,
         CancellationToken ct = default);
 

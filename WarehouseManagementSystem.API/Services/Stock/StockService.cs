@@ -171,22 +171,5 @@ public class StockService : IStockService
 
         await _unitOfWork.SaveChangesAsync();
     }
-
-    public async Task<bool> IsAvailableAsync(
-        Guid productId,
-        Guid warehouseId,
-        Guid warehouseZoneId,
-        decimal requiredQuantity,
-        Guid? batchId)
-    {
-        if (requiredQuantity <= 0)
-            throw new ArgumentException("Required quantity must be greater than zero.", nameof(requiredQuantity));
-
-        var stock = await _unitOfWork.Stocks
-            .GetByProductAndWarehouseAsync(productId, warehouseId, warehouseZoneId, batchId);
-
-        return stock != null && stock.IsAvailable(requiredQuantity);
-    }
-
     #endregion
 }

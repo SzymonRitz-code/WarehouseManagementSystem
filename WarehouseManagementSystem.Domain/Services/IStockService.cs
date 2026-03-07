@@ -25,7 +25,5 @@ public interface IStockService
 
     Task ExpireReservationsAsync();
 
-    Task<bool> IsAvailableAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal requiredQuantity, Guid? batchId);
-
     Task MoveStockAsync(Guid productId, Guid sourceWarehouseId, Guid sourceZoneId, Guid targetWarehouseId, Guid targetZoneId, decimal quantity, Guid? batchId);
 }

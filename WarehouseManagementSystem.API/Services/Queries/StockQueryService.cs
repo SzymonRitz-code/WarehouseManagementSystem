@@ -1,8 +1,7 @@
-﻿using WarehouseManagementSystem.Domain.Enums;
+﻿using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Infrastructure.Persistence;
-
 
 namespace WarehouseManagementSystem.API.Services.Queries;
 
@@ -22,18 +21,31 @@ public class StockQueryService : IStockQueryService
             .FirstOrDefaultAsync(s => s.Id == stockId, ct);
     }
 
-    public async Task<Stock?> GetByProductAndWarehouseAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId, CancellationToken ct = default)
+    public async Task<Stock?> GetStockAsync(
+        Guid productId,
+        Guid? batchId,
+        Guid warehouseId,
+        Guid? warehouseZoneId,
+        CancellationToken ct = default)
     {
-        return await _context.Stocks
+        var query = _context.Stocks
             .AsNoTracking()
-            .FirstOrDefaultAsync(s =>
+            .Where(s =>
                 s.ProductId == productId &&
-                s.WarehouseId == warehouseId &&
-                s.WarehouseZoneId == warehouseZoneId &&
-                s.ProductBatchId == batchId, ct);
+                s.WarehouseId == warehouseId);
+
+        if (batchId.HasValue)
+            query = query.Where(s => s.ProductBatchId == batchId.Value);
+
+        if (warehouseZoneId.HasValue)
+            query = query.Where(s => s.WarehouseZoneId == warehouseZoneId.Value);
+
+        return await query.FirstOrDefaultAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Stock>> GetByProductAsync(Guid productId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Stock>> GetByProductAsync(
+        Guid productId,
+        CancellationToken ct = default)
     {
         return await _context.Stocks
             .AsNoTracking()
@@ -41,7 +53,9 @@ public class StockQueryService : IStockQueryService
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Stock>> GetByWarehouseAsync(Guid warehouseId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Stock>> GetByWarehouseAsync(
+        Guid warehouseId,
+        CancellationToken ct = default)
     {
         return await _context.Stocks
             .AsNoTracking()
@@ -49,43 +63,14 @@ public class StockQueryService : IStockQueryService
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Stock>> GetByWarehouseAndZoneAsync(Guid warehouseId, Guid warehouseZoneId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Stock>> GetByWarehouseZoneAsync(
+        Guid warehouseZoneId,
+        CancellationToken ct = default)
     {
         return await _context.Stocks
             .AsNoTracking()
-            .Where(s => s.WarehouseId == warehouseId && s.WarehouseZoneId == warehouseZoneId)
+            .Where(s => s.WarehouseZoneId == warehouseZoneId)
             .ToListAsync(ct);
-    }
-
-    public async Task<decimal> GetAvailableQuantityAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId, CancellationToken ct = default)
-    {
-        var stock = await GetByProductAndWarehouseAsync(productId, warehouseId, warehouseZoneId, batchId, ct);
-        return stock?.Available ?? 0m;
-    }
-
-    public async Task<IReadOnlyList<Stock>> GetStocksWithActiveReservationsAsync(CancellationToken ct = default)
-    {
-        return await _context.Stocks
-            .AsNoTracking()
-            .Where(s => _context.StockReservations
-                .Any(r => r.StockId == s.Id && r.Status == ReservationStatus.Active))
-            .ToListAsync(ct);
-    }
-    public async Task<Stock?> GetStockAsync(
-    Guid productId,
-    Guid? productBatchId,
-    Guid warehouseId,
-    Guid? warehouseZoneId,
-    CancellationToken ct = default)
-    {
-        return await _context.Stocks
-            .AsNoTracking()
-            .FirstOrDefaultAsync(s =>
-                s.ProductId == productId &&
-                s.ProductBatchId == productBatchId &&
-                s.WarehouseId == warehouseId &&
-                s.WarehouseZoneId == warehouseZoneId,
-                ct);
     }
 
     public async Task<IReadOnlyList<Stock>> GetByProductAndWarehouseAsync(
@@ -103,7 +88,7 @@ public class StockQueryService : IStockQueryService
 
     public async Task<decimal> GetAvailableQuantityAsync(
         Guid productId,
-        Guid? productBatchId,
+        Guid? batchId,
         Guid warehouseId,
         Guid? warehouseZoneId,
         CancellationToken ct = default)
@@ -114,8 +99,8 @@ public class StockQueryService : IStockQueryService
                 s.ProductId == productId &&
                 s.WarehouseId == warehouseId);
 
-        if (productBatchId.HasValue)
-            query = query.Where(s => s.ProductBatchId == productBatchId.Value);
+        if (batchId.HasValue)
+            query = query.Where(s => s.ProductBatchId == batchId.Value);
 
         if (warehouseZoneId.HasValue)
             query = query.Where(s => s.WarehouseZoneId == warehouseZoneId.Value);
@@ -141,6 +126,39 @@ public class StockQueryService : IStockQueryService
             .SumAsync(ct);
     }
 
+    public async Task<bool> IsAvailableAsync(
+        Guid productId,
+        Guid warehouseId,
+        Guid warehouseZoneId,
+        decimal requiredQuantity,
+        Guid? batchId,
+        CancellationToken ct = default)
+    {
+        if (requiredQuantity <= 0)
+            throw new ArgumentException("Required quantity must be greater than zero.", nameof(requiredQuantity));
+
+        var available = await _context.Stocks
+            .AsNoTracking()
+            .Where(s =>
+                s.ProductId == productId &&
+                s.WarehouseId == warehouseId &&
+                s.WarehouseZoneId == warehouseZoneId &&
+                s.ProductBatchId == batchId)
+            .Select(s => s.QuantityTotal - s.QuantityReserved)
+            .FirstOrDefaultAsync(ct);
+
+        return available >= requiredQuantity;
+    }
+
+    public async Task<IReadOnlyList<Stock>> GetStocksWithActiveReservationsAsync(
+        CancellationToken ct = default)
+    {
+        return await _context.Stocks
+            .AsNoTracking()
+            .Where(s => s.Reservations.Any(r => r.Status == ReservationStatus.Active))
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<Stock>> GetByTemperatureAsync(
         TemperatureType temperatureType,
         CancellationToken ct = default)
@@ -152,16 +170,6 @@ public class StockQueryService : IStockQueryService
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Stock>> GetByZoneAsync(
-        Guid warehouseZoneId,
-        CancellationToken ct = default)
-    {
-        return await _context.Stocks
-            .AsNoTracking()
-            .Where(s => s.WarehouseZoneId == warehouseZoneId)
-            .ToListAsync(ct);
-    }
-
     public async Task<IReadOnlyList<Stock>> GetAvailableForPickingAsync(
         Guid warehouseId,
         CancellationToken ct = default)
@@ -170,9 +178,8 @@ public class StockQueryService : IStockQueryService
             .AsNoTracking()
             .Where(s =>
                 s.WarehouseId == warehouseId &&
-                s.Available > 0)
-            .OrderByDescending(s => s.Available)
+                (s.QuantityTotal - s.QuantityReserved) > 0)
+            .OrderByDescending(s => s.QuantityTotal - s.QuantityReserved)
             .ToListAsync(ct);
     }
-
 }
