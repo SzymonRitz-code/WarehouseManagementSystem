@@ -17,9 +17,6 @@ namespace WarehouseManagementSystem.Infrastructure.Services
             this.clock = clock;
         }
 
-        public async Task<string> GenerateAsync(DocumentType type)
-            => await GenerateAsync(type, null, clock.UtcNow);
-
         public async Task<string> GenerateAsync(
             DocumentType type,
             Guid? warehouseId,

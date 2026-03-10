@@ -11,20 +11,17 @@ public class DocumentCommandService : IDocumentCommandService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IStockService _stockService;
-    private readonly IStockReservationService _reservationService;
     private readonly IDocumentNumberGenerator _numberGenerator;
     private readonly ISystemClock _clock;
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
         IStockService stockService,
-        IStockReservationService reservationService,
         IDocumentNumberGenerator numberGenerator,
         ISystemClock systemClock)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
-        _reservationService = reservationService ?? throw new ArgumentNullException(nameof(reservationService));
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
         this._clock = systemClock;
     }
@@ -154,7 +151,7 @@ public class DocumentCommandService : IDocumentCommandService
                 foreach (var reservation in reservations)
                 {
                     // Używamy serwisu do zwolnienia rezerwacji
-                    await _reservationService.ReleaseReservationAsync(reservation.Id);
+                    await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id);
                 }
                 break;
 
@@ -163,7 +160,7 @@ public class DocumentCommandService : IDocumentCommandService
 
                 foreach (var reservation in mmReservations)
                 {
-                    await _reservationService.ReleaseReservationAsync(reservation.Id);
+                    await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id);
                 }
                 break;
 

@@ -4,8 +4,6 @@ namespace WarehouseManagementSystem.Domain.Services;
 
 public interface IDocumentNumberGenerator
 {
-    Task<string> GenerateAsync(DocumentType type);
-
     Task<string> GenerateAsync(
         DocumentType type,
         Guid? warehouseId,
