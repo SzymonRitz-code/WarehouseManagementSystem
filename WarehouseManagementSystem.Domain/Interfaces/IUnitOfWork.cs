@@ -9,6 +9,7 @@ public interface IUnitOfWork : IDisposable
     IProductBatchRepository ProductBatches { get; }
     IStockRepository Stocks { get; }
     IDocumentRepository Documents { get; }
+    IWarehouseZoneRepository WarehouseZones { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     int SaveChanges();

@@ -1,5 +1,6 @@
 ﻿using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
+using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence;
@@ -10,8 +11,8 @@ public class UnitOfWork : IUnitOfWork
     private readonly IProductRepository _products;
     private readonly IProductBatchRepository _productBatches;
     private readonly IStockRepository _stockRepository;
-    //private readonly IStockReservationRepository _stockReservationRepository;
     private readonly IDocumentRepository _documentRepository;
+    private readonly IWarehouseZoneRepository _warehouseZoneRepository;
     private readonly WarehouseManagementSystemDbContext _context;
 
     public UnitOfWork(WarehouseManagementSystemDbContext context)
@@ -23,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     public IProductBatchRepository ProductBatches { get { return _productBatches ?? new ProductBatchRepository(_context); } }
     public IStockRepository Stocks { get { return _stockRepository ?? new StockRepository(_context); } }
     public IDocumentRepository Documents { get { return _documentRepository ?? new DocumentRepository(_context); } }
+    public IWarehouseZoneRepository WarehouseZones { get { return _warehouseZoneRepository ?? new WarehouseZoneRepository(_context); } }
 
 
 

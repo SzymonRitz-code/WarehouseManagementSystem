@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
@@ -11,12 +12,12 @@ namespace WarehouseManagementSystem.API.Controllers;
 [ApiController]
 public class WarehouseZonesController : ControllerBase
 {
-    private readonly WarehouseManagementSystemDbContext _unitOfWork;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
 
     // TODO zamienić DbContext na IUnitOfWork
-    public WarehouseZonesController(WarehouseManagementSystemDbContext unitOfWork, IMapper mapper)
+    public WarehouseZonesController(IUnitOfWork unitOfWork, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -25,7 +26,7 @@ public class WarehouseZonesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WarehouseZoneDto>>> GetWarehouseZones()
     {
-        var zones = await _unitOfWork.WarehouseZones.ToListAsync();
+        var zones = await _unitOfWork.WarehouseZones.AllAsync();
         return Ok(_mapper.Map<IEnumerable<WarehouseZoneDto>>(zones));
     }
 
@@ -45,7 +46,7 @@ public class WarehouseZonesController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var zoneEntity = _mapper.Map<WarehouseZone>(zoneDto);
-        _unitOfWork.Entry(zoneEntity).State = EntityState.Modified;
+        _unitOfWork.WarehouseZones.Update(zoneEntity);
 
         try
         {
@@ -78,7 +79,7 @@ public class WarehouseZonesController : ControllerBase
         var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
         if (zone == null) return NotFound();
 
-        _unitOfWork.WarehouseZones.Remove(zone);
+        _unitOfWork.WarehouseZones.Delete(zone);
         await _unitOfWork.SaveChangesAsync();
 
         return NoContent();

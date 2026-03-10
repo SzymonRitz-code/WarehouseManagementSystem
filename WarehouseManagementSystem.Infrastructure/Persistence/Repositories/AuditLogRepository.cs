@@ -14,29 +14,18 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
             _context = context;
         }
 
-        public void Add(AuditLog entity)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Any(Expression<Func<AuditLog, bool>> predicate)
         {
-            throw new NotImplementedException();
+           return _context.AuditLogs.Any(predicate);
         }
-
-        public void Delete(AuditLog entity)
-        {
-            throw new NotImplementedException();
-        }
-
         public AuditLog Find(Guid id)
         {
-            throw new NotImplementedException();
+            return _context.AuditLogs.Find(id);
         }
 
-        public Task<AuditLog> FindAsync(Guid id)
+        public async Task<AuditLog> FindAsync(Guid id)
         {
-            throw new NotImplementedException();
+            return await _context.AuditLogs.FindAsync(id);
         }
 
         public async Task<IEnumerable<AuditLog>> GetFilteredAsync(
@@ -58,16 +47,6 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
             return await query.AsNoTracking()
                 .OrderByDescending(x => x.PerformedAt)
                 .ToListAsync();
-        }
-
-        public AuditLog Update(AuditLog entity)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdateRange(IEnumerable<AuditLog> entities)
-        {
-            throw new NotImplementedException();
         }
     }
 }

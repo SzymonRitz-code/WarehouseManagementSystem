@@ -4,7 +4,7 @@ using WarehouseManagementSystem.Domain.Model.AuditDomain;
 namespace WarehouseManagementSystem.Domain.Interfaces.Repositories
 {
 
-    public interface IAuditLogRepository : IRepository<AuditLog>
+    public interface IAuditLogRepository : IReadOnlyRepository<AuditLog>
     {
         Task<IEnumerable<AuditLog>> GetFilteredAsync(
             string? entityName,
