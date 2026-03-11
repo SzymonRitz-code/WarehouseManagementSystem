@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WarehouseManagementSystem.Test.Repositories
+namespace WarehouseManagementSystem.Test.Integration
 {
-    internal class ProductBatchRepositoryTests
+    internal class FullFlowIntegrationTests
     {
     }
 }

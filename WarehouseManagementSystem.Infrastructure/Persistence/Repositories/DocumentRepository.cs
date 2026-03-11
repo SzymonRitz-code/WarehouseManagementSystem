@@ -5,7 +5,7 @@ using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
 
-internal class DocumentRepository : IDocumentRepository
+public class DocumentRepository : IDocumentRepository
 {
     private readonly WarehouseManagementSystemDbContext _context;
 

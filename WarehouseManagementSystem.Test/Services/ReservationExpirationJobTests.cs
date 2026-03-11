@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseManagementSystem.Domain.Services;
@@ -26,7 +27,7 @@ public class ReservationExpirationJobTests
             .Returns(_serviceProviderMock.Object);
 
         _serviceProviderMock
-            .Setup(x => x.GetService(typeof(IStockReservationService)))
+            .Setup(x => x.GetRequiredService(typeof(IStockReservationService)))
             .Returns(_reservationServiceMock.Object);
 
         return new ReservationExpirationJob(
@@ -37,10 +38,13 @@ public class ReservationExpirationJobTests
     [Fact]
     public async Task RunAsync_ShouldResolveReservationService_AndExpireReservations()
     {
+        // Arrange
         var job = CreateJob();
 
+        // Act
         await job.RunAsync();
 
+        // Assert
         _reservationServiceMock.Verify(
             x => x.ExpireReservationsAsync(),
             Times.Once);
@@ -53,9 +57,7 @@ public class ReservationExpirationJobTests
 
         await job.RunAsync();
 
-        _scopeFactoryMock.Verify(
-            x => x.CreateScope(),
-            Times.Once);
+        _scopeFactoryMock.Verify(x => x.CreateScope(), Times.Once);
     }
 
     [Fact]
@@ -66,7 +68,48 @@ public class ReservationExpirationJobTests
         await job.RunAsync();
 
         _serviceProviderMock.Verify(
-            x => x.GetService(typeof(IStockReservationService)),
+            x => x.GetRequiredService(typeof(IStockReservationService)),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldLogInformation()
+    {
+        var job = CreateJob();
+
+        await job.RunAsync();
+
+        _loggerMock.Verify(
+            x => x.Log(
+                It.Is<LogLevel>(l => l == LogLevel.Information),
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => true),
+                It.IsAny<Exception>(),
+                It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task RunAsync_ShouldNotThrow_WhenReservationServiceThrows()
+    {
+        var job = CreateJob();
+
+        _reservationServiceMock
+            .Setup(x => x.ExpireReservationsAsync())
+            .ThrowsAsync(new InvalidOperationException("Test exception"));
+
+        // Act
+        var exception = await Record.ExceptionAsync(() => job.RunAsync());
+
+        // Assert
+        exception.Should().BeNull(); // nie powinno propagować wyjątku
+        _loggerMock.Verify(
+            x => x.Log(
+                It.Is<LogLevel>(l => l == LogLevel.Error),
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => true),
+                It.IsAny<Exception>(),
+                It.Is<Func<It.IsAnyType, Exception, string>>((v, t) => true)),
             Times.Once);
     }
 }

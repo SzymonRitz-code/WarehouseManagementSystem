@@ -5,7 +5,7 @@ using WarehouseManagementSystem.Domain.Model.AuditDomain;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 {
-    internal class AuditLogRepository : IAuditLogRepository
+    public class AuditLogRepository : IAuditLogRepository
     {
         private readonly WarehouseManagementSystemDbContext _context;
 

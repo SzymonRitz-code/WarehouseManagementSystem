@@ -6,7 +6,7 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
 
-internal class StockRepository : IStockRepository
+public class StockRepository : IStockRepository
 {
     private readonly WarehouseManagementSystemDbContext _context;
 

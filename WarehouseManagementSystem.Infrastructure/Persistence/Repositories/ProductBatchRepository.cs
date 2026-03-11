@@ -5,7 +5,7 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 {
-    internal class ProductBatchRepository : IProductBatchRepository
+    public class ProductBatchRepository : IProductBatchRepository
     {
         private readonly WarehouseManagementSystemDbContext _context;
 

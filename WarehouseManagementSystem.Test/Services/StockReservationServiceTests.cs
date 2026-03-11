@@ -69,7 +69,7 @@ namespace WarehouseManagementSystem.Tests.Services
             var exception = await Record.ExceptionAsync(() => _service.ExpireReservationsAsync());
 
             // Assert
-            exception.Should().BeNull(); // nie powinno rzucać wyjątku
+            exception.Should().BeNull();
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
@@ -89,6 +89,23 @@ namespace WarehouseManagementSystem.Tests.Services
             // Assert
             exception.Should().BeNull();
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ExpireReservationsAsync_ShouldNotCallExpireReservation_WhenNoExpiredReservations()
+        {
+            // Arrange
+            var now = DateTimeOffset.UtcNow;
+            _clockMock.Setup(c => c.UtcNow).Returns(now);
+
+            _unitOfWorkMock.Setup(u => u.Stocks.GetExpiredReservationsAsync(now))
+                .ReturnsAsync(new List<StockReservation>());
+
+            // Act
+            await _service.ExpireReservationsAsync();
+
+            // Assert
+            _unitOfWorkMock.Verify(u => u.Stocks.FindAsync(It.IsAny<Guid>()), Times.Never);
         }
     }
 }

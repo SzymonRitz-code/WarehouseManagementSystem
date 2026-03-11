@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
-using FluentAssertions;
+﻿using FluentAssertions;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
-using Xunit;
 
 namespace WarehouseManagementSystem.Tests.Domain.WarehouseDomain;
 

@@ -5,7 +5,7 @@ using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 {
-    internal class ProductRepository : IProductRepository
+    public class ProductRepository : IProductRepository
     {
         private readonly WarehouseManagementSystemDbContext _context;
 

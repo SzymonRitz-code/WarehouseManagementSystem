@@ -65,24 +65,23 @@ namespace WarehouseManagementSystem.Tests.Services
         {
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 5m);
 
-            var stockServiceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
-            stockServiceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
-                .ReturnsAsync(stock);
+            var serviceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
+            serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
+                       .ReturnsAsync(stock);
 
-            await stockServiceMock.Object.IncreaseStockAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, 10, null);
+            await serviceMock.Object.IncreaseStockAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, 10, null);
 
             stock.QuantityTotal.Should().Be(15m);
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        [Fact]
-        public async Task IncreaseStockAsync_ShouldThrow_WhenQuantityIsZeroOrNegative()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-5)]
+        public async Task IncreaseStockAsync_ShouldThrow_WhenQuantityIsInvalid(decimal qty)
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.IncreaseStockAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0, null));
-
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.IncreaseStockAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), -5, null));
+                _service.IncreaseStockAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), qty, null));
         }
 
         #endregion
@@ -94,18 +93,18 @@ namespace WarehouseManagementSystem.Tests.Services
         {
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 20m);
 
-            var stockServiceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
-            stockServiceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
-                .ReturnsAsync(stock);
+            var serviceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
+            serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
+                       .ReturnsAsync(stock);
 
-            await stockServiceMock.Object.DecreaseStockAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, 5, null);
+            await serviceMock.Object.DecreaseStockAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, 5, null);
 
             stock.QuantityTotal.Should().Be(15m);
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Fact]
-        public async Task DecreaseStockAsync_ShouldThrow_WhenQuantityIsZeroOrNegative()
+        public async Task DecreaseStockAsync_ShouldThrow_WhenQuantityIsInvalid()
         {
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 _service.DecreaseStockAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0, null));
@@ -127,13 +126,13 @@ namespace WarehouseManagementSystem.Tests.Services
             var sourceStock = new Stock(productId, sourceWarehouseId, sourceZoneId, null, 20m);
             var targetStock = new Stock(productId, targetWarehouseId, targetZoneId, null, 5m);
 
-            var stockServiceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
-            stockServiceMock.Setup(s => s.GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, null))
-                .ReturnsAsync(sourceStock);
-            stockServiceMock.Setup(s => s.GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, null))
-                .ReturnsAsync(targetStock);
+            var serviceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
+            serviceMock.Setup(s => s.GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, null))
+                       .ReturnsAsync(sourceStock);
+            serviceMock.Setup(s => s.GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, null))
+                       .ReturnsAsync(targetStock);
 
-            await stockServiceMock.Object.MoveStockAsync(productId, sourceWarehouseId, sourceZoneId, targetWarehouseId, targetZoneId, 10, null);
+            await serviceMock.Object.MoveStockAsync(productId, sourceWarehouseId, sourceZoneId, targetWarehouseId, targetZoneId, 10, null);
 
             sourceStock.QuantityTotal.Should().Be(10m);
             targetStock.QuantityTotal.Should().Be(15m);
