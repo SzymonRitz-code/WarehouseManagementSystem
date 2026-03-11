@@ -87,12 +87,13 @@ public class Warehouse
     {
         if (!IsActive)
             return;
+        if (_zones != null)
+            if (_zones.Any())
+                throw new InvalidOperationException("Cannot deactivate warehouse with active zones.");
 
-        if (_zones.Any())
-            throw new InvalidOperationException("Cannot deactivate warehouse with active zones.");
-
-        if (Stocks.Any())
-            throw new InvalidOperationException("Cannot deactivate warehouse containing stock.");
+        if (Stocks != null)
+            if (Stocks.Any())
+                throw new InvalidOperationException("Cannot deactivate warehouse containing stock.");
 
         IsActive = false;
     }

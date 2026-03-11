@@ -18,7 +18,7 @@ public class StockService : IStockService
 
     #region Stock Creation / Retrieval
 
-    public async Task<Stock> GetOrCreateAsync(
+    public virtual async Task<Stock> GetOrCreateAsync(
         Guid productId,
         Guid warehouseId,
         Guid warehouseZoneId,

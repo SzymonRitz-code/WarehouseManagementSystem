@@ -147,8 +147,9 @@ public class StockTests
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 10m);
         stock.CreateReservation(4m, "test", Guid.NewGuid());
 
+        stock.IsAvailable(6m).Should().BeTrue();
         stock.IsAvailable(5m).Should().BeTrue();
-        stock.IsAvailable(6m).Should().BeFalse();
+        stock.IsAvailable(7m).Should().BeFalse();
     }
 
     [Fact]

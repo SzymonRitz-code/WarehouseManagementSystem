@@ -93,7 +93,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
 
             Action act = () => stock.Decrease(25m); // > available
             act.Should().Throw<InvalidOperationException>()
-                .WithMessage("*Not enough stock*");
+                .WithMessage("Not enough available stock.");
         }
 
         [Fact]

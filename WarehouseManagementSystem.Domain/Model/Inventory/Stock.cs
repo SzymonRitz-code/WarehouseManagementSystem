@@ -66,6 +66,14 @@ public class Stock
 
         Touch();
     }
+    public void IncreaseReserved(decimal quantity)
+    {
+        ValidatePositive(quantity);
+
+        _quantityReserved += quantity;
+
+        Touch();
+    }
 
     public void Decrease(decimal quantity)
     {
@@ -75,7 +83,16 @@ public class Stock
             throw new InvalidOperationException("Not enough available stock.");
 
         _quantityTotal -= quantity;
+        Touch();
+    }
+    public void DecreaseReserved(decimal quantity)
+    {
+        ValidatePositive(quantity);
 
+        if (quantity > _quantityReserved)
+            throw new InvalidOperationException("Not enough reserved stock to decrease.");
+
+        _quantityReserved -= quantity;
         Touch();
     }
 
@@ -98,9 +115,16 @@ public class Stock
         Guid createdBy,
         DateTimeOffset? expiresAt = null)
     {
-        ValidatePositive(quantity);
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity cannot be negative or zero.", nameof(quantity));
 
-        if (quantity > Available)
+        if (string.IsNullOrWhiteSpace(source))
+            throw new ArgumentException("Source must be provided.", nameof(source));
+
+        // Obliczamy ile jest dostępne na rezerwacje
+        var availableToReserve = QuantityTotal - _quantityReserved;
+
+        if (quantity > availableToReserve)
             throw new InvalidOperationException("Not enough stock available to reserve.");
 
         var reservation = new StockReservation(
@@ -144,12 +168,23 @@ public class Stock
 
     public void ConfirmReservation(Guid reservationId)
     {
-        var reservation = _reservations.FirstOrDefault(r => r.Id == reservationId);
-        if (reservation == null) throw new InvalidOperationException("Reservation not found.");
+        var reservation = GetReservation(reservationId);
+        if (reservation == null)
+            throw new InvalidOperationException("Reservation not found.");
 
-        // zmniejszamy fizycznie QuantityTotal
-        Decrease(reservation.Quantity);
-        reservation.Release(); // status zmieniony na Released
+        // zmniejszamy fizycznie ilość w magazynie
+        //Decrease(reservation.Quantity);
+        _quantityTotal -= reservation.Quantity;
+
+        // zmniejszamy ilość zarezerwowaną
+        //DecreaseReserved(reservation.Quantity);
+        _quantityReserved -= reservation.Quantity;
+
+        // ustawiamy rezerwację jako potwierdzoną
+        reservation.Fulfill();
+
+        _reservations.Remove(reservation);
+
         Touch();
     }
 

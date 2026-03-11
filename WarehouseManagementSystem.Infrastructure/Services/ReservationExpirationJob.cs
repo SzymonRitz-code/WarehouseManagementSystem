@@ -5,8 +5,7 @@ using WarehouseManagementSystem.Domain.Services;
 
 namespace WarehouseManagementSystem.Infrastructure.Services;
 
-public class ReservationExpirationJob
-    : BackgroundService
+public class ReservationExpirationJob : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ReservationExpirationJob> _logger;
@@ -42,13 +41,20 @@ public class ReservationExpirationJob
 
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
-        using var scope = _scopeFactory.CreateScope();
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
 
-        var reservationService =
-            scope.ServiceProvider.GetRequiredService<IStockReservationService>();
+            var reservationService =
+                scope.ServiceProvider.GetRequiredService<IStockReservationService>();
 
-        await reservationService.ExpireReservationsAsync();
+            await reservationService.ExpireReservationsAsync();
 
-        _logger.LogInformation("Expired reservations processed");
+            _logger.LogInformation("Expired reservations processed");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while processing expired reservations");
+        }
     }
 }

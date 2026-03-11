@@ -113,6 +113,9 @@ public class Document
     }
     public void StartTransfer(Guid userId, DateTimeOffset now)
     {
+        if (Status == DocumentStatus.Cancelled)
+            throw new InvalidOperationException("Cancelled document cannot be transferred.");
+
         if (Status != DocumentStatus.Confirmed)
             throw new InvalidOperationException("Only confirmed document can be transferred.");
 
@@ -120,6 +123,7 @@ public class Document
         TransferStartedAt = now;
         TransferStartedById = userId;
     }
+
     public void Confirm(Guid confirmedById)
     {
         if (!_items.Any())
@@ -128,6 +132,13 @@ public class Document
         if (Status != DocumentStatus.Draft)
             throw new InvalidOperationException("Only draft document can be confirmed.");
 
+        Status = DocumentStatus.Confirmed;
+        ConfirmedById = confirmedById;
+        ConfirmedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void CompleteTransfer(Guid confirmedById)
+    {
         if (Status != DocumentStatus.Transfer)
             throw new InvalidOperationException("Only transferred document can be completed.");
 

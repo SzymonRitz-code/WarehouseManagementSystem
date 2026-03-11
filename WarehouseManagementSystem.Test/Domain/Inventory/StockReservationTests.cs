@@ -1,6 +1,9 @@
 ﻿using FluentAssertions;
+using Moq;
+using System.Threading;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain;
 
@@ -8,6 +11,7 @@ public class StockReservationTests
 {
     private readonly Guid _stockId = Guid.NewGuid();
     private readonly Guid _userId = Guid.NewGuid();
+    private readonly Mock<ISystemClock> _clockMock = new();
 
     private StockReservation CreateReservation(
         decimal quantity = 10,
@@ -183,16 +187,27 @@ public class StockReservationTests
     {
         var reservation = CreateReservation();
 
-        reservation.IsExpired().Should().BeFalse();
+        reservation.IsExpired(_clockMock.Object.UtcNow).Should().BeFalse();
     }
 
     [Fact]
     public void IsExpired_Should_ReturnTrue_WhenDatePassed()
     {
-        var reservation = CreateReservation(
-            expires: DateTimeOffset.UtcNow.AddMinutes(-1));
+        // Arrange
+        var expiresAt = DateTimeOffset.UtcNow.AddSeconds(1);
 
-        reservation.IsExpired().Should().BeTrue();
+        var reservation = new StockReservation(
+            _stockId,
+            quantity: 10,
+            reservationSource: "ORDER",
+            createdBy: _userId,
+            expiresAt: expiresAt); // expiration po CreatedAt
+        var now = DateTimeOffset.UtcNow;
+        // Act
+        var result = reservation.IsExpired(now.AddSeconds(1));
+
+        // Assert
+        result.Should().BeTrue();
     }
 
     [Fact]

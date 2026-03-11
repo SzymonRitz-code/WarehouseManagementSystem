@@ -3,6 +3,7 @@ using Moq;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
+using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
@@ -46,18 +47,25 @@ public class DocumentCommandServiceTests
     [Fact]
     public async Task CreateDocumentAsync_ShouldCreateDocumentAndSave()
     {
+        // Arrange
         var draftItems = new List<DocumentItemDraft>
         {
             new(Guid.NewGuid(), 5, null, Guid.NewGuid(), null)
         };
 
         _numberGeneratorMock
-            .Setup(x => x.GenerateAsync(
-                DocumentType.PZ,
-                It.IsAny<Guid>(),
-                It.IsAny<DateTime>()))
+            .Setup(x => x.GenerateAsync(DocumentType.PZ, It.IsAny<Guid>(), It.IsAny<DateTimeOffset>()))
             .ReturnsAsync("DOC-001");
 
+        // Mock repozytorium dokumentów
+        var documentRepoMock = new Mock<IDocumentRepository>();
+        _unitOfWorkMock.Setup(u => u.Documents).Returns(documentRepoMock.Object);
+
+        _unitOfWorkMock
+            .Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        // Act
         var document = await _service.CreateDocumentAsync(
             DocumentType.PZ,
             Guid.NewGuid(),
@@ -65,8 +73,9 @@ public class DocumentCommandServiceTests
             draftItems,
             DateTime.UtcNow);
 
-        _unitOfWorkMock.Verify(x => x.Documents.Add(document), Times.Once);
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        // Assert
+        documentRepoMock.Verify(r => r.Add(document), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         document.Number.Should().Be("DOC-001");
         document.Items.Should().HaveCount(1);
@@ -74,8 +83,9 @@ public class DocumentCommandServiceTests
     }
 
     [Fact]
-    public async Task StartTransferAsync_ShouldStartTransferAndSave()
+    public async Task StartTransferAsync_ShouldThrow_WhenDocumentNotConfirmed()
     {
+        // Arrange
         var doc = new Document(
             "DOC-001",
             DateTime.UtcNow,
@@ -85,18 +95,47 @@ public class DocumentCommandServiceTests
             null,
             null);
 
-        var now = DateTimeOffset.UtcNow;
-
         _unitOfWorkMock
             .Setup(x => x.Documents.FindAsync(doc.Id))
             .ReturnsAsync(doc);
 
-        _clockMock
-            .Setup(x => x.UtcNow)
-            .Returns(now);
+        // Act
+        Func<Task> act = () => _service.StartTransferAsync(doc.Id, Guid.NewGuid());
 
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Only confirmed document can be transferred.");
+    }
+
+    [Fact]
+    public async Task StartTransferAsync_ShouldStartTransferAndSave_WhenDocumentConfirmed()
+    {
+        var productId = Guid.NewGuid();
+        var zoneId = Guid.NewGuid();
+        // Arrange
+        var confirmedBy = Guid.NewGuid();
+        var doc = new Document(
+            "DOC-001",
+            DateTime.UtcNow,
+            DocumentType.PZ,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            null,
+            null);
+        doc.AddItem(new DocumentItem(productId, 5, null, zoneId, null));
+
+        doc.Confirm(confirmedBy); // zatwierdzamy dokument
+
+        var now = DateTimeOffset.UtcNow;
+        _unitOfWorkMock.Setup(x => x.Documents.FindAsync(doc.Id)).ReturnsAsync(doc);
+        _clockMock.Setup(x => x.UtcNow).Returns(now);
+
+        // Act
         await _service.StartTransferAsync(doc.Id, Guid.NewGuid());
 
+        // Assert
+        doc.Status.Should().Be(DocumentStatus.Transfer);
+        doc.TransferStartedAt.Should().BeCloseTo(now, TimeSpan.FromSeconds(1));
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 

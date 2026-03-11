@@ -24,9 +24,26 @@ namespace WarehouseManagementSystem.Tests.Repositories
             var context = CreateDbContext();
             var repo = new AuditLogRepository(context);
 
-            var log1 = new AuditLog { Id = Guid.NewGuid(), EntityName = "Entity1", PerformedAt = DateTime.UtcNow.AddMinutes(-1) };
-            var log2 = new AuditLog { Id = Guid.NewGuid(), EntityName = "Entity2", PerformedAt = DateTime.UtcNow };
+            var log1 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test1",
+                Operation = "Operation1",
+                EntityName = "Entity1",
+                PerformedAt = DateTime.UtcNow.AddMinutes(-1)
+            };
+            var log2 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test2",
+                Operation = "Operation2",
+                EntityName = "Entity2",
+                PerformedAt = DateTime.UtcNow
+            };
             context.AuditLogs.AddRange(log1, log2);
+
             await context.SaveChangesAsync();
 
             // Act
@@ -45,8 +62,26 @@ namespace WarehouseManagementSystem.Tests.Repositories
             var repo = new AuditLogRepository(context);
 
             var entityId = Guid.NewGuid();
-            var log1 = new AuditLog { Id = Guid.NewGuid(), EntityId = entityId, PerformedAt = DateTime.UtcNow };
-            var log2 = new AuditLog { Id = Guid.NewGuid(), EntityId = Guid.NewGuid(), PerformedAt = DateTime.UtcNow };
+            var log1 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test1",
+                Operation = "Operation1",
+                EntityName = "Entity1",
+                EntityId = entityId,
+                PerformedAt = DateTime.UtcNow
+            };
+            var log2 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test2",
+                Operation = "Operation2",
+                EntityName = "Entity2",
+                EntityId = Guid.NewGuid(),
+                PerformedAt = DateTime.UtcNow
+            };
             context.AuditLogs.AddRange(log1, log2);
             await context.SaveChangesAsync();
 
@@ -66,8 +101,26 @@ namespace WarehouseManagementSystem.Tests.Repositories
             var repo = new AuditLogRepository(context);
 
             var userId = Guid.NewGuid();
-            var log1 = new AuditLog { Id = Guid.NewGuid(), PerformedById = userId, PerformedAt = DateTime.UtcNow };
-            var log2 = new AuditLog { Id = Guid.NewGuid(), PerformedById = Guid.NewGuid(), PerformedAt = DateTime.UtcNow };
+            var log1 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test1",
+                Operation = "Operation1",
+                EntityName = "Entity1",
+                PerformedById = userId,
+                PerformedAt = DateTime.UtcNow
+            };
+            var log2 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test2",
+                Operation = "Operation2",
+                EntityName = "Entity2",
+                PerformedById = Guid.NewGuid(),
+                PerformedAt = DateTime.UtcNow
+            };
             context.AuditLogs.AddRange(log1, log2);
             await context.SaveChangesAsync();
 
@@ -92,6 +145,9 @@ namespace WarehouseManagementSystem.Tests.Repositories
             var log1 = new AuditLog
             {
                 Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test1",
+                Operation = "Operation1",
                 EntityName = "Entity1",
                 EntityId = entityId,
                 PerformedById = userId,
@@ -100,7 +156,10 @@ namespace WarehouseManagementSystem.Tests.Repositories
             var log2 = new AuditLog
             {
                 Id = Guid.NewGuid(),
-                EntityName = "Entity1",
+                OldValues = "Test",
+                NewValues = "Test2",
+                Operation = "Operation2",
+                EntityName = "Entity2",
                 EntityId = Guid.NewGuid(),
                 PerformedById = userId,
                 PerformedAt = DateTime.UtcNow
@@ -127,8 +186,24 @@ namespace WarehouseManagementSystem.Tests.Repositories
             var context = CreateDbContext();
             var repo = new AuditLogRepository(context);
 
-            var log1 = new AuditLog { Id = Guid.NewGuid(), PerformedAt = DateTime.UtcNow.AddMinutes(-10) };
-            var log2 = new AuditLog { Id = Guid.NewGuid(), PerformedAt = DateTime.UtcNow };
+            var log1 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test1",
+                Operation = "Operation1",
+                EntityName = "Entity1",
+                PerformedAt = DateTime.UtcNow.AddMinutes(-10)
+            };
+            var log2 = new AuditLog
+            {
+                Id = Guid.NewGuid(),
+                OldValues = "Test",
+                NewValues = "Test2",
+                Operation = "Operation2",
+                EntityName = "Entity2",
+                PerformedAt = DateTime.UtcNow
+            };
             context.AuditLogs.AddRange(log1, log2);
             await context.SaveChangesAsync();
 

@@ -27,7 +27,7 @@ public class ReservationExpirationJobTests
             .Returns(_serviceProviderMock.Object);
 
         _serviceProviderMock
-            .Setup(x => x.GetRequiredService(typeof(IStockReservationService)))
+            .Setup(x => x.GetService(typeof(IStockReservationService)))
             .Returns(_reservationServiceMock.Object);
 
         return new ReservationExpirationJob(
@@ -68,7 +68,7 @@ public class ReservationExpirationJobTests
         await job.RunAsync();
 
         _serviceProviderMock.Verify(
-            x => x.GetRequiredService(typeof(IStockReservationService)),
+            x => x.GetService(typeof(IStockReservationService)),
             Times.Once);
     }
 

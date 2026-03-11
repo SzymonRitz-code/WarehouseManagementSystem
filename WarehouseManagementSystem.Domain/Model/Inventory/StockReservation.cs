@@ -106,12 +106,12 @@ public class StockReservation
         Status = ReservationStatus.Expired;
     }
 
-    public bool IsExpired()
+    public bool IsExpired(DateTimeOffset now)
     {
         if (!ExpiresAt.HasValue)
             return false;
 
-        return DateTimeOffset.UtcNow >= ExpiresAt.Value;
+        return now >= ExpiresAt.Value;
     }
 
     private void EnsureActive()

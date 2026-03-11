@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Moq;
 using WarehouseManagementSystem.API.Services.Stocks;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Infrastructure.Services;
@@ -205,22 +206,36 @@ namespace WarehouseManagementSystem.Tests.Services
         [Fact]
         public async Task ExpireReservationsAsync_ShouldExpireAllExpiredReservations()
         {
+            // Arrange
             var now = DateTimeOffset.UtcNow;
             _clockMock.Setup(c => c.UtcNow).Returns(now);
 
-            var reservation1 = new StockReservation(Guid.NewGuid(), 5, "Test", Guid.NewGuid(), now.AddDays(-1));
-            var reservation2 = new StockReservation(Guid.NewGuid(), 3, "Test", Guid.NewGuid(), now.AddHours(-1));
-
+            // Tworzymy stocki
             var stock1 = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 10m);
             var stock2 = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 5m);
 
+            // Tworzymy rezerwacje **przez stock**, aby trafiały do _reservations
+            var reservation1 = stock1.CreateReservation(5, "Test1", Guid.NewGuid(), now.AddMinutes(1));
+            var reservation2 = stock2.CreateReservation(3, "Test2", Guid.NewGuid(), now.AddMinutes(1));
+
+            // Mock UnitOfWork, aby zwracał faktycznie istniejące rezerwacje
             _unitOfWorkMock.Setup(u => u.Stocks.GetExpiredReservationsAsync(now))
                 .ReturnsAsync(new List<StockReservation> { reservation1, reservation2 });
 
-            _unitOfWorkMock.Setup(u => u.Stocks.FindAsync(reservation1.StockId)).ReturnsAsync(stock1);
-            _unitOfWorkMock.Setup(u => u.Stocks.FindAsync(reservation2.StockId)).ReturnsAsync(stock2);
+            _unitOfWorkMock.Setup(u => u.Stocks.FindAsync(reservation1.StockId))
+                .ReturnsAsync(stock1);
+            _unitOfWorkMock.Setup(u => u.Stocks.FindAsync(reservation2.StockId))
+                .ReturnsAsync(stock2);
 
+            // Act
             await _service.ExpireReservationsAsync();
+
+            // Assert
+            reservation1.Status.Should().Be(ReservationStatus.Expired);
+            reservation2.Status.Should().Be(ReservationStatus.Expired);
+
+            stock1.QuantityReserved.Should().Be(0);
+            stock2.QuantityReserved.Should().Be(0);
 
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }

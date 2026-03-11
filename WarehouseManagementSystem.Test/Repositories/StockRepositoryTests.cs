@@ -81,14 +81,14 @@ public class StockRepositoryTests
 
         var now = DateTimeOffset.UtcNow;
 
-        var expired = new StockReservation(stock.Id, 5, "TEST", Guid.NewGuid(), now.AddMinutes(-1));
+        var expired = new StockReservation(stock.Id, 5, "TEST", Guid.NewGuid(), now.AddMinutes(1));
         var active = new StockReservation(stock.Id, 5, "TEST", Guid.NewGuid(), now.AddMinutes(10));
 
         context.StockReservations.AddRange(expired, active);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await repo.GetExpiredReservationsAsync(now);
+        var result = await repo.GetExpiredReservationsAsync(now.AddMinutes(5));
 
         // Assert
         result.Should().HaveCount(1);

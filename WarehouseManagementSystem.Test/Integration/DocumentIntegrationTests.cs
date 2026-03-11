@@ -244,11 +244,10 @@ public class DocumentIntegrationTests
             .WithMessage("Only confirmed document can be transferred.");
 
         // Confirm and cancel edge case
-        document.Confirm(createdBy);
         document.Cancel();
         Action actCancelled = () => document.StartTransfer(transferUserId, now);
 
         actCancelled.Should().Throw<InvalidOperationException>()
-            .WithMessage("Only confirmed document can be transferred.");
+            .WithMessage("Cancelled document cannot be transferred.");
     }
 }
