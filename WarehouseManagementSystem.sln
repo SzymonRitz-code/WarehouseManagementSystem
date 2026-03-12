@@ -1,17 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36930.0 d17.14
+VisualStudioVersion = 17.14.36930.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.API", "WarehouseManagementSystem.API\WarehouseManagementSystem.API.csproj", "{96FF4A98-26A9-427C-86EA-5B443337D9E3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.DataAccessLayer", "WarehouseManagementSystem.DataAccessLayer\WarehouseManagementSystem.DataAccessLayer.csproj", "{AEE45907-00FB-4657-8AAB-0420EBC8A198}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.Domain", "WarehouseManagementSystem.Domain\WarehouseManagementSystem.Domain.csproj", "{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.Idp", "WarehouseManagementSystem.Idp\WarehouseManagementSystem.Idp.csproj", "{A8E02431-F272-41E2-BA9B-7938F4DB9E62}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.Test", "WarehouseManagementSystem.Test\WarehouseManagementSystem.Test.csproj", "{052A0115-B638-41CA-8221-7E2D55D94F97}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.Infrastructure", "WarehouseManagementSystem.Infrastructure\WarehouseManagementSystem.Infrastructure.csproj", "{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +28,6 @@ Global
 		{96FF4A98-26A9-427C-86EA-5B443337D9E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96FF4A98-26A9-427C-86EA-5B443337D9E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96FF4A98-26A9-427C-86EA-5B443337D9E3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AEE45907-00FB-4657-8AAB-0420EBC8A198}.Release|Any CPU.Build.0 = Release|Any CPU
 		{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86E884EE-EBC7-46DE-84E0-EC67BD9C13BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +40,10 @@ Global
 		{052A0115-B638-41CA-8221-7E2D55D94F97}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{052A0115-B638-41CA-8221-7E2D55D94F97}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{052A0115-B638-41CA-8221-7E2D55D94F97}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
