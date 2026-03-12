@@ -2,24 +2,20 @@
   <app-page-breadcrumb pageTitle="Product Form" />
 
   <app-component-card title="Default Inputs">
-    <div class="space-y-6">
-      <form>
-        
-      </form>
-      <!-- <form #form="ngForm">
+    <form [formGroup]="productForm"(ngSubmit)="onSave()">
+      <div class="space-y-6">
         <div>
           <app-label for="inputName">Name</app-label>
-          <app-input-field type="text" name="name" [(ngModel)]="product.name" [required]="true" [maxlength]="10"
+          <app-input-field id="inputName" type="text" name="name" formControlName="name" [required]="true" [maxlength]="10"
             hint="Enter product name"></app-input-field>
 
           <div>
             <app-label for="inputSKU">SKU</app-label>
-            <app-input-field id="inputSKU" name="sku" [(ngModel)]="product.sku" #skuInput="ngModel"
-              [required]="true"></app-input-field>
+            <app-input-field id="inputSKU" name="sku" formControlName="sku" [required]="true"></app-input-field>
           </div>
         </div>
-      </form> -->
-    </div>
-    <app-form-actions (back)="onBack()" (save)="onSave()" />
+      </div>
+      <app-form-actions (back)="onBack()" [disabled]="productForm.invalid"/>
+    </form>
   </app-component-card>
 </div>

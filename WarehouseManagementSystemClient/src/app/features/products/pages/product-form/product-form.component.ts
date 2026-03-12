@@ -7,7 +7,7 @@ import { FormActionsComponent } from "../../../../shared/components/form/form-ac
 import { Router } from '@angular/router';
 import { Product } from '../../model/product';
 import { CreateProduct } from '../../model/create-product';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -20,20 +20,18 @@ import { CommonModule } from '@angular/common';
     InputFieldComponent,
     FormActionsComponent,
     ReactiveFormsModule,
-    FormsModule,
     CommonModule],
   templateUrl: './product-form.component.html'
 })
 export class ProductFormComponent implements OnInit {
+
+  constructor(private router: Router, private fb: FormBuilder) { }
+
   @Input() id: string | undefined;
   product!: Product | CreateProduct;
   productForm!: FormGroup;
 
   ngOnInit(): void {
-    this.productForm = new FormGroup({
-      name: new FormControl('', Validators.required),
-      sku: new FormControl('', Validators.required)
-    })
     if (this.id === undefined) {
       this.product = {
         name: '',
@@ -46,11 +44,16 @@ export class ProductFormComponent implements OnInit {
         sku: 'sku'
       } as Product
     }
+    this.productForm = this.fb.nonNullable.group({
+      name: ['', Validators.required],
+      sku: ['', Validators.required]
+    })
+    // this.name.setValue(this.product.name)
+    // this.sku.setValue(this.product.sku)
   }
 
-
-  constructor(private router: Router) { }
   onSave() {
+    this.product = this.productForm.value
     console.log(`Dodano produkt: ${this.product?.name} ${this.product?.sku}`)
     this.router.navigateByUrl('/products/detail');
   }
