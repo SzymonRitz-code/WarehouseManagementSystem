@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, ElementRef, QueryList, ViewChildren } fro
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
 import { combineLatest, Subscription } from 'rxjs';
-import { SidebarService } from '../../services/sidebar-service';
+import { SidebarService } from '../../features/services/sidebar-service';
 
 interface NavSubItem {
   name: string;

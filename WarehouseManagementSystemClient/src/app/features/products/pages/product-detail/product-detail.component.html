@@ -1,1 +1,23 @@
-<p>product-detail works!</p>
+<div>
+  <app-page-breadcrumb pageTitle="Product Details" />
+
+  <app-component-card title="Product Information">
+    <div class="space-y-6">
+      <div>
+        <app-label for="productName">Name</app-label>
+        <app-input-detail id="productName" [value]="product?.name">
+        </app-input-detail>
+      </div>
+
+      <div>
+        <app-label for="productSku">SKU</app-label>
+        <app-input-detail id="productSku" [value]="product?.sku">
+        </app-input-detail>
+      </div>
+    </div>
+
+    <!-- sekcja akcji -->
+    <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()"> </app-detail-actions>
+
+  </app-component-card>
+</div>

@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-form-actions',
+  selector: 'app-detail-actions',
   imports: [],
-  templateUrl: './form-actions.component.html'
+  templateUrl: './detail-actions.component.html'
 })
-export class FormActionsComponent {
+export class DetailActionsComponent {
+
   @Input() backLabel = 'Back';
-  @Input() actionLabel = 'Save';
+  @Input() actionLabel = 'Edit';
   @Input() disabled: boolean | null = true;
   @Output() back = new EventEmitter();
   @Output() action = new EventEmitter();

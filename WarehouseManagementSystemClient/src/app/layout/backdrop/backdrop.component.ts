@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarService } from '../../services/sidebar-service';
+import { SidebarService } from '../../features/services/sidebar-service';
 
 @Component({
   selector: 'app-backdrop',

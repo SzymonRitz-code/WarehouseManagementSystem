@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AppHeaderComponent } from '../app-header/app-header.component';
 import { AppSidebarComponent } from '../app-sidebar/app-sidebar.component';
 import { BackdropComponent } from '../backdrop/backdrop.component';
-import { SidebarService } from '../../services/sidebar-service';
+import { SidebarService } from '../../features/services/sidebar-service';
 
 @Component({
   selector: 'app-layout',

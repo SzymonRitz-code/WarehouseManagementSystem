@@ -2,12 +2,12 @@
   <app-page-breadcrumb pageTitle="Product Form" />
 
   <app-component-card title="Default Inputs">
-    <form [formGroup]="productForm"(ngSubmit)="onSave()">
+    <form [formGroup]="productForm" (ngSubmit)="onSave()">
       <div class="space-y-6">
         <div>
           <app-label for="inputName">Name</app-label>
-          <app-input-field id="inputName" type="text" name="name" formControlName="name" [required]="true" [maxlength]="10"
-            hint="Enter product name"></app-input-field>
+          <app-input-field id="inputName" type="text" name="name" formControlName="name" [required]="true"
+            [maxlength]="10" hint="Enter product name"></app-input-field>
 
           <div>
             <app-label for="inputSKU">SKU</app-label>
@@ -15,7 +15,7 @@
           </div>
         </div>
       </div>
-      <app-form-actions (back)="onBack()" [disabled]="productForm.invalid"/>
+      <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="productForm.invalid" />
     </form>
   </app-component-card>
 </div>

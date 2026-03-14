@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { SidebarService } from '../../services/sidebar-service';
+import { SidebarService } from '../../features/services/sidebar-service';
 
 @Component({
   selector: 'app-header',

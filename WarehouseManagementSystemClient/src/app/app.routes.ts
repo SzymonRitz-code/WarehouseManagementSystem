@@ -44,6 +44,7 @@ export const routes: Routes = [
         children: [
           { path: '', component: DocumentListComponent },
           { path: 'form', component: DocumentFormComponent },
+          { path: 'form/:id', component: DocumentFormComponent },
           { path: 'detail/:id', component: DocumentDetailComponent },
           { path: 'items', component: DocumentItemsComponent }
         ]
@@ -63,6 +64,7 @@ export const routes: Routes = [
           { path: '', component: ProductListComponent },
           { path: 'detail/:id', component: ProductDetailComponent },
           { path: 'form', component: ProductFormComponent },
+          { path: 'form/:id', component: ProductFormComponent },
         ],
       },
       // Stocks
