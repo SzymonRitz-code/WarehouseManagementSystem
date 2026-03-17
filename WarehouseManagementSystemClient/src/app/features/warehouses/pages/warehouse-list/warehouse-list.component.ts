@@ -1,0 +1,39 @@
+import { Component, OnInit } from '@angular/core';
+import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
+import { TableComponent } from "../../../../shared/components/table/table.component";
+import { WarehouseService } from '../../../services/warehouse-service';
+import { Warehouse } from '../../model/warehouse';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-warehouse-list',
+  standalone: true,
+  imports: [ComponentCardComponent, TableComponent],
+  templateUrl: './warehouse-list.component.html'
+})
+export class WarehouseListComponent implements OnInit {
+
+  warehouses: Warehouse[] = [];
+
+  constructor(private warehouseService: WarehouseService, private router: Router) { }
+
+  ngOnInit(): void {
+    this.warehouses = this.warehouseService.warehouses;
+  }
+  columns = [
+    { key: 'id', label: 'ID', sortable: true },
+    { key: 'code', label: 'Code', sortable: true },
+    { key: 'WarehouseName', label: 'Warehouse Name', sortable: true },
+    { key: 'country', label: 'Country', sortable: true },
+    { key: 'address', label: 'Address', sortable: true },
+    { key: 'zonesCount', label: 'Zones Count', sortable: true },
+    { key: 'totalStock', label: 'Total Stock', sortable: true },
+    { key: 'totalQty', label: 'Total Qty', sortable: true },
+    { key: 'Status', label: 'Status', sortable: true },
+    { key: 'createdAt', label: 'CreatedAt', sortable: true, type: 'date' },
+    { key: 'actions', label: ' ', sortable: false },
+  ];
+  goToForm() {
+    this.router.navigate(['/warehouses/form']);
+  }
+}

@@ -3,15 +3,15 @@ import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
 import { HomeComponent } from './features/home/home.component';
 import { ProductListComponent } from './features/products/pages/product-list/product-list.component';
 import { ProductDetailComponent } from './features/products/pages/product-detail/product-detail.component';
-import { WarehouseListComponent } from './features/warehouses/warehouse-list/warehouse-list.component';
-import { WarehouseFormComponent } from './features/warehouses/warehouse-form/warehouse-form.component';
-import { WarehouseDetailComponent } from './features/warehouses/warehouse-detail/warehouse-detail.component';
-import { ZonesComponent } from './features/warehouses/zones/zones.component';
+import { WarehouseListComponent } from './features/warehouses/pages/warehouse-list/warehouse-list.component';
+import { WarehouseFormComponent } from './features/warehouses/pages/warehouse-form/warehouse-form.component';
+import { WarehouseDetailComponent } from './features/warehouses/pages/warehouse-detail/warehouse-detail.component';
+import { ZonesComponent } from './features/warehouses/pages/zones/zones.component';
 import { ProductFormComponent } from './features/products/pages/product-form/product-form.component';
-import { StockListComponent } from './features/stocks/stock-list/stock-list.component';
-import { StockAvailabilityComponent } from './features/stocks/stock-availability/stock-availability.component';
-import { ReservationsComponent } from './features/stocks/reservations/reservations.component';
-import { StockMoveComponent } from './features/stocks/stock-move/stock-move.component';
+import { StockListComponent } from './features/stocks/pages/stock-list/stock-list.component';
+import { StockAvailabilityComponent } from './features/stocks/pages/stock-availability/stock-availability.component';
+import { ReservationsComponent } from './features/stocks/pages/reservations/reservations.component';
+import { StockMoveComponent } from './features/stocks/pages/stock-move/stock-move.component';
 import { AuditLogListComponent } from './features/audit/audit-log-list/audit-log-list.component';
 import { DocumentListComponent } from './features/documents/document-list/document-list.component';
 import { DocumentFormComponent } from './features/documents/document-form/document-form.component';
@@ -92,6 +92,7 @@ export const routes: Routes = [
         children: [
           { path: '', component: WarehouseListComponent },
           { path: 'form', component: WarehouseFormComponent },
+          { path: 'form/:id', component: WarehouseFormComponent },
           { path: 'detail/:id', component: WarehouseDetailComponent },
           { path: 'zones', component: ZonesComponent }
         ],

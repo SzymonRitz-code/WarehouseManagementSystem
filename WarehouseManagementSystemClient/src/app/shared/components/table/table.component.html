@@ -1,46 +1,55 @@
-    <div
-        class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-        <div class="max-w-full overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-white/[0.05]">
+<div 
+class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="max-w-full overflow-x-auto">
+        <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-white/[0.05]">
             <thead class="bg-gray-50 dark:bg-gray-900">
-            <tr>
-                <th
-                *ngFor="let col of columns"
-                (click)="col.sortable ? toggleSort(col.key) : null"
-                [ngClass]="{'bg-gray-200 dark:bg-gray-700': sortKey === col.key}"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-                >
-                {{ col.label }}
-                <span *ngIf="col.sortable">
-                    {{ sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '' }}
-                </span>
-                <input
-                type="text"
-                placeholder="Filter..."
-                [(ngModel)]="filters[col.key]"
-                (ngModelChange)="applyFilters()"
-                (click)="$event.stopPropagation()"
-                class="border rounded px-2 py-1 text-theme-xs dark:bg-gray-800 dark:text-white"
-                />
-                </th>
-            </tr>
+                <tr>
+                    <th
+                    *ngFor="let col of columns"
+                    (click)="col.sortable ? toggleSort(col.key) : null"
+                    [ngClass]="{'bg-gray-200 dark:bg-gray-700': sortKey === col.key}"
+                    class="px-6 py-3 text-left felx text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                    >
+                        {{ col.label }}
+                        <span *ngIf="col.sortable">
+                            {{ sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '' }}
+                        </span>
+                        <input
+                        type="text"
+                        placeholder="Filter..."
+                        [(ngModel)]="filters[col.key]"
+                        (ngModelChange)="applyFilters()"
+                        (click)="$event.stopPropagation()"
+                        class="w-full max-w-full border rounded px-2 py-1 text-theme-xs dark:bg-gray-800 dark:text-white"
+                    />
+                    </th>
+                </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-white/[0.05]">
-            <tr *ngFor="let row of paginatedData">
-                <td *ngFor="let col of columns" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                <ng-container *ngIf="!col.template">
-                    {{ row[col.key] }}
-                </ng-container>
-                <ng-container *ngIf="col.template">
-                    <ng-container *ngTemplateOutlet="col.template; context: { $implicit: row }"></ng-container>
-                </ng-container>
-                </td>
-            </tr>
+                <tr *ngFor="let row of paginatedData">
+                    <td *ngFor="let col of columns" class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                        <ng-container *ngIf="col.type === 'date'; else checkTemplate">
+                            {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }} CET
+                        </ng-container>
+            
+                        <!-- 2. Jeśli kolumna ma template -->
+                        <ng-template #checkTemplate>
+                            <ng-container *ngIf="col.template; else defaultCell">
+                                <ng-container *ngTemplateOutlet="col.template; context: { $implicit: row }"></ng-container>
+                            </ng-container>
+                        </ng-template>
+            
+                        <!-- 3. Domyślnie zwykła wartość -->
+                        <ng-template #defaultCell>
+                            {{ row[col.key] }}
+                        </ng-template>
+                    </td>
+                </tr>
             </tbody>
         </table>
-        </div>
+    </div>
 
-        <div class="flex items-center justify-between mt-4 px-4 py-3 border-t border-gray-100 dark:border-white/10">
+    <div class="flex items-center justify-between mt-4 px-4 py-3 border-t border-gray-100 dark:border-white/10">
 
         <button 
             (click)="goToPageSafe(currentPage - 1)" 
@@ -50,17 +59,17 @@
         </button>
 
         <div class="flex justify-center mt-4 space-x-2">
-        <button 
-            *ngFor="let page of visiblePages" 
-            (click)="goToPageSafe(page)"
-            [ngClass]="{
-                'bg-blue-100 text-blue-700': currentPage === page,   
-                'bg-gray-100 text-gray-700 hover:bg-gray-200': currentPage !== page
-            }"
-            [disabled]="page === '...'"
-            class="px-3 py-1 rounded hover:bg-brand-400 hover:text-white transition-colors">
-            {{ page }}
-        </button>
+            <button 
+                *ngFor="let page of visiblePages" 
+                (click)="goToPageSafe(page)"
+                [ngClass]="{
+                    'bg-blue-100 text-blue-700': currentPage === page,   
+                    'bg-gray-100 text-gray-700 hover:bg-gray-200': currentPage !== page
+                }"
+                [disabled]="page === '...'"
+                class="px-3 py-1 rounded hover:bg-brand-400 hover:text-white transition-colors">
+                {{ page }}
+            </button>
         </div>
 
         <button 
@@ -70,7 +79,7 @@
             Next
         </button>
 
-        </div>
-
     </div>
+
+</div>
 

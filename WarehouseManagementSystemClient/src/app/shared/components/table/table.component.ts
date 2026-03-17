@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class TableComponent<T extends Record<string, any> = any> implements OnInit {
 
-  @Input() columns: { key: string; label: string; sortable?: boolean; template?: any }[] = [];
+  @Input() columns: { key: string; label: string; sortable?: boolean; template?: any; type?: string }[] = [];
   @Input() data: T[] = [];
   @Input() pageSize = 10;
 

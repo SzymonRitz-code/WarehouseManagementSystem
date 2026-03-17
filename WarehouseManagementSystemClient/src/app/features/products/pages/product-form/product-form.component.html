@@ -7,13 +7,13 @@
         <div>
           <app-label for="inputName">Name</app-label>
           <app-input-field id="inputName" type="text" name="name" formControlName="name" [required]="true"
-            [maxlength]="10" hint="Enter product name"></app-input-field>
-
-          <div>
-            <app-label for="inputSKU">SKU</app-label>
-            <app-input-field id="inputSKU" name="sku" formControlName="sku" [required]="true"></app-input-field>
-          </div>
+            [maxlength]="30" hint="Enter product name"></app-input-field>
         </div>
+        <div>
+          <app-label for="inputSKU">SKU</app-label>
+          <app-input-field id="inputSKU" name="sku" formControlName="sku" [required]="true"></app-input-field>
+        </div>
+
       </div>
       <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="productForm.invalid" />
     </form>

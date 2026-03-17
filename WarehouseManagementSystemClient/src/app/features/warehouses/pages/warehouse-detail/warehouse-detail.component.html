@@ -1,0 +1,34 @@
+<div>
+    <app-page-breadcrumb pageTitle="Warehouse Details" />
+
+    <app-component-card title="Product Information">
+        <div class="space-y-6">
+            <div>
+                <app-label for="inputCode">Code</app-label>
+                <app-input-detail id="inputCode" type="text" name="code" [value]="warehouse.code"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputWarehouseName">Warehouse Name</app-label>
+                <app-input-detail id="inputWarehouseName" name="warehouseName"
+                    [value]="warehouse.warehouseName"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputCountry">Country</app-label>
+                <app-input-detail id="inputCountry" name="country" [value]="warehouse.country"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputAddres">Addres</app-label>
+                <app-input-detail id="inputAddres" name="addres" [value]="warehouse.addres"></app-input-detail>
+            </div>
+            <!-- <div>
+                <app-label for="inputStatus">Status</app-label>
+                <app-input-detail id="inputStatus" name="status" [value]="warehouse.status"></app-input-detail>
+            </div> -->
+        </div>
+
+        <!-- sekcja akcji -->
+        <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
+        </app-detail-actions>
+
+    </app-component-card>
+</div>
