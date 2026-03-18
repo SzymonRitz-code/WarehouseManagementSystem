@@ -1,0 +1,43 @@
+<div>
+    <app-page-breadcrumb pageTitle="Zone Form" />
+
+    <app-component-card title="Zone">
+        <form [formGroup]="zoneForm" (ngSubmit)="onSave()">
+            <div class="space-y-6">
+                <div>
+                    <app-label for="inputCode">Code</app-label>
+                    <app-input-field id="inputCode" type="text" name="code" formControlName="code" [required]="true"
+                        [maxlength]="30" hint="Enter Code"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputName">Name</app-label>
+                    <app-input-field id="inputName" name="name" formControlName="name"
+                        [required]="true"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputTemperatureType">Temperature Type</app-label>
+                    <app-input-field id="inputTemperatureType" type="text" name="temperatureType"
+                        formControlName="temperatureType" [required]="true" [maxlength]="30"
+                        hint="Choose Temperature Type"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputIsPickingZone">Is Picking Zone</app-label>
+                    <app-input-field id="inputIsPickingZone" type="text" name="isPickingZone"
+                        formControlName="isPickingZone" [required]="true" hint="isPickingZone"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputWarehouse">Warehouse</app-label>
+                    <app-input-select id="inputWarehouse" type="text" name="warehouseId"
+                            [options]="options"
+                            placeholder="Select Warehouse"
+                            className="dark:bg-dark-900"
+                            [required]="true"
+                        formControlName="warehouseId" [required]="true" hint="warehouseId"></app-input-select>
+                </div>
+            </div>
+            <button type="submit" [disabled]="zoneForm.invalid">Zapisz</button>
+            <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" (submit)="zoneForm.valid && onSave()"
+                [disabled]="zoneForm.invalid" />    
+        </form>
+    </app-component-card>
+</div>

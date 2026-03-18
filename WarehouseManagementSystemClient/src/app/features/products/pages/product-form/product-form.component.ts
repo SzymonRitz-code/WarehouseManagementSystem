@@ -26,7 +26,11 @@ import { ProductService } from '../../../services/product-service';
 })
 export class ProductFormComponent implements OnInit {
 
-  constructor(private activatedRoute: ActivatedRoute, private router: Router, private fb: FormBuilder, private productService: ProductService) { }
+  constructor(
+    private activatedRoute: ActivatedRoute, 
+    private router: Router, 
+    private fb: FormBuilder, 
+    private productService: ProductService) { }
 
   id: string | null = '';
   product!: Product | CreateProduct;

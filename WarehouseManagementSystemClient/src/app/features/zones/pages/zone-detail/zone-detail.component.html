@@ -1,0 +1,40 @@
+<div>
+    <app-page-breadcrumb pageTitle="Zone Details" />
+
+    <app-component-card title="Zone Information">
+        <div class="space-y-6">
+            <div>
+                <app-label for="code">Name</app-label>
+                <app-input-detail id="code" [value]="zone.code">
+                </app-input-detail>
+            </div>
+
+            <div>
+                <app-label for="name">SKU</app-label>
+                <app-input-detail id="name" [value]="zone.name">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="temperatureType">Temperature Type</app-label>
+                <app-input-detail id="temperatureType" [value]="zone.temperatureType">
+                </app-input-detail>
+            </div>
+
+            <div>
+                <app-label for="isPickingZone">Is Picking Zone</app-label>
+                <app-input-detail id="isPickingZone" [value]="zone.isPickingZone.toString()">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="warehouse">Warehouse</app-label>
+                <app-input-detail id="warehouse" [value]="zone.warehouseName">
+                </app-input-detail>
+            </div>
+        </div>
+
+        <!-- sekcja akcji -->
+        <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
+        </app-detail-actions>
+
+    </app-component-card>
+</div>

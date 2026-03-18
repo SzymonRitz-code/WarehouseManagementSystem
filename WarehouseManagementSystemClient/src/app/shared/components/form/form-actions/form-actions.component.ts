@@ -10,5 +10,5 @@ export class FormActionsComponent {
   @Input() actionLabel = 'Save';
   @Input() disabled: boolean | null = true;
   @Output() back = new EventEmitter();
-  @Output() action = new EventEmitter();
+  @Output() submit = new EventEmitter();
 }

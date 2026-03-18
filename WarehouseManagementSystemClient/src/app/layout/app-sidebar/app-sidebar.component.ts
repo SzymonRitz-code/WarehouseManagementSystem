@@ -64,6 +64,18 @@ export class AppSidebarComponent {
       ],
     },
     {
+      name: "Zones",
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
+            <path d="M3 6H21V18H3V6Z" stroke="currentColor" stroke-width="1.5"/>
+           </svg>`,
+      subItems: [
+        { name: "Zone List", path: "/zones" },
+        { name: "Create Zone", path: "/zones/form" }  // dual create/edit form
+        // opcjonalnie: { name: "Warehouse Zones", path: "/warehouses/zones" }
+        // jeśli chcesz mieć globalną listę stref
+      ],
+    },
+    {
       name: "Stocks",
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
             <path d="M3 3H21V21H3V3Z" stroke="currentColor" stroke-width="1.5"/>

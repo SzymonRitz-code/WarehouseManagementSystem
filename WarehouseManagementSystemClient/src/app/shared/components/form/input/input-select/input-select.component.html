@@ -1,0 +1,28 @@
+<div class="relative">
+  <select
+    [id]="id"
+    [name]="name"
+    [ngClass]="selectClasses"
+    [value]="value"
+    (change)="onValueChange($event.target.value)"
+    (blur)="onTouched()"
+    [disabled]="disabled"
+  >
+    <!-- Placeholder -->
+    <option value="" disabled [selected]="!value"
+     class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
+    >{{ placeholder }}</option>
+
+    <!-- Options -->
+    <option *ngFor="let option of options" [value]="option.value"
+    class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
+    >
+      {{ option.label }}
+    </option>
+  </select>
+
+  <!-- Validation errors -->
+  <p *ngIf="errorMessages.length" class="mt-1.5 text-xs text-error-500">
+    <span *ngFor="let err of errorMessages">{{ err }}</span>
+  </p>
+</div>

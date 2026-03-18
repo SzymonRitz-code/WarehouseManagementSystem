@@ -6,7 +6,7 @@ import { ProductDetailComponent } from './features/products/pages/product-detail
 import { WarehouseListComponent } from './features/warehouses/pages/warehouse-list/warehouse-list.component';
 import { WarehouseFormComponent } from './features/warehouses/pages/warehouse-form/warehouse-form.component';
 import { WarehouseDetailComponent } from './features/warehouses/pages/warehouse-detail/warehouse-detail.component';
-import { ZonesComponent } from './features/warehouses/pages/zones/zones.component';
+import { ZoneListComponent } from './features/zones/pages/zone-list/zone-list.component';
 import { ProductFormComponent } from './features/products/pages/product-form/product-form.component';
 import { StockListComponent } from './features/stocks/pages/stock-list/stock-list.component';
 import { StockAvailabilityComponent } from './features/stocks/pages/stock-availability/stock-availability.component';
@@ -22,6 +22,8 @@ import { AdjustmentCreateComponent } from './features/inventory-adjustments/adju
 import { UserListComponent } from './features/users/user-list/user-list.component';
 import { UserFormComponent } from './features/users/user-form/user-form.component';
 import { UserDetailComponentnent } from './features/users/user-detail/user-detail.component';
+import { ZoneFormComponent } from './features/zones/pages/zone-form/zone-form.component';
+import { ZoneDetailComponent } from './features/zones/pages/zone-detail/zone-detail.component';
 
 
 export const routes: Routes = [
@@ -94,7 +96,17 @@ export const routes: Routes = [
           { path: 'form', component: WarehouseFormComponent },
           { path: 'form/:id', component: WarehouseFormComponent },
           { path: 'detail/:id', component: WarehouseDetailComponent },
-          { path: 'zones', component: ZonesComponent }
+          { path: 'zones', component: ZoneListComponent }
+        ],
+      },
+      // Zones
+      {
+        path: 'zones',
+        children: [
+          { path: '', component: ZoneListComponent },
+          { path: 'form', component: ZoneFormComponent },
+          { path: 'form/:id', component: ZoneFormComponent },
+          { path: 'detail/:id', component: ZoneDetailComponent }
         ],
       },
 

@@ -1,0 +1,11 @@
+<app-component-card title="Zone List">
+    <button card-actions (click)="goToForm()"
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        Add Zone
+    </button>
+    <div
+        class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <app-table [columns]="columns" [data]="zones" [pageSize]="5">
+        </app-table>
+    </div>
+</app-component-card>

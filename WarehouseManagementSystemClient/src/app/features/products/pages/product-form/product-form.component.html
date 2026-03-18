@@ -1,7 +1,7 @@
 <div>
   <app-page-breadcrumb pageTitle="Product Form" />
 
-  <app-component-card title="Default Inputs">
+  <app-component-card title="Product">
     <form [formGroup]="productForm" (ngSubmit)="onSave()">
       <div class="space-y-6">
         <div>
@@ -15,7 +15,7 @@
         </div>
 
       </div>
-      <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="productForm.invalid" />
+      <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" (submit)="productForm.valid && onSave()" [disabled]="productForm.invalid" />
     </form>
   </app-component-card>
 </div>
