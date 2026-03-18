@@ -1,1 +1,10 @@
-<p>stock-availability works!</p>
+<div>
+    <app-page-breadcrumb pageTitle="Stock Availability List" />
+    <app-component-card title="Stock Availability List">
+        <div
+            class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <app-table [columns]="columns" [data]="stockAvailabilities" [pageSize]="5">
+            </app-table>
+        </div>
+    </app-component-card>
+</div>

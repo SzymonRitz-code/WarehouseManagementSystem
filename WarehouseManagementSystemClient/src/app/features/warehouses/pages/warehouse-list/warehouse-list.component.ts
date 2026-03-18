@@ -4,11 +4,12 @@ import { TableComponent } from "../../../../shared/components/table/table.compon
 import { WarehouseService } from '../../../services/warehouse-service';
 import { Warehouse } from '../../model/warehouse';
 import { Router } from '@angular/router';
+import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 
 @Component({
   selector: 'app-warehouse-list',
   standalone: true,
-  imports: [ComponentCardComponent, TableComponent],
+  imports: [ComponentCardComponent, TableComponent, PageBreadcrumbComponent],
   templateUrl: './warehouse-list.component.html'
 })
 export class WarehouseListComponent implements OnInit {

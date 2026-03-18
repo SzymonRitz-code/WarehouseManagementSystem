@@ -3,12 +3,13 @@ import { Router } from '@angular/router';
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { ZoneService } from '../../../services/zone-service';
-import { Zone  } from '../../model/zone';
+import { Zone } from '../../model/zone';
+import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 
 @Component({
   selector: 'app-zones',
   standalone: true,
-  imports: [ComponentCardComponent, TableComponent],
+  imports: [PageBreadcrumbComponent, ComponentCardComponent, TableComponent],
   templateUrl: './zone-list.component.html'
 })
 export class ZoneListComponent implements OnInit {
@@ -22,7 +23,7 @@ export class ZoneListComponent implements OnInit {
     { key: 'isPickingZone', label: 'isPickingZone', sortable: true },
     { key: 'warehouseName', label: 'Warehouse Name', sortable: true },
     { key: 'stockQty', label: 'StockQty', sortable: true },
-    { key: 'createdAt', label: 'Created At', sortable: true }
+    { key: 'createdAt', label: 'Created At', sortable: true, type: 'date' }
   ];
 
   constructor(private zoneService: ZoneService, private router: Router) {
