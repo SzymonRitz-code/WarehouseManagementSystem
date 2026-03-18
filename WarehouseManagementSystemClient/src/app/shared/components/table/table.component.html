@@ -1,6 +1,24 @@
 <div 
 class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
     <div class="max-w-full overflow-x-auto">
+        <div class="bg-gray-50 flex items-center justify-between px-4 py-3">
+        
+            <!-- LEFT: Page size -->
+            <div class="flex items-center gap-3">
+                <span class="text-gray-500 dark:text-gray-400">Show</span>
+        
+                <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()"
+                    class="py-2 pl-3 pr-8 text-sm border border-gray-300 rounded-lg dark:bg-gray-900 dark:text-white">
+                    <option [value]="5">5</option>
+                    <option [value]="10">10</option>
+                    <option [value]="20">20</option>
+                    <option [value]="50">50</option>
+                </select>
+        
+                <span class="text-gray-500 dark:text-gray-400">entries</span>
+            </div>
+        
+        </div>
         <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-white/[0.05]">
             <thead class="bg-gray-50 dark:bg-gray-900">
                 <tr>
