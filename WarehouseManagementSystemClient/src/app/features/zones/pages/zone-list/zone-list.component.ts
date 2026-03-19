@@ -20,7 +20,7 @@ export class ZoneListComponent implements OnInit {
     { key: 'code', label: 'Code', sortable: true },
     { key: 'name', label: 'Name', sortable: true },
     { key: 'temperatureType', label: 'Temperature Type', sortable: true },
-    { key: 'isPickingZone', label: 'isPickingZone', sortable: true },
+    { key: 'isPickingZone', label: 'is Picking Zone', sortable: true },
     { key: 'warehouseName', label: 'Warehouse Name', sortable: true },
     { key: 'stockQty', label: 'StockQty', sortable: true },
     { key: 'createdAt', label: 'Created At', sortable: true, type: 'date' }

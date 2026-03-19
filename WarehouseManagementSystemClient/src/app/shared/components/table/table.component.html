@@ -1,6 +1,6 @@
 <div 
-class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-    <div class="max-w-full overflow-x-auto">
+class="overflow-hidden rounded-xl border-t border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="max-w-full overflow-x-auto custom-scrollbar">
         <div class="bg-gray-50 flex items-center justify-between px-4 py-3">
         
             <!-- LEFT: Page size -->
@@ -26,7 +26,7 @@ class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-wh
                     *ngFor="let col of columns"
                     (click)="col.sortable ? toggleSort(col.key) : null"
                     [ngClass]="{'bg-gray-200 dark:bg-gray-700': sortKey === col.key}"
-                    class="px-6 py-3 text-left felx text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
+                    class="px-4 py-3 text-left felx text-xs font-medium text-theme-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
                     >
                         {{ col.label }}
                         <span *ngIf="col.sortable">
@@ -45,7 +45,7 @@ class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-wh
             </thead>
             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-white/[0.05]">
                 <tr *ngFor="let row of paginatedData">
-                    <td *ngFor="let col of columns" class="px-6 py-4 text-theme-sm text-gray-500 dark:text-gray-300 whitespace-normal break-words">
+                    <td *ngFor="let col of columns" class="px-4 py-4 font-normal text-theme-sm text-gray-500 dark:text-gray-400 whitespace-normal break-words">
                         <ng-container *ngIf="col.type === 'date'; else checkTemplate">
                             {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }} CET
                         </ng-container>
