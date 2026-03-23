@@ -1,0 +1,93 @@
+<div>
+    <app-page-breadcrumb pageTitle="Document Details" />
+
+    <app-component-card title="Document Information">
+        <div class="space-y-6">
+            <div>
+                <app-label for="documentNumber">Number</app-label>
+                <app-input-detail id="documentNumber" [value]="document?.number">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentDate">Document Date</app-label>
+                <app-input-detail id="documentNumber" [value]="document?.documentDate">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentType">Document Type</app-label>
+                <app-input-detail id="documentType" [value]="document?.type">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentType">Document Type</app-label>
+                <app-input-detail id="documentType" [value]="document?.type">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentStatus">Document Status</app-label>
+                <app-input-detail id="documentStatus" [value]="document?.status">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentStatus">Document Status</app-label>
+                <app-input-detail id="documentStatus" [value]="document?.status">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentCreatedAt">Created At</app-label>
+                <app-input-detail id="documentCreatedAt" [value]="document?.createdAt">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentCreatedBy">Created By</app-label>
+                <app-input-detail id="documentCreatedBy" [value]="document?.createdByName">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentCreatedBy">Created By</app-label>
+                <app-input-detail id="documentCreatedBy" [value]="document?.createdByName">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentConfirmedAt">Confirmed At</app-label>
+                <app-input-detail id="documentConfirmedAt" [value]="document?.confirmedAt">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="documentConfirmedBy">Confirmed By</app-label>
+                <app-input-detail id="documentConfirmedBy" [value]="document?.confirmedByName">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="transferStartedAt">Transfer Started At</app-label>
+                <app-input-detail id="transferStartedAt" [value]="document?.transferStartedAt">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="transferStartedBy">Transfer Started By</app-label>
+                <app-input-detail id="transferStartedBy" [value]="document?.transferStartedByName">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="sourceWarehouse">Source Warehouse</app-label>
+                <app-input-detail id="sourceWarehouse" [value]="document?.sourceWarehouseName">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="targetWarehouse">Target Warehouse</app-label>
+                <app-input-detail id="targetWarehouse" [value]="document?.targetWarehouseName">
+                </app-input-detail>
+            </div>
+            <div>
+                <app-label for="notes">Notes</app-label>
+                <app-input-detail id="notes" [value]="document?.notes">
+                </app-input-detail>
+            </div>
+
+        </div>
+
+        <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
+        </app-detail-actions>
+
+    </app-component-card>
+</div>

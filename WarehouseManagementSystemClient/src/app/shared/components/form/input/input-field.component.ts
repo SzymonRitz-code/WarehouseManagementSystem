@@ -73,7 +73,6 @@ export class InputFieldComponent implements ControlValueAccessor, Validator {
 
   /** Reactive Forms */
   writeValue(val: any): void {
-
     this.value = val ?? '';
     this.updateErrors(this.value);
 
@@ -97,11 +96,9 @@ export class InputFieldComponent implements ControlValueAccessor, Validator {
 
   /** Obsługa inputu */
   onValueChange(val: any) {
-
     this.value = val;
     this.onChange(val);
     this.updateErrors(val);
-
   }
 
   /** Walidacja */

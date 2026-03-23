@@ -40,16 +40,7 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
   }
   onPageSizeChange() {
     this.currentPage = 1; // reset paginacji
-    // this.updatePagination();
   }
-  // updatePagination() {
-  //   const start = (this.currentPage - 1) * this.pageSize;
-  //   const end = start + this.pageSize;
-
-  //   this.paginatedData = this.filteredData.slice(start, end);
-
-  //   this.totalPages = Math.ceil(this.filteredData.length / this.pageSize);
-  // }
 
   get sortedData(): T[] {
     if (!this.sortKey) return this.data;

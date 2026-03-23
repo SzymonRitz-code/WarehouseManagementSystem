@@ -35,7 +35,6 @@
                         formControlName="warehouseId" [required]="true" hint="warehouseId"></app-input-select>
                 </div>
             </div>
-            <button type="submit" [disabled]="zoneForm.invalid">Zapisz</button>
             <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" (submit)="zoneForm.valid && onSave()"
                 [disabled]="zoneForm.invalid" />    
         </form>

@@ -1,0 +1,56 @@
+<div>
+    <app-page-breadcrumb pageTitle="Document Form" />
+
+    <app-component-card title="Document">
+        <form [formGroup]="documentForm" (ngSubmit)="onSave()">
+            <div class="space-y-6">
+                <div>
+                    <app-label for="inputNumber">Number</app-label>
+                    <app-input-field id="inputNumber" type="text" formControlName="number" [required]="true"
+                        [maxlength]="30" hint="Enter Number"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputDocumentDate">Document Date</app-label>
+                    <app-date-picker id="inputDocumentDate" formControlName="documentDate" [required]="true"
+                        hint="Enter Document Date"></app-date-picker>
+                </div>
+                <div>
+                    <app-label for="inputType">Document Type</app-label>
+                    <app-input-select id="inputType" [options]="documentTyoeOptions" 
+                        placeholder="Select Document Type"
+                        className="dark:bg-dark-900" 
+                        [required]="true" 
+                        formControlName="type" 
+                        [required]="true"
+                        hint="Choose Document Type"></app-input-select>
+                </div>
+                <div>
+                    <app-label for="inputSourceWarehouse">Source Warehouse</app-label>
+                    <app-input-select id="inputSourceWarehouse" [options]="sourceOptions"
+                        placeholder="Select Source Warehouse" className="dark:bg-dark-900" [required]="true"
+                        formControlName="sourceWarehouseId" [required]="true"
+                        hint="Choose Source Warehouse"></app-input-select>
+                </div>
+                <div>
+                    <app-label for="inputTargetWarehouse">Target Warehouse</app-label>
+                    <app-input-select id="inputTargetWarehouse" [options]="targetOptions"
+                        placeholder="Select Target Warehouse" className="dark:bg-dark-900" [required]="true"
+                        formControlName="targetWarehouseId" [required]="true"
+                        hint="Choose Target Warehouse"></app-input-select>
+                </div>
+                <div>
+                    <app-label for="inputNotes">Document Notes</app-label>
+                    <app-text-area id="inputNotes" type="text" formControlName="notes"
+                        hint="Enter Document Notes"></app-text-area>
+                </div>
+
+            </div>
+            <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()"
+                (submit)="documentForm.valid && onSave()" [disabled]="documentForm.invalid" />
+            <pre>{{ documentForm.valid | json }}</pre>
+            <pre>{{ documentForm.value | json }}</pre>
+        </form>
+
+
+    </app-component-card>
+</div>

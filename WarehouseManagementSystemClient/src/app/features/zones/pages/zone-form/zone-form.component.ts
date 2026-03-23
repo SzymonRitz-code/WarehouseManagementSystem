@@ -35,11 +35,7 @@ export class ZoneFormComponent implements OnInit {
   id: string | null = '';
   zone!: Zone | CreateZone;
   zoneForm!: FormGroup;
-  options = [
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'template', label: 'Template' },
-    { value: 'development', label: 'Development' },
-  ];
+  options!: any[];
   selectedValue = '';
   constructor(
     private fb: FormBuilder,

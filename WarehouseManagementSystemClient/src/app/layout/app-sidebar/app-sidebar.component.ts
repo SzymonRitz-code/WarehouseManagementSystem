@@ -38,14 +38,16 @@ export class AppSidebarComponent {
       name: "Dashboard",
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
             <path d="M3 10L12 3L21 10V21H3V10Z" stroke="currentColor" stroke-width="1.5"/>
-           </svg>`,
+            </svg>`,
       path: "/home",
     },
     {
       name: "Products",
-      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
-           </svg>`,
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l9-5 9 5v10l-9 5-9-5V8z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M12 3v18" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M3 8l9 5 9-5" stroke="currentColor" stroke-width="1.5"/>
+            </svg>`,
       subItems: [
         { name: "Product List", path: "/products" },
         { name: "Product Form", path: "/products/form" }  // create/edit
@@ -53,9 +55,10 @@ export class AppSidebarComponent {
     },
     {
       name: "Warehouses",
-      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6H21V18H3V6Z" stroke="currentColor" stroke-width="1.5"/>
-           </svg>`,
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9L12 2l9 7v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 22V12h6v10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`,
       subItems: [
         { name: "Warehouse List", path: "/warehouses" },
         { name: "Create Warehouse", path: "/warehouses/form" }  // dual create/edit form
@@ -65,9 +68,12 @@ export class AppSidebarComponent {
     },
     {
       name: "Zones",
-      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6H21V18H3V6Z" stroke="currentColor" stroke-width="1.5"/>
-           </svg>`,
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="13" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="3" y="13" width="8" height="8" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="13" y="13" width="8" height="8" stroke="currentColor" stroke-width="1.5"/>
+            </svg>`,
       subItems: [
         { name: "Zone List", path: "/zones" },
         { name: "Create Zone", path: "/zones/form" }  // dual create/edit form
@@ -77,21 +83,25 @@ export class AppSidebarComponent {
     },
     {
       name: "Stocks",
-      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
-            <path d="M3 3H21V21H3V3Z" stroke="currentColor" stroke-width="1.5"/>
-           </svg>`,
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="7" y="7" width="10" height="10" stroke="currentColor" stroke-width="1.5"/>
+            </svg>`,
       subItems: [
         { name: "Stocks List", path: "/stocks" },
-        { name: "Stock Availability", path: "/stocks/availability" }
+        { name: "Stock Availability", path: "/stocks/availability" },
+        { name: "Stock Moves", path: "/stocks/move" }
         // rezerwacje i stock-move → dostępne w Stock Detail
       ],
     },
     {
       name: "Documents",
-      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M4 20C4 16 8 14 12 14C16 14 20 16 20 20" stroke="currentColor" stroke-width="1.5"/>
-           </svg>`,
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M4 2h16v20H4V2z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 7h16" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 12h16" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 17h10" stroke="currentColor" stroke-width="1.5"/>
+            </svg>`,
       subItems: [
         { name: "Document List", path: "/documents" },  // filtry status Draft/Confirmed/Transfer/Completed
         { name: "Document Form", path: "/documents/form" }  // create/edit
@@ -99,10 +109,12 @@ export class AppSidebarComponent {
     },
     {
       name: "Inventory Adjustments",
-      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
-            <path d="M3 3H21V21H3V3Z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M7 7H17V17H7V7Z" stroke="currentColor" stroke-width="1.5"/>
-           </svg>`,
+      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="16" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="7" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="7" y1="16" x2="17" y2="16" stroke="currentColor" stroke-width="1.5"/>
+            </svg>`,
       subItems: [
         { name: "Adjustment List", path: "/adjustments" },
         { name: "Adjustment Form", path: "/adjustments/form" }  // create/edit
@@ -111,8 +123,8 @@ export class AppSidebarComponent {
     {
       name: "Users",
       icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none">
-            <path d="M3 3H21V21H3V3Z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M7 7H17V17H7V7Z" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 20C4 16 8 14 12 14C16 14 20 16 20 20" stroke="currentColor" stroke-width="1.5"/>
            </svg>`,
       subItems: [
         { name: "User List", path: "/users" },

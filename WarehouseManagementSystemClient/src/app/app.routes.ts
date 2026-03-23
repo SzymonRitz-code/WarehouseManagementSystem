@@ -13,10 +13,7 @@ import { StockAvailabilityComponent } from './features/stocks/pages/stock-availa
 import { ReservationsComponent } from './features/stocks/pages/reservations/reservations.component';
 import { StockMoveComponent } from './features/stocks/pages/stock-move/stock-move.component';
 import { AuditLogListComponent } from './features/audit/audit-log-list/audit-log-list.component';
-import { DocumentListComponent } from './features/documents/document-list/document-list.component';
-import { DocumentFormComponent } from './features/documents/document-form/document-form.component';
-import { DocumentDetailComponent } from './features/documents/document-detail/document-detail.component';
-import { DocumentItemsComponent } from './features/documents/document-items/document-items.component';
+import { DocumentListComponent } from './features/documents/pages/document-list/document-list.component';
 import { AdjustmentListComponent } from './features/inventory-adjustments/adjustment-list/adjustment-list.component';
 import { AdjustmentCreateComponent } from './features/inventory-adjustments/adjustment-create/adjustment-create.component';
 import { UserListComponent } from './features/users/user-list/user-list.component';
@@ -24,6 +21,9 @@ import { UserFormComponent } from './features/users/user-form/user-form.componen
 import { UserDetailComponentnent } from './features/users/user-detail/user-detail.component';
 import { ZoneFormComponent } from './features/zones/pages/zone-form/zone-form.component';
 import { ZoneDetailComponent } from './features/zones/pages/zone-detail/zone-detail.component';
+import { DocumentFormComponent } from './features/documents/pages/document-form/document-form.component';
+import { DocumentDetailComponent } from './features/documents/pages/document-detail/document-detail.component';
+import { DocumentItemsComponent } from './features/documents/pages/document-items/document-items.component';
 
 
 export const routes: Routes = [
