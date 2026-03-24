@@ -1,0 +1,14 @@
+export interface DocumentItem {
+    id: string,
+    quantity: number,
+    documentId: string,
+    documentNumber?: string,
+    productId: string,
+    productName?: string,
+    sourceZoneId: string,
+    sourceZoneCode?: string,
+    sourceZoneName?: string,
+    targetZoneId: string,
+    targetZoneCode?: string,
+    targetZoneName?: string,
+}

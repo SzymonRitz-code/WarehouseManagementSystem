@@ -10,8 +10,8 @@ export class DocumentService {
 
 
 
-
-    documents = [
+    documents: Document[] = []
+    documentList = [
         { id: '1', documentNumber: "DOC-1001", type: "Transfer", status: "Completed", sourceWarehouse: "Regional DC Kraków", destinationWarehouse: "North Hub Gdańsk", createdBy: "Tom Brown", approvedBy: "Anna Kowalska", createdAt: new Date("2026-03-16T15:36:50"), approvedAt: new Date("2026-03-18T13:36:50"), itemCount: 20, totalQuantity: 538, actions: "" },
         { id: '2', documentNumber: "DOC-1002", type: "Transfer", status: "Completed", sourceWarehouse: "Central Warehouse Warsaw", destinationWarehouse: "East DC Lublin", createdBy: "Tom Brown", approvedBy: "Anna Kowalska", createdAt: new Date("2026-03-05T15:49:36"), approvedAt: new Date("2026-03-07T00:49:36"), itemCount: 19, totalQuantity: 509, actions: "" },
         { id: '3', documentNumber: "DOC-1003", type: "Transfer", status: "Cancelled", sourceWarehouse: "North Hub Gdańsk", destinationWarehouse: "North Hub Gdańsk", createdBy: "Sara Lee", approvedBy: "", createdAt: new Date("2026-03-16T01:40:54"), approvedAt: null, itemCount: 5, totalQuantity: 114, actions: "" },
@@ -57,9 +57,11 @@ export class DocumentService {
             createdAt: new Date(),
             status: DocumentStatus.Draft
         }
+        this.documents.push(newDocument)
         return newDocument;
     }
+
     getDocument(id: string): Document {
-      return this.documents.find(d => d.id === id) as unknown as Document;
+        return this.documents.find(d => d.id === id)!;
     }
 }

@@ -5,6 +5,7 @@ import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_V
 
 @Component({
   selector: 'app-text-area',
+  standalone:true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   providers: [
     {

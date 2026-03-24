@@ -19,16 +19,6 @@
                 </app-input-detail>
             </div>
             <div>
-                <app-label for="documentType">Document Type</app-label>
-                <app-input-detail id="documentType" [value]="document?.type">
-                </app-input-detail>
-            </div>
-            <div>
-                <app-label for="documentStatus">Document Status</app-label>
-                <app-input-detail id="documentStatus" [value]="document?.status">
-                </app-input-detail>
-            </div>
-            <div>
                 <app-label for="documentStatus">Document Status</app-label>
                 <app-input-detail id="documentStatus" [value]="document?.status">
                 </app-input-detail>
@@ -36,11 +26,6 @@
             <div>
                 <app-label for="documentCreatedAt">Created At</app-label>
                 <app-input-detail id="documentCreatedAt" [value]="document?.createdAt">
-                </app-input-detail>
-            </div>
-            <div>
-                <app-label for="documentCreatedBy">Created By</app-label>
-                <app-input-detail id="documentCreatedBy" [value]="document?.createdByName">
                 </app-input-detail>
             </div>
             <div>
@@ -80,11 +65,12 @@
             </div>
             <div>
                 <app-label for="notes">Notes</app-label>
-                <app-input-detail id="notes" [value]="document?.notes">
-                </app-input-detail>
+                <app-text-area id="notes" [value]="document?.notes ??''" [disabled]="true">
+                </app-text-area>
             </div>
 
         </div>
+        <app-document-items-detail [documentItems]="document?.documentItems!"></app-document-items-detail>
 
         <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
         </app-detail-actions>

@@ -1,0 +1,49 @@
+   <app-modal [isOpen]="isOpen" (close)="onCancel()">
+      <form [formGroup]="itemForm" (ngSubmit)="onSave()" class="space-y-4">
+        <div>
+          <app-label for="product">Product</app-label>
+          <app-input-select
+            id="product"
+            formControlName="productId"
+            [options]="productOptions"
+            placeholder="Select Product"
+            [required]="true"
+          ></app-input-select>
+        </div>
+
+        <div>
+          <app-label for="quantity">Quantity</app-label>
+          <app-input-field
+            id="quantity"
+            type="number"
+            formControlName="quantity"
+            [required]="true"
+          ></app-input-field>
+        </div>
+
+        <div>
+          <app-label for="sourceZone">Source Zone</app-label>
+          <app-input-select
+            id="sourceZone"
+            formControlName="sourceZoneId"
+            [options]="sourceZoneOptions"
+            placeholder="Select Source Zone"
+          ></app-input-select>
+        </div>
+
+        <div>
+          <app-label for="targetZone">Target Zone</app-label>
+          <app-input-select
+            id="targetZone"
+            formControlName="targetZoneId"
+            [options]="targetZoneOptions"
+            placeholder="Select Target Zone"
+          ></app-input-select>
+        </div>
+
+        <div class="flex justify-end space-x-2">
+          <button type="button" (click)="onCancel()" class="btn-secondary">Cancel</button>
+          <button type="submit" [disabled]="itemForm.invalid" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </app-modal>

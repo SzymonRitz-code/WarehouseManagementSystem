@@ -1,0 +1,69 @@
+<div class="space-y-4">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center">
+    <h3 class="text-lg font-semibold">Document Items</h3>
+
+    <!-- <button type="button" class="px-3 py-2 text-sm bg-brand-500 text-white rounded-lg" (click)="openAddItemModal()"
+      (submit)="onModalSave($event)" (cancel)="onModalCancel()">
+      + Add Item
+    </button> -->
+    <button type="button" class="px-3 py-2 text-sm bg-brand-500 text-white rounded-lg" (click)="addItemTolist()">
+      + Add Item
+    </button>
+    <!-- <app-document-items-form [isOpen]="isModalOpened" [item]="modalItem" (save)="onModalSave($event)"
+      (cancel)="onModalCancel()"></app-document-items-form> -->
+  </div>
+
+  <!-- TABLE -->
+  <div class="border rounded-lg overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-100 dark:bg-gray-800">
+        <tr>
+          <th class="p-2 text-left">Product</th>
+          <th class="p-2 text-left">Qty</th>
+          <th class="p-2 text-left">From Zone</th>
+          <th class="p-2 text-left">To Zone</th>
+          <th class="p-2 w-[80px]"></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (item of items; track item.value.id; let i = $index) {
+        <tr [formGroup]="item" class="border-t">
+
+          <td class="p-2">
+            <app-input-select [id]="'productid-'+i" [options]="productOptions" placeholder="Select Product"
+              className="dark:bg-dark-900" [required]="true" formControlName="productId" [required]="true"
+              hint="Choose Source Zone" />
+          </td>
+
+          <td class="p-2">
+            <app-input-field  [id]="'quantity-'+i"  type="number" formControlName="quantity" class="w-full border rounded px-2 py-1" />
+          </td>
+
+          <td class="p-2">
+            <app-input-select [id]="'sourceZoneId-'+i" [options]="sourceZoneOptions" placeholder="Select Source Zone "
+              className="dark:bg-dark-900" [required]="true" formControlName="sourceZoneId" [required]="true"
+              hint="Choose Source Zone" />
+          </td>
+
+          <td class="p-2">
+            <app-input-select [id]="'targetZoneId-'+i" [options]="targetZoneOptions" placeholder="Select Target Zone "
+              className="dark:bg-dark-900" [required]="true" formControlName="targetZoneId" [required]="true"
+              hint="Choose targetOptions Zone" />
+          </td>
+
+          <td class="p-2 text-right">
+            <button type="button" class="text-red-500" (click)="removeItem(i)">
+              ✕
+            </button>
+          </td>
+
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>

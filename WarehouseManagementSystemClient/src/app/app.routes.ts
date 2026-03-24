@@ -23,7 +23,7 @@ import { ZoneFormComponent } from './features/zones/pages/zone-form/zone-form.co
 import { ZoneDetailComponent } from './features/zones/pages/zone-detail/zone-detail.component';
 import { DocumentFormComponent } from './features/documents/pages/document-form/document-form.component';
 import { DocumentDetailComponent } from './features/documents/pages/document-detail/document-detail.component';
-import { DocumentItemsComponent } from './features/documents/pages/document-items/document-items.component';
+import { DocumentItemsComponent } from './features/documents/pages/document-items/document-items-list/document-items.component';
 
 
 export const routes: Routes = [

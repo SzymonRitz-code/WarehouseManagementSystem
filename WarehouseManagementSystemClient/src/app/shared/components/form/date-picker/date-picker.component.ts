@@ -53,8 +53,6 @@ export class DatePickerComponent implements ControlValueAccessor, Validator {
       onChange: (selectedDates, dateStr, instance) => {
         this.onChange(dateStr);
         this.onTouched();
-        console.log(`${selectedDates}`)
-        console.log(`${dateStr}`)
         this.updateErrors(dateStr);
         this.dateChange.emit({ selectedDates, dateStr, instance });
       }
@@ -76,9 +74,7 @@ export class DatePickerComponent implements ControlValueAccessor, Validator {
     if (this.required && !val) {
       errors['required'] = true;
       this.errorMessages.push('This field is required.');
-      console.log('validation negative')
     }
-    console.log(`validation positive ${val}`)
     return Object.keys(errors).length ? errors : null;
   }
   registerOnChange(fn: any): void {

@@ -17,7 +17,7 @@ export class DocumentListComponent implements OnInit {
   documents: any[] = [];
   constructor(private documentService: DocumentService, private router: Router) { }
   ngOnInit(): void {
-    this.documents = this.documentService.documents;
+    this.documents = this.documentService.documentList;
   }
 
   columns = [

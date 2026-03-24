@@ -1,4 +1,5 @@
 import { DocumentStatus } from "../../../core/enums/documentStatus";
+import { DocumentItem } from "./document-item";
 
 export interface CreateDocument {
     number: string;
@@ -9,4 +10,5 @@ export interface CreateDocument {
     sourceWarehouseName?: string;
     targetWarehouseId?: string;
     targetWarehouseName?: string;
+    documentItems: DocumentItem[];
 }
