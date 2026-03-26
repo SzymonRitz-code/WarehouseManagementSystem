@@ -8,7 +8,13 @@
         </button>
         <div
             class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <app-table [columns]="columns" [data]="zones" [pageSize]="5">
+            <app-table 
+                [columns]="columns" 
+                [data]="zones" 
+                [pageSize]="5"                
+                [rowActions]="zoneActions"
+                (rowAction)="onZoneAction($event)">
+            >
             </app-table>
         </div>
     </app-component-card>

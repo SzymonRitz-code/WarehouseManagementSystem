@@ -25,6 +25,10 @@ export class ZoneListComponent implements OnInit {
     { key: 'stockQty', label: 'StockQty', sortable: true },
     { key: 'createdAt', label: 'Created At', sortable: true, type: 'date' }
   ];
+  zoneActions = [
+    { label: 'Edit', action: 'edit' },
+    { label: 'Details', action: 'details' },
+  ];
 
   constructor(private zoneService: ZoneService, private router: Router) {
 
@@ -37,5 +41,25 @@ export class ZoneListComponent implements OnInit {
 
   goToForm() {
     this.router.navigate(['/zones/form']);
+  }
+
+  onZoneAction(event: { row: Zone; action: string }) {
+    const { row, action } = event;
+
+    switch (action) {
+      case 'edit':
+        this.onEdit(row);
+        break;
+
+      case 'details':
+        this.onDetails(row);
+        break;
+    }
+  }
+  onDetails(zone: Zone) {
+    this.router.navigateByUrl(`/zones/detail/${zone.id}`)
+  }
+  onEdit(zone: Zone) {
+    this.router.navigateByUrl(`/zones/form/${zone.id}`)
   }
 }
