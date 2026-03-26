@@ -66,6 +66,7 @@ export class DocumentFormComponent implements OnInit {
     })
     if (this.id) {
       this.document = this.documentService.getDocument(this.id);
+      console.log(`Editing DOcument: ${this.document}`)
       this.documentForm.patchValue({
         number: this.document.number,
         documentDate: this.document.documentDate,

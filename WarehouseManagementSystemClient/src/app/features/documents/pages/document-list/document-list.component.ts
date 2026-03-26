@@ -4,6 +4,7 @@ import { PageBreadcrumbComponent } from "../../../../shared/components/common/pa
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { Router } from '@angular/router';
+import { Document } from '../../model/document';
 
 @Component({
   selector: 'app-document-list',
@@ -12,7 +13,6 @@ import { Router } from '@angular/router';
   templateUrl: './document-list.component.html'
 })
 export class DocumentListComponent implements OnInit {
-
 
   documents: any[] = [];
   constructor(private documentService: DocumentService, private router: Router) { }
@@ -35,9 +35,47 @@ export class DocumentListComponent implements OnInit {
     { key: 'totalQuantity', label: 'Total Qty', sortable: true },               // suma ilości wszystkich produktów
     { key: 'actions', label: ' ', sortable: false }                             // np. podgląd, edycja, PDF, zatwierdzenie
   ];
-
+  documentActions = [
+    { label: 'Edit', action: 'edit', visible: (row: Document) => row.status === 'Draft' },
+    { label: 'Details', action: 'details' },
+    { label: 'Confirm', action: 'confirm', visible: (row: Document) => row.status === 'Draft' },
+    { label: 'Cancel', action: 'cancel', visible: (row: Document) => row.status !== 'Cancelled' },
+  ];
   goToForm() {
     this.router.navigateByUrl('/documents/form')
   }
+  onDocumentAction(event: { row: Document; action: string }) {
+    const { row, action } = event;
 
+    switch (action) {
+      case 'edit':
+        this.onEdit(row);
+        break;
+
+      case 'details':
+        this.onDetails(row);
+        break;
+
+      case 'confirm':
+        this.onConfirm(row);
+        break;
+
+      case 'cancel':
+        this.onCancel(row);
+        break;
+    }
+  }
+  onCancel(row: Document) {
+    throw new Error('Method not implemented.');
+  }
+  onConfirm(row: Document) {
+    throw new Error('Method not implemented.');
+  }
+  onDetails(row: Document) {
+    throw new Error('Method not implemented.');
+  }
+  onEdit(document: Document) {
+    console.log(`Edit: ${document.id}`)
+    this.router.navigateByUrl(`/documents/form/${document.id}`)
+  }
 }

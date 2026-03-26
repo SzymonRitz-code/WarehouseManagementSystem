@@ -37,15 +37,10 @@
                     <app-text-area id="inputNotes" type="text" formControlName="notes"
                         hint="Enter Document Notes"></app-text-area>
                 </div>
-
             </div>
             <app-document-items [formArray]="documentItemsFormArray"></app-document-items>
             <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()"
                 (submit)="documentForm.valid && onSave()" [disabled]="documentForm.invalid" />
-            <pre>{{ documentForm.valid | json }}</pre>
-            <pre>{{ documentForm.value | json }}</pre>
-
-
         </form>
 
 
