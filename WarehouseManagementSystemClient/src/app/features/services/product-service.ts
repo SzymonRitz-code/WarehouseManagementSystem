@@ -32,7 +32,7 @@ export class ProductService {
     { id: '23', name: 'HDMI Cable 2m', sku: 'CAB-023' }
   ];
 
-  addProduct(product: CreateProduct) {
+   addProduct(product: CreateProduct) {
     // zamiana istniejących ID na number i znalezienie max
     const maxId = this.products.length > 0
       ? Math.max(...this.products.map(p => Number(p.id)))
