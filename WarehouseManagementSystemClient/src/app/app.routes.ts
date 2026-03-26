@@ -15,15 +15,15 @@ import { StockMoveComponent } from './features/stocks/pages/stock-move/stock-mov
 import { AuditLogListComponent } from './features/audit/audit-log-list/audit-log-list.component';
 import { DocumentListComponent } from './features/documents/pages/document-list/document-list.component';
 import { AdjustmentListComponent } from './features/inventory-adjustments/adjustment-list/adjustment-list.component';
-import { AdjustmentCreateComponent } from './features/inventory-adjustments/adjustment-create/adjustment-create.component';
-import { UserListComponent } from './features/users/user-list/user-list.component';
-import { UserFormComponent } from './features/users/user-form/user-form.component';
-import { UserDetailComponentnent } from './features/users/user-detail/user-detail.component';
+import { AdjustmentCreateComponent } from './features/inventory-adjustments/adjustment-form/adjustment-form.component';
 import { ZoneFormComponent } from './features/zones/pages/zone-form/zone-form.component';
 import { ZoneDetailComponent } from './features/zones/pages/zone-detail/zone-detail.component';
 import { DocumentFormComponent } from './features/documents/pages/document-form/document-form.component';
 import { DocumentDetailComponent } from './features/documents/pages/document-detail/document-detail.component';
 import { DocumentItemsComponent } from './features/documents/pages/document-items/document-items-list/document-items.component';
+import { UserListComponent } from './features/users/pages/user-list/user-list.component';
+import { UserFormComponent } from './features/users/pages/user-form/user-form.component';
+import { UserDetailComponent } from './features/users/pages/user-detail/user-detail.component';
 
 
 export const routes: Routes = [
@@ -51,6 +51,7 @@ export const routes: Routes = [
           { path: 'items', component: DocumentItemsComponent }
         ]
       },
+
       // Inventory Adjustments
       {
         path: 'adjustments',
@@ -59,6 +60,7 @@ export const routes: Routes = [
           { path: 'form', component: AdjustmentCreateComponent }
         ]
       },
+
       // Products
       {
         path: 'products',
@@ -69,6 +71,7 @@ export const routes: Routes = [
           { path: 'form/:id', component: ProductFormComponent },
         ],
       },
+
       // Stocks
       {
         path: 'stocks',
@@ -79,15 +82,18 @@ export const routes: Routes = [
           { path: 'move', component: StockMoveComponent }
         ],
       },
+
       // Users
       {
         path: 'users',
         children: [
           { path: '', component: UserListComponent },
           { path: 'form', component: UserFormComponent },
-          { path: 'detail/:id', component: UserDetailComponentnent }
+          { path: 'form/:id', component: UserFormComponent },
+          { path: 'detail/:id', component: UserDetailComponent }
         ],
       },
+
       // Warehouses
       {
         path: 'warehouses',
@@ -99,6 +105,7 @@ export const routes: Routes = [
           { path: 'zones', component: ZoneListComponent }
         ],
       },
+
       // Zones
       {
         path: 'zones',

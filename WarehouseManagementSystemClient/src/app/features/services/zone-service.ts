@@ -20,7 +20,7 @@ export class ZoneService {
       name: 'Receiving Dock 1',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '1'
     },
     {
       id: '2',
@@ -31,7 +31,7 @@ export class ZoneService {
       name: 'Receiving Dock 2',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '1'
     },
     {
       id: '3',
@@ -42,7 +42,7 @@ export class ZoneService {
       name: 'Bulk Storage A',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '2'
     },
     {
       id: '4',
@@ -53,7 +53,7 @@ export class ZoneService {
       name: 'Bulk Storage B',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '2'
     },
     {
       id: '5',
@@ -64,7 +64,7 @@ export class ZoneService {
       name: 'Picking Zone A1',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: true,
-      warehouseId: 'WH-1'
+      warehouseId: '3'
     },
     {
       id: '6',
@@ -75,7 +75,7 @@ export class ZoneService {
       name: 'Picking Zone A2',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: true,
-      warehouseId: 'WH-1'
+      warehouseId: '3'
     },
     {
       id: '7',
@@ -86,7 +86,7 @@ export class ZoneService {
       name: 'Packing Area',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: true,
-      warehouseId: 'WH-1'
+      warehouseId: '4'
     },
     {
       id: '8',
@@ -97,7 +97,7 @@ export class ZoneService {
       name: 'Returns Processing',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '4'
     },
     {
       id: '9',
@@ -108,7 +108,7 @@ export class ZoneService {
       name: 'Overflow Storage',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '4'
     },
 
     // COLD STORAGE
@@ -122,7 +122,7 @@ export class ZoneService {
       name: 'Cold Receiving',
       temperatureType: TemperatureType.Cold,
       isPickingZone: false,
-      warehouseId: 'WH-2'
+      warehouseId: '2'
     },
     {
       id: '11',
@@ -133,7 +133,7 @@ export class ZoneService {
       name: 'Cold Storage A',
       temperatureType: TemperatureType.Cold,
       isPickingZone: false,
-      warehouseId: 'WH-2'
+      warehouseId: '2'
     },
     {
       id: '12',
@@ -144,7 +144,7 @@ export class ZoneService {
       name: 'Cold Storage B',
       temperatureType: TemperatureType.Cold,
       isPickingZone: false,
-      warehouseId: 'WH-2'
+      warehouseId: '3'
     },
     {
       id: '13',
@@ -155,7 +155,7 @@ export class ZoneService {
       name: 'Cold Picking A',
       temperatureType: TemperatureType.Cold,
       isPickingZone: true,
-      warehouseId: 'WH-2'
+      warehouseId: '3'
     },
     {
       id: '14',
@@ -166,7 +166,7 @@ export class ZoneService {
       name: 'Cold Picking B',
       temperatureType: TemperatureType.Cold,
       isPickingZone: true,
-      warehouseId: 'WH-2'
+      warehouseId: '1'
     },
     {
       id: '15',
@@ -177,7 +177,7 @@ export class ZoneService {
       name: 'Cold Packing',
       temperatureType: TemperatureType.Cold,
       isPickingZone: true,
-      warehouseId: 'WH-2'
+      warehouseId: '1'
     },
     {
       id: '16',
@@ -188,7 +188,7 @@ export class ZoneService {
       name: 'Cold Returns',
       temperatureType: TemperatureType.Cold,
       isPickingZone: false,
-      warehouseId: 'WH-2'
+      warehouseId: '1'
     },
 
     // FROZEN
@@ -202,7 +202,7 @@ export class ZoneService {
       name: 'Frozen Receiving',
       temperatureType: TemperatureType.Frozen,
       isPickingZone: false,
-      warehouseId: 'WH-3'
+      warehouseId: '4'
     },
     {
       id: '18',
@@ -213,7 +213,7 @@ export class ZoneService {
       name: 'Frozen Bulk Storage',
       temperatureType: TemperatureType.Frozen,
       isPickingZone: false,
-      warehouseId: 'WH-3'
+      warehouseId: '4'
     },
     {
       id: '19',
@@ -224,7 +224,7 @@ export class ZoneService {
       name: 'Frozen Picking A',
       temperatureType: TemperatureType.Frozen,
       isPickingZone: true,
-      warehouseId: 'WH-3'
+      warehouseId: '4'
     },
     {
       id: '20',
@@ -235,7 +235,7 @@ export class ZoneService {
       name: 'Frozen Picking B',
       temperatureType: TemperatureType.Frozen,
       isPickingZone: true,
-      warehouseId: 'WH-3'
+      warehouseId: '7'
     },
     {
       id: '21',
@@ -246,7 +246,7 @@ export class ZoneService {
       name: 'Frozen Packing',
       temperatureType: TemperatureType.Frozen,
       isPickingZone: true,
-      warehouseId: 'WH-3'
+      warehouseId: '7'
     },
     {
       id: '22',
@@ -257,7 +257,7 @@ export class ZoneService {
       name: 'Frozen Returns',
       temperatureType: TemperatureType.Frozen,
       isPickingZone: false,
-      warehouseId: 'WH-3'
+      warehouseId: '8'
     },
 
     // EXTRA / SPECIAL ZONES
@@ -271,7 +271,7 @@ export class ZoneService {
       name: 'Quality Control',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '8'
     },
     {
       id: '24',
@@ -282,7 +282,7 @@ export class ZoneService {
       name: 'Damaged Goods',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: false,
-      warehouseId: 'WH-1'
+      warehouseId: '9'
     },
     {
       id: '25',
@@ -293,7 +293,7 @@ export class ZoneService {
       name: 'Cold QC',
       temperatureType: TemperatureType.Cold,
       isPickingZone: false,
-      warehouseId: 'WH-2'
+      warehouseId: '9'
     },
     {
       id: '26',
@@ -304,7 +304,7 @@ export class ZoneService {
       name: 'Frozen QC',
       temperatureType: TemperatureType.Frozen,
       isPickingZone: false,
-      warehouseId: 'WH-3'
+      warehouseId: '9'
     },
     {
       id: '27',
@@ -315,7 +315,7 @@ export class ZoneService {
       name: 'Cross Docking Area',
       temperatureType: TemperatureType.Ambient,
       isPickingZone: true,
-      warehouseId: 'WH-1'
+      warehouseId: '9'
     }
   ];
 

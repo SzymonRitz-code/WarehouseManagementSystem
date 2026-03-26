@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-adjustment-create',
+  selector: 'app-adjustment-form',
   imports: [],
-  templateUrl: './adjustment-create.component.html'
+  templateUrl: './adjustment-form.component.html'
 })
 export class AdjustmentCreateComponent {
 
