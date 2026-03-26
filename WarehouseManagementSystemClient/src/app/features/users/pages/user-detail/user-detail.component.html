@@ -1,0 +1,42 @@
+<div>
+    <app-page-breadcrumb pageTitle="User Details" />
+
+    <app-component-card title="User Information">
+        <div class="space-y-6">
+            <div>
+                <app-label for="inputEmail">Email</app-label>
+                <app-input-detail id="inputEmail" name="email" [value]="user.email"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputUserName">User Name</app-label>
+                <app-input-detail id="inputUserName" name="userName" [value]="user.username"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputFirstName">First Name</app-label>
+                <app-input-detail id="inputFirstName" name="firstName" [value]="user.firstName"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputLastName">Last Name</app-label>
+                <app-input-detail id="inputLastName" name="lastName" [value]="user.lastName"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputRole">Role</app-label>
+                <app-input-detail id="inputRole" name="role" [value]="user.role"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputStatus">Is Active</app-label>
+                <app-input-detail id="inputStatus" name="status" [value]="user.status"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputCreatedAt">Created At</app-label>
+                <app-input-detail id="inputCreatedAt" name="createdAt" [value]="user.createdAt"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="inputUpdatedAt">Updated At</app-label>
+                <app-input-detail id="inputUpdatedAt" name="updatedAt" [value]="user.updatedAt"></app-input-detail>
+            </div>
+        </div>
+        <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
+        </app-detail-actions>
+    </app-component-card>
+</div>

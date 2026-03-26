@@ -1,0 +1,42 @@
+<div>
+    <app-page-breadcrumb pageTitle="User Form" />
+
+    <app-component-card title="User">
+        <form [formGroup]="userForm" (ngSubmit)="onSave()">
+            <div class="space-y-6">
+                <div>
+                    <app-label for="inputEmail">Email</app-label>
+                    <app-input-field id="inputEmail" name="status" formControlName="email"
+                        [required]="true"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputUserName">User Name</app-label>
+                    <app-input-field id="inputUserName" name="userName" formControlName="username"
+                        [required]="true"></app-input-field>
+                </div> 
+                <div>
+                    <app-label for="inputFirstName">First Name</app-label>
+                    <app-input-field id="inputFirstName" name="firstName" formControlName="firstName"
+                        [required]="true"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputLastName">Last Name</app-label>
+                    <app-input-field id="inputLastName" name="lastName" formControlName="lastName"
+                        [required]="true"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputRole">Role</app-label>
+                    <app-input-field id="inputRole" name="role" formControlName="role"
+                        [required]="true"></app-input-field>
+                </div>
+                <div>
+                    <app-label for="inputStatus">Is Active</app-label>
+                    <app-input-field id="inputStatus" name="status" formControlName="status"
+                        [required]="true"></app-input-field>
+                </div>
+            </div>
+            <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" (submit)="userForm.valid && onSave()"
+                [disabled]="userForm.invalid" />
+        </form>
+    </app-component-card>
+</div>
