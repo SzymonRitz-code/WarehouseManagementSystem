@@ -23,12 +23,12 @@ export class WarehouseDetailComponent implements OnInit {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
     this.warehouse = this.warehouseService.getWarehouse(this.id) as Warehouse
   }
-
+  onEdit() {
+    this.router.navigateByUrl(`/warehouses/form/${(this.warehouse as Warehouse).id}`)
+  }
   onBack() {
     this.router.navigateByUrl('/warehouses')
   }
 
-  onEdit() {
-    this.router.navigateByUrl(`/warehouses/form/${(this.warehouse as Warehouse).id}`)
-  }
+
 }
