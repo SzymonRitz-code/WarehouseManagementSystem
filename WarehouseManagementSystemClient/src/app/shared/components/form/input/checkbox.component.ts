@@ -1,26 +1,40 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, forwardRef } from '@angular/core';
+import {
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR,
+  ReactiveFormsModule,
+  FormsModule
+} from '@angular/forms';
 
 @Component({
   selector: 'app-checkbox',
-  imports: [CommonModule],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => CheckboxComponent),
+      multi: true,
+    },
+  ],
   template: `
   <label
-  class="flex items-center space-x-3 group cursor-pointer"
-  [ngClass]="{ 'cursor-not-allowed opacity-60': disabled }"
->
-  <div class="relative w-5 h-5">
-    <input
-      [id]="id"
-      type="checkbox"
-      class="w-5 h-5 appearance-none cursor-pointer dark:border-gray-700 border border-gray-300 checked:border-transparent rounded-md checked:bg-brand-500 disabled:opacity-60"
-      [ngClass]="className"
-      [checked]="checked"
-      (change)="onChange($event)"
-      [disabled]="disabled"
-    />
-    @if (checked) {
-    <ng-container>
+    class="flex items-center space-x-3 group cursor-pointer"
+    [ngClass]="{ 'cursor-not-allowed opacity-60': disabled }"
+  >
+    <div class="relative w-5 h-5">
+      <input
+        [id]="id"
+        type="checkbox"
+        class="w-5 h-5 appearance-none cursor-pointer dark:border-gray-700 border border-gray-300 checked:border-transparent rounded-md checked:bg-brand-500 disabled:opacity-60"
+        [ngClass]="className"
+        [checked]="value"
+        (change)="onInputChange($event)"
+        [disabled]="disabled"
+      />
+
+      @if (value) {
       <svg
         class="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
         xmlns="http://www.w3.org/2000/svg"
@@ -37,10 +51,9 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
           stroke-linejoin="round"
         />
       </svg>
-    </ng-container>
-    }
-    @if (disabled) {
-    <ng-container>
+      }
+
+      @if (disabled) {
       <svg
         class="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
         xmlns="http://www.w3.org/2000/svg"
@@ -57,31 +70,51 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
           stroke-linejoin="round"
         />
       </svg>
-    </ng-container>
+      }
+    </div>
+
+    @if (label) {
+      <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+        {{ label }}
+      </span>
     }
-  </div>
-  @if (label) {
-  <span
-    class="text-sm font-medium text-gray-800 dark:text-gray-200"
-    >
-      {{ label }}
-  </span>
-  }
-</label>
-  `,
-  styles: ``
+  </label>
+  `
 })
-export class CheckboxComponent {
+export class CheckboxComponent implements ControlValueAccessor {
 
   @Input() label?: string;
-  @Input() checked = false;
   @Input() className = '';
   @Input() id?: string;
   @Input() disabled = false;
-  @Output() checkedChange = new EventEmitter<boolean>();
 
-  onChange(event: Event) {
+  value: boolean = false;
+
+  onChange: (value: boolean) => void = () => {};
+  onTouched: () => void = () => {};
+
+  /** Reactive Forms */
+  writeValue(val: boolean): void {
+    this.value = !!val;
+  }
+
+  registerOnChange(fn: any): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: any): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+  }
+
+  /** UI -> Form */
+  onInputChange(event: Event) {
     const input = event.target as HTMLInputElement;
-    this.checkedChange.emit(input.checked);
+    this.value = input.checked;
+    this.onChange(this.value);
+    this.onTouched();
   }
 }

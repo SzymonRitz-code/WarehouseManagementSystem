@@ -1,12 +1,11 @@
-<div 
-class="overflow-hidden rounded-xl border-t border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+<div class="overflow-hidden rounded-xl border-t border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
     <div class="max-w-full overflow-x-auto custom-scrollbar">
         <div class="bg-gray-50 flex items-center justify-between px-4 py-3">
-        
+
             <!-- LEFT: Page size -->
             <div class="flex items-center gap-3">
                 <span class="text-gray-500 dark:text-gray-400">Show</span>
-        
+
                 <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()"
                     class="py-2 pl-3 pr-8 text-sm border border-gray-300 rounded-lg dark:bg-gray-900 dark:text-white">
                     <option [value]="5">5</option>
@@ -14,53 +13,55 @@ class="overflow-hidden rounded-xl border-t border-gray-200 bg-white dark:border-
                     <option [value]="20">20</option>
                     <option [value]="50">50</option>
                 </select>
-        
+
                 <span class="text-gray-500 dark:text-gray-400">entries</span>
             </div>
-        
+
         </div>
         <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-white/[0.05]">
             <thead class="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                    <th
-                    *ngFor="let col of columns"
-                    (click)="col.sortable ? toggleSort(col.key) : null"
-                    [ngClass]="{'bg-gray-200 dark:bg-gray-700': sortKey === col.key}"
-                    class="px-4 py-3 text-left felx text-xs font-medium text-theme-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-                    >
+                    <th *ngFor="let col of columns" (click)="col.sortable ? toggleSort(col.key) : null"
+                        [ngClass]="{'bg-gray-200 dark:bg-gray-700': sortKey === col.key}"
+                        class="px-4 py-3 text-left felx text-xs font-medium text-theme-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
                         {{ col.label }}
                         <span *ngIf="col.sortable">
                             {{ sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '' }}
                         </span>
-                        <input
-                        type="text"
-                        placeholder="Filter..."
-                        [(ngModel)]="filters[col.key]"
-                        (ngModelChange)="applyFilters()"
-                        (click)="$event.stopPropagation()"
-                        class="w-full max-w-full border rounded px-2 py-1 text-theme-xs dark:bg-gray-800 dark:text-white"
-                    />
+                        <input type="text" placeholder="Filter..." [(ngModel)]="filters[col.key]"
+                            (ngModelChange)="applyFilters()" (click)="$event.stopPropagation()"
+                            class="w-full max-w-full border rounded px-2 py-1 text-theme-xs dark:bg-gray-800 dark:text-white" />
                     </th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-white/[0.05]">
                 <tr *ngFor="let row of paginatedData">
-                    <td *ngFor="let col of columns" class="px-4 py-4 font-normal text-theme-sm text-gray-500 dark:text-gray-400 whitespace-normal break-words">
+                    <td *ngFor="let col of columns"
+                        class="px-4 py-4 font-normal text-theme-sm text-gray-500 dark:text-gray-400 whitespace-normal break-words">
                         <ng-container *ngIf="col.type === 'date'; else checkTemplate">
                             {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }} CET
                         </ng-container>
-            
+
                         <!-- 2. Jeśli kolumna ma template -->
                         <ng-template #checkTemplate>
                             <ng-container *ngIf="col.template; else defaultCell">
-                                <ng-container *ngTemplateOutlet="col.template; context: { $implicit: row }"></ng-container>
+                                <ng-container
+                                    *ngTemplateOutlet="col.template; context: { $implicit: row }"></ng-container>
                             </ng-container>
                         </ng-template>
-            
+
                         <!-- 3. Domyślnie zwykła wartość -->
                         <ng-template #defaultCell>
                             {{ row[col.key] }}
                         </ng-template>
+                    </td>
+                    <td class="px-4 py-2">
+                        <ng-container *ngFor="let action of rowActions">
+                            <button *ngIf="!action.visible || action.visible(row)"
+                                (click)="emitRowAction(row, action.action)" class="mr-2 px-2 py-1 bg-gray-200 rounded">
+                                {{ action.label }}
+                            </button>
+                        </ng-container>
                     </td>
                 </tr>
             </tbody>
@@ -69,30 +70,22 @@ class="overflow-hidden rounded-xl border-t border-gray-200 bg-white dark:border-
 
     <div class="flex items-center justify-between mt-4 px-4 py-3 border-t border-gray-100 dark:border-white/10">
 
-        <button 
-            (click)="goToPageSafe(currentPage - 1)" 
-            [disabled]="currentPage === 1"
+        <button (click)="goToPageSafe(currentPage - 1)" [disabled]="currentPage === 1"
             class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40">
             Previous
         </button>
 
         <div class="flex justify-center mt-4 space-x-2">
-            <button 
-                *ngFor="let page of visiblePages" 
-                (click)="goToPageSafe(page)"
-                [ngClass]="{
+            <button *ngFor="let page of visiblePages" (click)="goToPageSafe(page)" [ngClass]="{
                     'bg-blue-100 text-blue-700': currentPage === page,   
                     'bg-gray-100 text-gray-700 hover:bg-gray-200': currentPage !== page
-                }"
-                [disabled]="page === '...'"
+                }" [disabled]="page === '...'"
                 class="px-3 py-1 rounded hover:bg-brand-400 hover:text-white transition-colors">
                 {{ page }}
             </button>
         </div>
 
-        <button 
-            (click)="goToPageSafe(currentPage + 1)" 
-            [disabled]="currentPage === totalPages"
+        <button (click)="goToPageSafe(currentPage + 1)" [disabled]="currentPage === totalPages"
             class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40">
             Next
         </button>
@@ -100,4 +93,3 @@ class="overflow-hidden rounded-xl border-t border-gray-200 bg-white dark:border-
     </div>
 
 </div>
-
