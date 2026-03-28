@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit, } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -8,11 +8,12 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, FormsModule],
   templateUrl: './table.component.html',
 })
-export class TableComponent<T extends Record<string, any> = any> implements OnInit {
+export class TableComponent<T extends Record<string, any> = any> implements OnInit, OnChanges {
+
 
   @Input() columns: { key: string; label: string; sortable?: boolean; template?: any; type?: string }[] = [];
   @Input() rowActions!: any[];
-  @Input() data: T[] = [];
+  @Input() data: T[] | null = [];
   @Input() pageSize = 10;
 
   @Output() sortChange = new EventEmitter<{ key: string; direction: 'asc' | 'desc' }>();
@@ -25,9 +26,16 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
   filteredData: T[] = [];
 
   ngOnInit(): void {
-    this.filteredData = [...this.data];
+    //this.filteredData = [...this.data!];
   }
-
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data'] && this.data) {
+      this.filteredData = [...this.data];
+    }
+  }
+  trackByFn(index: number, item: T) {
+    return (item as any).id ?? index;
+  }
   get paginatedData() {
     const start = (this.currentPage - 1) * this.pageSize;
     return this.filteredData.slice(start, start + this.pageSize);
@@ -44,8 +52,8 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
   }
 
   get sortedData(): T[] {
-    if (!this.sortKey) return this.data;
-    return [...this.data].sort((a, b) => {
+    if (!this.sortKey) return this.data!;
+    return [...this.data!].sort((a, b) => {
       const aVal = a[this.sortKey!];
       const bVal = b[this.sortKey!];
       if (aVal < bVal) return this.sortDir === 'asc' ? -1 : 1;

@@ -15,6 +15,32 @@
         </app-input-detail>
       </div>
     </div>
+    <div>
+      <app-label for="inputUnit">Unit</app-label>
+      <app-input-detail id="inputUnit" name="unit" [value]="product?.unit"></app-input-detail>
+    </div>
+    <div>
+      <app-label for="inputisRequiresBatch">Requires Batch</app-label>
+      <app-input-detail id="inputisRequiresBatch" name="requiresBatch"
+        [value]="product?.requiresBatch"></app-input-detail>
+    </div>
+    <div>
+      <app-label for="inputisActive">Is Active</app-label>
+      <app-input-detail id="inputisActive" name="isActive" [value]="product?.isActive"></app-input-detail>
+    </div>
+    <div>
+      <app-label for="inputWeight">Weight</app-label>
+      <app-input-detail id="weight" name="weight" [value]="product?.weight"></app-input-detail>
+    </div>
+    <div>
+      <app-label for="inputVolume">Volume</app-label>
+      <app-input-detail id="inputVolume" name="volume" [value]="product?.volume"></app-input-detail>
+    </div>
+    <div>
+      <app-label for="description">Description</app-label>
+      <app-text-area id="InputDescription" [value]="product?.description ??''" [disabled]="true">
+      </app-text-area>
+    </div>
 
     <!-- sekcja akcji -->
     <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()"> </app-detail-actions>

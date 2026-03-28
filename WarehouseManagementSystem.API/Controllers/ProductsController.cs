@@ -43,14 +43,21 @@ public class ProductsController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var product = _mapper.Map<Product>(productDto);
+        var product = new Product(
+            productDto.SKU,
+            productDto.Name,
+            productDto.Unit,
+            productDto.RequiresBatch ?? false,
+            productDto.Weight,
+            productDto.Volume,
+            productDto.Description);
 
-        // TODO Tutaj można dodać walidację biznesową np. unikalne SKU
+
         _unitOfWork.Products.Add(product);
         await _unitOfWork.SaveChangesAsync();
 
         var createdDto = _mapper.Map<ProductDto>(product);
-        return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, createdDto);
+        return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, createdDto);
     }
 
     [HttpPut("{productId}")]

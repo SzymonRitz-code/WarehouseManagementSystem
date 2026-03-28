@@ -30,7 +30,7 @@ builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
 builder.Services.AddScoped<IStockQueryService, StockQueryService>();
 
 
-//builder.Services.AddScoped<IStockReservationService, StockReservationService>();
+builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 
 builder.Services.AddScoped<IStockService, StockService>();
 
@@ -46,6 +46,17 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddWmsMappings();
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWmsClient",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -56,6 +67,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowWmsClient");
 
 app.UseAuthorization();
 

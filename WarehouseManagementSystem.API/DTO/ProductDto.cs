@@ -1,34 +1,27 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
-
-public record struct ProductDto(
-    [property: Required] Guid Id,
-
-    [property: Required, StringLength(50)]
-    string SKU,
-
-    [property: Required, StringLength(200)]
-    string Name,
-
-    string? Description,
-
+public class ProductDto
+{
+    public Guid Id { get; set; }
+    [Required, StringLength(50)]
+    public string? SKU { get; set; }
+    [Required, StringLength(200)]
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    [Required]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public UnitOfMeasure Unit { get; set; }
     [property: Required]
-    UnitOfMeasure Unit,
-
+    public bool? RequiresBatch { get; set; }
     [property: Required]
-    bool RequiresBatch,
-
+    public bool? IsActive { get; set; }
+    [Range(0, double.MaxValue)]
+    public decimal? Weight { get; set; }
+    [Range(0, double.MaxValue)]
+    public decimal? Volume { get; set; }
     [property: Required]
-    bool IsActive,
-
-    [property: Range(0, double.MaxValue)]
-    decimal? Weight,
-
-    [property: Range(0, double.MaxValue)]
-    decimal? Volume,
-
-    [property: Required]
-    DateTimeOffset CreatedAt
-);
+    public DateTimeOffset CreatedAt { get; set; }
+}

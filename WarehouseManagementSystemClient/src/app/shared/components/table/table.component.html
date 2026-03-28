@@ -32,15 +32,24 @@
                             (ngModelChange)="applyFilters()" (click)="$event.stopPropagation()"
                             class="w-full max-w-full border rounded px-2 py-1 text-theme-xs dark:bg-gray-800 dark:text-white" />
                     </th>
+                    <ng-container *ngIf="rowActions">
+                        <th></th>
+                    </ng-container>
+
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-white/[0.05]">
-                <tr *ngFor="let row of paginatedData">
+                <tr *ngFor="let row of paginatedData; trackBy:trackByFn">
                     <td *ngFor="let col of columns"
                         class="px-4 py-4 font-normal text-theme-sm text-gray-500 dark:text-gray-400 whitespace-normal break-words">
-                        <ng-container *ngIf="col.type === 'date'; else checkTemplate">
+                        <ng-container *ngIf="col.type === 'date'; else checkBoolean">
                             {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }} CET
                         </ng-container>
+                        <ng-template #checkBoolean>
+                            <ng-container *ngIf="col.type === 'boolean'; else checkTemplate">
+                                {{ row[col.key] ? 'Yes' : 'No' }}
+                            </ng-container>
+                        </ng-template>
 
                         <!-- 2. Jeśli kolumna ma template -->
                         <ng-template #checkTemplate>
@@ -55,14 +64,21 @@
                             {{ row[col.key] }}
                         </ng-template>
                     </td>
-                    <td class="px-4 py-2">
-                        <ng-container *ngFor="let action of rowActions">
-                            <button *ngIf="!action.visible || action.visible(row)"
-                                (click)="emitRowAction(row, action.action)" class="mr-2 px-2 py-1 bg-gray-200 rounded">
-                                {{ action.label }}
-                            </button>
-                        </ng-container>
-                    </td>
+                    <ng-container *ngIf="rowActions">
+                        <td class="px-4 py-2">
+                            <div class="flex">
+                                <ng-container *ngFor="let action of rowActions">
+                                    <button *ngIf="!action.visible || action.visible(row)"
+                                        (click)="emitRowAction(row, action.action)"
+                                        class="mr-2 px-2 py-1 text-sm rounded-lg border hover:bg-brand-400 rounded ">
+                                        {{ action.label }}
+                                    </button>
+                                </ng-container>
+                            </div>
+
+                        </td>
+                    </ng-container>
+
                 </tr>
             </tbody>
         </table>
@@ -71,7 +87,7 @@
     <div class="flex items-center justify-between mt-4 px-4 py-3 border-t border-gray-100 dark:border-white/10">
 
         <button (click)="goToPageSafe(currentPage - 1)" [disabled]="currentPage === 1"
-            class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40">
+            class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40 hover:bg-brand-400">
             Previous
         </button>
 
@@ -86,7 +102,7 @@
         </div>
 
         <button (click)="goToPageSafe(currentPage + 1)" [disabled]="currentPage === totalPages"
-            class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40">
+            class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40 hover:bg-brand-400">
             Next
         </button>
 
