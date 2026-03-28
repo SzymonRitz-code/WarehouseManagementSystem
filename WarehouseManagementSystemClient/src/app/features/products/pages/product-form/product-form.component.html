@@ -5,6 +5,10 @@
     <form [formGroup]="productForm" (ngSubmit)="productForm.valid && onSave()">
       <div class="space-y-6">
         <div>
+          <app-input-field id="inputId" type="text" name="id" formControlName="id" [required]="true"
+            hidden></app-input-field>
+        </div>
+        <div>
           <app-label for="inputName">Name</app-label>
           <app-input-field id="inputName" type="text" name="name" formControlName="name" [required]="true"
             [maxlength]="30" hint="Enter product name"></app-input-field>
@@ -41,8 +45,7 @@
             hint="Enter Document Description"></app-text-area>
         </div>
       </div>
-      <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" 
-        [disabled]="productForm.invalid" />
+      <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="productForm.invalid" />
     </form>
   </app-component-card>
 </div>

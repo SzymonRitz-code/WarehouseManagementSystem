@@ -48,6 +48,7 @@ export class ProductFormComponent implements OnInit {
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id');
     this.productForm = this.fb.group({
+      id: [''],
       name: ['', [Validators.required, Validators.maxLength(200)]],
       sku: ['', [Validators.required, Validators.maxLength(50)]],
       description: [''],
@@ -62,6 +63,7 @@ export class ProductFormComponent implements OnInit {
         next: (res: Product) => {
           this.product = res;
           this.productForm.patchValue({
+            id: (this.product as Product).id,
             name: this.product.name,
             sku: this.product.sku,
             description: this.product.description,
@@ -80,15 +82,24 @@ export class ProductFormComponent implements OnInit {
   }
 
   onSave() {
-    this.product = this.productForm.getRawValue()
-    this.productService.addProduct(this.product).subscribe({
-      next: (responce) => {
-        this.product = responce
-        this.router.navigateByUrl(`/products/detail/${(this.product as Product).id}`);
-      },
-      error: (err) => { console.log(err) }
-    });
+    if (this.productForm.invalid) return;
 
+    const product = this.productForm.getRawValue();
+    console.log(this.id)
+    const request$ = this.id
+      ? this.productService.updateProduct(product)
+      : this.productService.addProduct(product);
+
+    request$.subscribe({
+      next: (response: Product) => {
+        this.router.navigateByUrl(`/products/detail/${this.id}`);
+      },
+      error: (err) => {
+        console.error(err);
+        // tutaj docelowo:
+        // this.setServerErrors(err)
+      }
+    });
   }
   onBack() {
     this.router.navigateByUrl('/products');

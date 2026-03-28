@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Warehouse } from '../warehouses/model/warehouse';
-import { CreateWarehouse } from '../warehouses/model/create-warehouse';
+import { Warehouse } from '../model/warehouse';
+import { CreateWarehouse } from '../model/create-warehouse';
+import { environment } from '../../../environments/environment';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WarehouseService {
-
+  private apiUrl: string = environment.apiUrl
+  constructor(private http: HttpClient) { }
 
   warehouses: Warehouse[] = [
     {

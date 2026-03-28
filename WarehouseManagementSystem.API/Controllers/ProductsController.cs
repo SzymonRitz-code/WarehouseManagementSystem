@@ -61,7 +61,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{productId}")]
-    public async Task<IActionResult> UpdateProduct(Guid productId, ProductDto productDto)
+    public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, ProductDto productDto)
     {
         if (productId != productDto.Id) return BadRequest();
         if (!ModelState.IsValid) return BadRequest(ModelState);

@@ -6,7 +6,7 @@ import { LabelComponent } from "../../../../shared/components/form/label/label.c
 import { DetailActionsComponent } from "../../../../shared/components/form/detail-actions/detail-actions.component";
 import { Warehouse } from '../../model/warehouse';
 import { ActivatedRoute, Router } from '@angular/router';
-import { WarehouseService } from '../../../services/warehouse-service';
+import { WarehouseService } from '../../services/warehouse-service';
 
 @Component({
   selector: 'app-warehouse-detail',

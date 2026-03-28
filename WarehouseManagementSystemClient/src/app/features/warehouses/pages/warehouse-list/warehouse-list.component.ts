@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
-import { WarehouseService } from '../../../services/warehouse-service';
+import { WarehouseService } from '../../services/warehouse-service';
 import { Warehouse } from '../../model/warehouse';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-warehouse-list',
   standalone: true,
-  imports: [ComponentCardComponent, TableComponent, PageBreadcrumbComponent],
+  imports: [CommonModule, ComponentCardComponent, TableComponent, PageBreadcrumbComponent],
   templateUrl: './warehouse-list.component.html'
 })
 export class WarehouseListComponent implements OnInit {

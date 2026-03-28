@@ -10,7 +10,7 @@ import { CreateZone } from '../../model/create-zone';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Warehouse } from '../../../warehouses/model/warehouse';
 import { ZoneService } from '../../../services/zone-service';
-import { WarehouseService } from '../../../services/warehouse-service';
+import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { CommonModule } from '@angular/common';
 import { InputSelectComponent } from "../../../../shared/components/form/input/input-select/input-select.component";
 

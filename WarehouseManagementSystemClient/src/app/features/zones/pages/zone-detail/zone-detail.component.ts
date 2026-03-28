@@ -7,7 +7,7 @@ import { DetailActionsComponent } from "../../../../shared/components/form/detai
 import { Zone } from '../../model/zone';
 import { ZoneService } from '../../../services/zone-service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { WarehouseService } from '../../../services/warehouse-service';
+import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 @Component({
   selector: 'app-zone-detail',
   standalone: true,

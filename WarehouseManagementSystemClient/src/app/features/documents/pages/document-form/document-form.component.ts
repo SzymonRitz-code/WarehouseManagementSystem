@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { LabelComponent } from "../../../../shared/components/form/label/label.component";
 import { FormActionsComponent } from "../../../../shared/components/form/form-actions/form-actions.component";
 import { InputSelectComponent } from '../../../../shared/components/form/input/input-select/input-select.component';
-import { WarehouseService } from '../../../services/warehouse-service';
+import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { InputFieldComponent } from '../../../../shared/components/form/input/input-field.component';
 import { DatePickerComponent } from "../../../../shared/components/form/date-picker/date-picker.component";
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";

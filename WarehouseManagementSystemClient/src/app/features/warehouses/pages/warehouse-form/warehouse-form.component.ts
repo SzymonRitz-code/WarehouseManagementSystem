@@ -8,7 +8,7 @@ import { Warehouse } from '../../model/warehouse';
 import { CreateWarehouse } from '../../model/create-warehouse';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { WarehouseService } from '../../../services/warehouse-service';
+import { WarehouseService } from '../../services/warehouse-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RadioComponent } from "../../../../shared/components/form/input/radio.component";
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";

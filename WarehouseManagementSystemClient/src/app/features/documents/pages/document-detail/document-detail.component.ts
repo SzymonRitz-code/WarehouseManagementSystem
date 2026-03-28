@@ -8,7 +8,7 @@ import { Document } from '../../model/document';
 import { DocumentService } from '../../services/document-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
-import { WarehouseService } from '../../../services/warehouse-service';
+import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { DocumentItemsComponent } from "../document-items/document-items-list/document-items.component";
 import { DocumentItemsDetailComponent } from "../document-items/app-document-items-detail/app-document-items-detail.component";
 import { ZoneService } from '../../../services/zone-service';

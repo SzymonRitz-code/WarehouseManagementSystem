@@ -43,7 +43,7 @@
                     <td *ngFor="let col of columns"
                         class="px-4 py-4 font-normal text-theme-sm text-gray-500 dark:text-gray-400 whitespace-normal break-words">
                         <ng-container *ngIf="col.type === 'date'; else checkBoolean">
-                            {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }} CET
+                            {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }}
                         </ng-container>
                         <ng-template #checkBoolean>
                             <ng-container *ngIf="col.type === 'boolean'; else checkTemplate">
