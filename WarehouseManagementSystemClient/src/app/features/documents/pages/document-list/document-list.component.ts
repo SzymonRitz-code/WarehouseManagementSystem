@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { DocumentService } from '../../../services/document-service';
+import { DocumentService } from '../../services/document-service';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
@@ -32,10 +32,10 @@ export class DocumentListComponent implements OnInit {
     { key: 'createdAt', label: 'Created At', sortable: true, type: 'date' },    // data utworzenia
     { key: 'approvedAt', label: 'Approved At', sortable: true, type: 'date' },  // data zatwierdzenia
     { key: 'itemCount', label: 'Items', sortable: true },                       // liczba produktów w dokumencie
-    { key: 'totalQuantity', label: 'Total Qty', sortable: true },               // suma ilości wszystkich produktów
-    { key: 'actions', label: ' ', sortable: false }                             // np. podgląd, edycja, PDF, zatwierdzenie
+    { key: 'totalQuantity', label: 'Total Qty', sortable: true }                // suma ilości wszystkich produktów
+
   ];
-  documentActions = [
+  documentActions = [    // np. podgląd, edycja, PDF, zatwierdzenie
     { label: 'Edit', action: 'edit', visible: (row: Document) => row.status === 'Draft' },
     { label: 'Details', action: 'details' },
     { label: 'Confirm', action: 'confirm', visible: (row: Document) => row.status === 'Draft' },

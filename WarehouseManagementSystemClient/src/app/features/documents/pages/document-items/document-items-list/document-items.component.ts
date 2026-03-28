@@ -5,7 +5,7 @@ import { ZoneService } from '../../../../services/zone-service';
 import { InputSelectComponent } from '../../../../../shared/components/form/input/input-select/input-select.component';
 import { InputFieldComponent } from "../../../../../shared/components/form/input/input-field.component";
 import { Product } from '../../../../products/model/product';
-import { ProductService } from '../../../../services/product-service';
+import { ProductService } from '../../../../products/services/product-service';
 
 @Component({
   selector: 'app-document-items',

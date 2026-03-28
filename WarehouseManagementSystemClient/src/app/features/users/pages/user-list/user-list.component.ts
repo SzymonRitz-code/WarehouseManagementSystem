@@ -31,8 +31,7 @@ export class UserListComponent implements OnInit {
     { key: 'role', label: 'Role', sortable: true },              // np. Admin, User, Moderator
     { key: 'status', label: 'Status', sortable: true, type: 'boolean' }, // aktywny / nieaktywny
     { key: 'createdAt', label: 'Created At', sortable: true, type: 'date' },
-    { key: 'updatedAt', label: 'Updated At', sortable: true, type: 'date' },
-    { key: 'actions', label: '', sortable: false }        // Edit / Delete / Details
+    { key: 'updatedAt', label: 'Updated At', sortable: true, type: 'date' }
   ];
 
   userActions = [

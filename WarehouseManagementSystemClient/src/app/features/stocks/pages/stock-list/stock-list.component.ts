@@ -29,7 +29,6 @@ export class StockListComponent implements OnInit {
     { key: 'availableQty', label: 'Available Qty', sortable: true },
     { key: 'reservedQty', label: 'Reserved Qty', sortable: true },
     { key: 'totalQty', label: 'Total Qty', sortable: true },
-    { key: 'lastUpdated', label: 'Last Updated', sortable: true, type: 'date' },
-    { key: 'actions', label: ' ', sortable: false },
+    { key: 'lastUpdated', label: 'Last Updated', sortable: true, type: 'date' }
   ];
 }

@@ -6,7 +6,7 @@ import { CreateDocument } from '../../model/create-document';
 import { Document } from '../../model/document';
 import { DocumentType } from '../../../../core/enums/documentType';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DocumentService } from '../../../services/document-service';
+import { DocumentService } from '../../services/document-service';
 import { CommonModule } from '@angular/common';
 import { LabelComponent } from "../../../../shared/components/form/label/label.component";
 import { FormActionsComponent } from "../../../../shared/components/form/form-actions/form-actions.component";

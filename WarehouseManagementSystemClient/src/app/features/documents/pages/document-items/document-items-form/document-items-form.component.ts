@@ -1,12 +1,12 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ZoneService } from '../../../../services/zone-service';
-import { ProductService } from '../../../../services/product-service';
 import { CommonModule } from '@angular/common';
 import { InputSelectComponent } from "../../../../../shared/components/form/input/input-select/input-select.component";
 import { LabelComponent } from "../../../../../shared/components/form/label/label.component";
 import { InputFieldComponent } from "../../../../../shared/components/form/input/input-field.component";
 import { ModalComponent } from "../../../../../shared/components/common/modal/modal.component";
+import { ProductService } from '../../../../products/services/product-service';
 
 @Component({
   selector: 'app-document-items-form',

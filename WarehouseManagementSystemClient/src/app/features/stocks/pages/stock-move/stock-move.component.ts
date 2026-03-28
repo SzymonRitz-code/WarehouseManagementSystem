@@ -25,8 +25,7 @@ export class StockMoveComponent {
     { key: 'status', label: 'Status', sortable: true },                   // Completed / Pending / Cancelled
     { key: 'movedBy', label: 'Moved By', sortable: true },
     { key: 'movedAt', label: 'Moved At', sortable: true, type: 'date' },
-    { key: 'reference', label: 'Document', sortable: true },
-    { key: 'actions', label: ' ', sortable: false }                       // np. podgląd szczegółów ruchu
+    { key: 'reference', label: 'Document', sortable: true }
   ];
   
   stockMoves = [

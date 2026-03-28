@@ -1,14 +1,15 @@
 import { Injectable } from "@angular/core";
-import { CreateDocument } from "../documents/model/create-document";
-import { Document } from "../documents/model/document";
-import { DocumentStatus } from "../../core/enums/documentStatus";
+import { CreateDocument } from "../model/create-document";
+import { Document } from "../model/document";
+import { DocumentStatus } from "../../../core/enums/documentStatus";
+import { environment } from "../../../environments/environment";
 
 @Injectable({
     providedIn: 'root'
 })
 export class DocumentService {
 
-
+    private apiUrl:string = environment.apiUrl
 
     documents: Document[] = []
     documentList = [

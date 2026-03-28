@@ -31,8 +31,7 @@ export class WarehouseListComponent implements OnInit {
     { key: 'totalStock', label: 'Total Stock', sortable: true },
     { key: 'totalQty', label: 'Total Qty', sortable: true },
     { key: 'Status', label: 'Status', sortable: true },
-    { key: 'createdAt', label: 'CreatedAt', sortable: true, type: 'date' },
-    { key: 'actions', label: ' ', sortable: false },
+    { key: 'createdAt', label: 'CreatedAt', sortable: true, type: 'date' }
   ];
   warehouseActions = [
     { label: 'Edit', action: 'edit' },
