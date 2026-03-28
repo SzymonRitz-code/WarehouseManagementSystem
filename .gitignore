@@ -368,18 +368,30 @@ FodyWeavers.xsd
 
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
+# Angular
+.angular/
+
 # Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
+dist/
+tmp/
+out-tsc/
+bazel-out/
+build/
+dist-ssr/
 
 # Node
-/node_modules
+node_modules/
 npm-debug.log
 yarn-error.log
+*.log
+logs/
 
-# IDEs and editors
+# Env
+.env
+.env.local
+.env.*.local
+
+# IDEs
 .idea/
 .project
 .classpath
@@ -388,25 +400,31 @@ yarn-error.log
 .settings/
 *.sublime-workspace
 
-# Visual Studio Code
+# VS Code
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/mcp.json
-.history/*
 
-# Miscellaneous
-/.angular/cache
+.history/
+
+# Cache
+.cache/
+.eslintcache
 .sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
+
+# Misc
+connect.lock
+coverage/
+libpeerconnection.log
 testem.log
-/typings
+typings/
 __screenshots__/
 
-# System files
+# System
 .DS_Store
 Thumbs.db
+*.tmp
+*.swp
