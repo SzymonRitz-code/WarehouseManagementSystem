@@ -1,14 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO
 {
-    public record struct CreateProductDTO(
-    [Required(ErrorMessage = "Product name is required.")]
-    [MaxLength(200, ErrorMessage = "Product name cannot exceed 200 characters.")]
-    string Name,
-
-    [Required(ErrorMessage = "SKU is required.")]
-    [MaxLength(50, ErrorMessage = "SKU cannot exceed 50 characters.")]
-    string SKU
-    );
+    public class CreateProductDto
+    {
+        [Required, StringLength(50)]
+        public string? Sku { get; set; }
+        [Required, StringLength(200)]
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        [Required]
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public UnitOfMeasure Unit { get; set; }
+        [property: Required]
+        public bool? RequiresBatch { get; set; }
+        [property: Required]
+        public bool? IsActive { get; set; }
+        [Range(0, double.MaxValue)]
+        public decimal? Weight { get; set; }
+        [Range(0, double.MaxValue)]
+        public decimal? Volume { get; set; }
+    }
 }

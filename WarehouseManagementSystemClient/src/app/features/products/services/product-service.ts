@@ -10,7 +10,8 @@ import { Observable } from 'rxjs';
 })
 export class ProductService {
 
-  private apiUrl: string = environment.apiUrl
+  private readonly apiUrl: string = environment.apiUrl;
+
   constructor(private http: HttpClient) { }
 
   getProducts(): Observable<Product[]> {
@@ -18,14 +19,14 @@ export class ProductService {
   }
 
   getProduct(id: string) {
-    return this.http.get<Product>(`${environment.apiUrl}/products/${id}`)
+    return this.http.get<Product>(`${environment.apiUrl}/products/${id}`);
   }
 
   addProduct(product: CreateProduct) {
-    return this.http.post<Product>(`${this.apiUrl}/products`, product)
+    return this.http.post<Product>(`${this.apiUrl}/products`, product);
   }
 
   updateProduct(product: Product) {
-    return this.http.put<Product>(`${this.apiUrl}/products/${product.id}`, product)
+    return this.http.put<Product>(`${this.apiUrl}/products/${product.id}`, product);
   }
 }

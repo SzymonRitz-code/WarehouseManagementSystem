@@ -14,6 +14,7 @@ import { InputSelectComponent } from "../../../../shared/components/form/input/i
 import { UnitOfMeasure } from '../../../../core/enums/unitOfMeasure';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { TextAreaComponent } from '../../../../shared/components/form/input/text-area.component';
+import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
 
 @Component({
   selector: 'app-product-form',
@@ -48,7 +49,7 @@ export class ProductFormComponent implements OnInit {
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id');
     this.productForm = this.fb.group({
-      id: [''],
+      id: [this.id || null],
       name: ['', [Validators.required, Validators.maxLength(200)]],
       sku: ['', [Validators.required, Validators.maxLength(50)]],
       description: [''],
@@ -85,7 +86,6 @@ export class ProductFormComponent implements OnInit {
     if (this.productForm.invalid) return;
 
     const product = this.productForm.getRawValue();
-    console.log(this.id)
     const request$ = this.id
       ? this.productService.updateProduct(product)
       : this.productService.addProduct(product);
@@ -96,12 +96,13 @@ export class ProductFormComponent implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        // tutaj docelowo:
-        // this.setServerErrors(err)
+        setServerErrors(err, this.productForm);
       }
     });
   }
   onBack() {
     this.router.navigateByUrl('/products');
   }
+
+
 }

@@ -5,44 +5,64 @@
     <form [formGroup]="productForm" (ngSubmit)="productForm.valid && onSave()">
       <div class="space-y-6">
         <div>
-          <app-input-field id="inputId" type="text" name="id" formControlName="id" [required]="true"
-            hidden></app-input-field>
-        </div>
-        <div>
           <app-label for="inputName">Name</app-label>
           <app-input-field id="inputName" type="text" name="name" formControlName="name" [required]="true"
             [maxlength]="30" hint="Enter product name"></app-input-field>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('name')?.errors?.['server']">
+            {{ productForm.get('name')?.errors?.['server'] }}
+          </div>
         </div>
         <div>
           <app-label for="inputSKU">SKU</app-label>
           <app-input-field id="inputSKU" name="sku" formControlName="sku" [required]="true"></app-input-field>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('sku')?.errors?.['server']">
+            {{ productForm.get('sku')?.errors?.['server'] }}
+          </div>
         </div>
         <div>
           <app-label for="inputUnit">Unit</app-label>
           <app-input-select id="inputUnit" name="unit" formControlName="unit" [options]="unitOptions"
             [required]="true"></app-input-select>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('unit')?.errors?.['server']">
+            {{ productForm.get('unit')?.errors?.['server'] }}
+          </div>
         </div>
         <div>
           <app-label for="inputisRequiresBatch">Requires Batch</app-label>
           <app-checkbox id="inputisRequiresBatch" name="requiresBatch" formControlName="requiresBatch"
             [required]="true"></app-checkbox>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('requiresBatch')?.errors?.['server']">
+            {{ productForm.get('requiresBatch')?.errors?.['server'] }}
+          </div>
         </div>
         <div>
           <app-label for="inputisActive">Is Active</app-label>
           <app-checkbox id="inputisActive" name="isActive" formControlName="isActive" [required]="true"></app-checkbox>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('isActive')?.errors?.['server']">
+            {{ productForm.get('isActive')?.errors?.['server'] }}
+          </div>
         </div>
         <div>
           <app-label for="inputWeight">Weight</app-label>
           <app-input-field id="weight" name="weight" formControlName="weight" [required]="true"></app-input-field>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('weight')?.errors?.['server']">
+            {{ productForm.get('weight')?.errors?.['server'] }}
+          </div>
         </div>
         <div>
           <app-label for="inputVolume">Volume</app-label>
           <app-input-field id="inputVolume" name="volume" formControlName="volume" [required]="true"></app-input-field>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('volume')?.errors?.['server']">
+            {{ productForm.get('volume')?.errors?.['server'] }}
+          </div>
         </div>
         <div>
           <app-label for="inputDescription">Descrition</app-label>
           <app-text-area id="inputDescription" type="text" name="description" formControlName="description"
             hint="Enter Document Description"></app-text-area>
+          <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('description')?.errors?.['server']">
+            {{ productForm.get('description')?.errors?.['server'] }}
+          </div>
         </div>
       </div>
       <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="productForm.invalid" />

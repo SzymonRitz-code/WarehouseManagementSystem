@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using Humanizer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.Domain.Interfaces;
@@ -39,12 +41,17 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductDto>> CreateProduct(ProductDto productDto)
+    public async Task<ActionResult<ProductDto>> CreateProduct(CreateProductDto productDto)
     {
+        if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku))
+        {
+            ModelState.AddModelError(nameof(productDto.Sku), "Sku Already exists");
+            return ValidationProblem(ModelState);
+        }
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var product = new Product(
-            productDto.SKU,
+            productDto.Sku,
             productDto.Name,
             productDto.Unit,
             productDto.RequiresBatch ?? false,

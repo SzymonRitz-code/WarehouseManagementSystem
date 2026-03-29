@@ -17,7 +17,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ProductListComponent implements OnInit {
 
-  products!: Observable<Product[]>;
+  products$!: Observable<Product[]>;
   columns = [
     { key: 'sku', label: 'SKU', sortable: true },
     { key: 'name', label: 'Name', sortable: true },
@@ -36,7 +36,7 @@ export class ProductListComponent implements OnInit {
 
 
   ngOnInit(): void {
-    this.products = this.productService.getProducts()
+    this.products$ = this.productService.getProducts();
   }
 
   goToForm() {
