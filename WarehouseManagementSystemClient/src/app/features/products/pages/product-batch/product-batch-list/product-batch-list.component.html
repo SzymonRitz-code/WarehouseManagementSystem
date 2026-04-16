@@ -1,0 +1,43 @@
+<div>
+    <app-page-breadcrumb pageTitle="Product Batch List" />
+
+    <app-component-card title="Product Information">
+        <div class="space-y-6">
+            <div>
+                <!-- TODO sprawdzić jak rozwiązać problem z ?. gdy product jest undefined. 
+                 Chodzi mi o to że przy obsevable dane mogą spłynąć później niż element się pojawi-->
+                <app-label for="productName">Name</app-label>
+                <app-input-detail id="productName" [value]="product?.name">
+                </app-input-detail>
+            </div>
+
+            <div>
+                <app-label for="productSku">SKU</app-label>
+                <app-input-detail id="productSku" [value]="product?.sku">
+                </app-input-detail>
+            </div>
+        </div>
+        <div>
+            <app-label for="inputUnit">Unit</app-label>
+            <app-input-detail id="inputUnit" name="unit" [value]="product?.unit"></app-input-detail>
+        </div>
+        <div>
+            <app-label for="description">Description</app-label>
+            <app-text-area id="InputDescription" [value]="product?.description ??''" [disabled]="true">
+            </app-text-area>
+        </div>
+    </app-component-card>
+
+    <app-component-card title="Product Batch List">
+        <button card-actions (click)="goToForm()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            Add Product Batch
+        </button>
+        <div
+            class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+            <app-table [columns]="columns" [data]="batches$ | async" [pageSize]="5" [rowActions]="batchActions"
+                (rowAction)="onBatchAction($event)">>
+            </app-table>
+        </div>
+    </app-component-card>
+</div>

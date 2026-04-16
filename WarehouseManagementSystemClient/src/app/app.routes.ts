@@ -24,6 +24,9 @@ import { DocumentItemsComponent } from './features/documents/pages/document-item
 import { UserListComponent } from './features/users/pages/user-list/user-list.component';
 import { UserFormComponent } from './features/users/pages/user-form/user-form.component';
 import { UserDetailComponent } from './features/users/pages/user-detail/user-detail.component';
+import { ProductBatchListComponent } from './features/products/pages/product-batch/product-batch-list/product-batch-list.component';
+import { ProductBatchFormComponent } from './features/products/pages/product-batch/product-batch-form/product-batch-form.component';
+import { ProductBatchDetailComponent } from './features/products/pages/product-batch/product-batch-detail/product-batch-detail.component';
 
 
 export const routes: Routes = [
@@ -69,6 +72,14 @@ export const routes: Routes = [
           { path: 'detail/:id', component: ProductDetailComponent },
           { path: 'form', component: ProductFormComponent },
           { path: 'form/:id', component: ProductFormComponent },
+          {
+            path: ':id/batches', children: [
+              { path: '', component: ProductBatchListComponent },
+              { path: 'form', component: ProductBatchFormComponent },
+              { path: 'form/:batchId', component: ProductBatchFormComponent },
+              { path: 'detail/:batchId', component: ProductBatchDetailComponent }
+            ]
+          }
         ],
       },
 

@@ -1,23 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace WarehouseManagementSystem.API.DTO;
 
-namespace WarehouseManagementSystem.API.DTO;
+public class ProductBatchDto: CreateProductBatchDto
+{
+    public Guid Id { get; set; }
+    public string? ProductName { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
 
-public record struct ProductBatchDto(
-    [property: Required] Guid Id,
-
-    [property: Required, StringLength(50)]
-    string BatchNumber,
-
-    DateOnly? ExpirationDate,
-
-    DateOnly? ManufacturedDate,
-
-    [property: Required]
-    DateTimeOffset CreatedAt,
-
-    [property: Required]
-    Guid ProductId,
-
-    [property: Required, StringLength(200)]
-    string ProductName
-);

@@ -1,0 +1,26 @@
+<div>
+    <app-page-breadcrumb pageTitle="Batch Details" />
+
+    <app-component-card title="Batch Information">
+
+        <div class="space-y-6">
+            <div>
+                <app-label for="batchNumber">Batch Number</app-label>
+                <app-input-detail id="batchNumber" [value]="batch?.batchNumber"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="manufacturedDate">Manufactured Date</app-label>
+                <app-input-detail id="manufacturedDate" [value]="batch?.manufacturedDate"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="expirationDate">Expiration Date</app-label>
+                <app-input-detail id="expirationDate" [value]="batch?.expirationDate"></app-input-detail>
+            </div>
+            <div>
+                <app-label for="product">Product</app-label>
+                <app-input-detail id="product" [value]="batch?.productName"></app-input-detail>
+            </div>
+        </div>
+        <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()"/>
+    </app-component-card>
+</div>

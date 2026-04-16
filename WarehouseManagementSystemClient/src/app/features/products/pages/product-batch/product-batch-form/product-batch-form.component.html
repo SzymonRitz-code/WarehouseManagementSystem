@@ -1,0 +1,41 @@
+<div>
+    <app-page-breadcrumb pageTitle="Batch Form" />
+
+    <app-component-card title="Batch">
+        <form [formGroup]="batchForm" (ngSubmit)="batchForm.valid && onSave()">
+            <div class="space-y-6">
+                <div>
+                    <app-label for="inputBatchNumber">Batch Number</app-label>
+                    <app-input-field id="inputBatchNumber" type="text" name="batchNumber" formControlName="batchNumber"
+                        [required]="true" [maxlength]="30" hint="Enter batch number"></app-input-field>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="batchForm.get('batchNumber')?.errors?.['server']">
+                        {{ batchForm.get('batchNumber')?.errors?.['server'] }}
+                    </div>
+                </div>
+                <div>
+                    <app-label for="inputManufacturedDate">Manufactured Date</app-label>
+                    <app-date-picker id="inputManufacturedDate" name="manufacturedDate" formControlName="manufacturedDate"
+                        [required]="false"></app-date-picker>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="batchForm.get('manufacturedDate')?.errors?.['server']">
+                        {{ batchForm.get('manufacturedDate')?.errors?.['server'] }}
+                    </div>
+                </div>
+                <div>
+                    <app-label for="inputExpirationDate">Expiration Date</app-label>
+                    <app-date-picker id="inputExpirationDate" name="expirationDate" formControlName="expirationDate"
+                        [required]="false"></app-date-picker>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="batchForm.get('expirationDate')?.errors?.['server']">
+                        {{ batchForm.get('expirationDate')?.errors?.['server'] }}
+                    </div>
+                </div>
+                <div>
+                    <app-label for="inputProduct">Product</app-label>
+                    <app-input-select id="inputProduct" formControlName="productId" [options]="productOptions"
+                        placeholder="Select Product" className="dark:bg-dark-900" [required]="true"
+                        hint="Choose Product" />
+                </div>
+            </div>
+            <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="batchForm.invalid" />
+        </form>
+    </app-component-card>
+</div>
