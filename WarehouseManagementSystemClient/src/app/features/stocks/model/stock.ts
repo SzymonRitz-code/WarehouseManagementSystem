@@ -1,11 +1,16 @@
-export interface Stock{
-    id: string,
-    productSku: string,
-    productName: string,
-    warehouse: string,
-    zone: string,
-    availableQty: number,
-    reservedQty: number,
-    totalQty: number,
-    lastUpdated: Date
+export interface Stock {
+    id: string;
+    productId: string;
+    productSku: string;
+    productName: string;
+    productBatchId?: string;
+    productBatchNumber?: string;
+    warehouseId: string;
+    warehouseName: string;
+    warehouseZoneId: string;
+    warehouseZoneName: string;
+    quantityTotal: number;
+    quantityReserved: number;
+    quantityAvailable: number;
+    lastUpdated: Date;
 }

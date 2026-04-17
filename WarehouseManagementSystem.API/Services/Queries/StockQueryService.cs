@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
@@ -13,7 +14,54 @@ public class StockQueryService : IStockQueryService
     {
         _context = context;
     }
-
+    public async Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default)
+    {
+        return await _context.Stocks
+            .AsNoTracking()
+            .Select(s => new StockDto{
+                Id = s.Id,
+                ProductId = s.ProductId,
+                ProductSku = s.Product.SKU,
+                ProductName = s.Product.Name,
+                WarehouseId = s.WarehouseId,
+                WarehouseName = s.Warehouse.Name,
+                ZoneName = s.WarehouseZone.Name,
+                QuantityAvailable = s.QuantityTotal - s.QuantityReserved,
+                QuantityReserved = s.QuantityReserved,
+                QuantityTotal = s.QuantityTotal,
+                Unit = s.Product.Unit.ToString(),
+                LastUpdated = s.LastUpdated
+            })
+            .ToListAsync();    
+    }
+    //public async Task<List<StockMoveDto>> GetStockMoves()
+    //{
+    //    return await _context.StockMoves
+    //        .AsNoTracking()
+    //        .Include(x => x.Product)
+    //        .Include(x => x.FromWarehouse)
+    //        .Include(x => x.FromZone)
+    //        .Include(x => x.ToWarehouse)
+    //        .Include(x => x.ToZone)
+    //        .OrderByDescending(x => x.MovedAt)
+    //        .Select(x => new StockMoveDto(
+    //            x.Id,
+    //            x.Product.SKU,
+    //            x.Product.Name,
+    //            x.FromWarehouse.Name,
+    //            x.FromZone.Name,
+    //            x.ToWarehouse.Name,
+    //            x.ToZone.Name,
+    //            x.Quantity,
+    //            x.Product.Unit.ToString(),
+    //            x.MoveType.ToString(),
+    //            x.Status.ToString(),
+    //            x.MovedBy.ToString(),
+    //            x.MovedAt,
+    //            x.Reference
+    //        ))
+    //        .ToListAsync();
+    //}
     public async Task<Stock?> GetByIdAsync(Guid stockId, CancellationToken ct = default)
     {
         return await _context.Stocks

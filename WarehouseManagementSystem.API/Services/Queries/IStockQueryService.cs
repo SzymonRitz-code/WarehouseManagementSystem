@@ -1,10 +1,16 @@
-﻿using WarehouseManagementSystem.Domain.Enums;
+﻿using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 namespace WarehouseManagementSystem.API.Services.Queries;
 
 public interface IStockQueryService
 {
+    /// <summary>
+    /// Pobiera stan magazynowy po Id.
+    /// </summary>
+    Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default);
+
     /// <summary>
     /// Pobiera stan magazynowy po Id.
     /// </summary>

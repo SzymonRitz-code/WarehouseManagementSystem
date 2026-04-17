@@ -9,8 +9,8 @@ public interface IStockRepository : IRepository<Stock>
     Task<IEnumerable<Stock>> All();
     Task<Stock?> GetByProductAndWarehouseAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId);
     Task<Stock?> GetByProductAndWarehouseAsNoTrackingAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId);
-    Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsAsync(Guid stockId);
-    Task<IReadOnlyCollection<StockReservation>> GetExpiredReservationsAsync(DateTimeOffset currentTime);
-    Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId);
+    Task<IReadOnlyList<StockReservation>> GetActiveReservationsAsync(Guid stockId);
+    Task<IReadOnlyList<StockReservation>> GetExpiredReservationsAsync(DateTimeOffset currentTime);
+    Task<IReadOnlyList<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId);
     Task<IReadOnlyList<StockReservation>> FindReservationsByStockIdAsync(Guid stockId);
 }

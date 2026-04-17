@@ -1,0 +1,22 @@
+export interface StockMove {
+    Id: string,
+    ProductId: string,
+    ProductBatchId: string,
+    ProductSku: string,
+    ProductName: string,
+    SourceWarehouseId: string,
+    SourceWarehouse: string,
+    SourceZoneId: string,
+    SourceZone: string,
+    TargetWarehouseId: string,
+    TargetWarehouse: string,
+    TargetZoneId: string,
+    TargetZone: string,
+    Quantity: number,
+    Unit: string,
+    MoveType: string,
+    Status: string,
+    MovedBy: string,
+    MovedAt: Date,
+    Reference: string
+}

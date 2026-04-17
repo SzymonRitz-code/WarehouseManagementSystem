@@ -51,7 +51,7 @@ public class StockRepository : IStockRepository
     }
     public async Task<IEnumerable<Stock>> All()
     {
-        return await _context.Stocks.AsNoTracking().ToListAsync();
+        return await _context.Stocks.ToListAsync();
     }
 
     public bool Any(Expression<Func<Stock, bool>> predicate)
@@ -74,7 +74,7 @@ public class StockRepository : IStockRepository
     // STOCK RESERVATIONS QUERIES
     // ===========================
 
-    public async Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsAsync(Guid stockId)
+    public async Task<IReadOnlyList<StockReservation>> GetActiveReservationsAsync(Guid stockId)
     {
         return await _context.StockReservations
             .Where(r => r.StockId == stockId && r.Status == ReservationStatus.Active)
@@ -84,7 +84,7 @@ public class StockRepository : IStockRepository
             .ContinueWith(t => t.Result.AsReadOnly());
     }
 
-    public async Task<IReadOnlyCollection<StockReservation>> GetExpiredReservationsAsync(DateTimeOffset currentTime)
+    public async Task<IReadOnlyList<StockReservation>> GetExpiredReservationsAsync(DateTimeOffset currentTime)
     {
         return await _context.StockReservations
             .Where(r => r.Status == ReservationStatus.Active && r.ExpiresAt.HasValue && r.ExpiresAt <= currentTime)
@@ -94,7 +94,7 @@ public class StockRepository : IStockRepository
             .ContinueWith(t => t.Result.AsReadOnly());
     }
 
-    public async Task<IReadOnlyCollection<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId)
+    public async Task<IReadOnlyList<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId)
     {
         var reservations = await (
             from item in _context.DocumentItems

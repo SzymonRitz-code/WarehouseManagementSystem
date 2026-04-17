@@ -20,7 +20,13 @@ public class StocksController : ControllerBase
         _stockQuery = stockQuery;
         _mapper = mapper;
     }
+    [HttpGet()]
+    public async Task<ActionResult<StockDto>> GetStocks()
+    {
+        var stocks = await _stockQuery.GetStocksAsync();
 
+        return Ok(_mapper.Map<List<StockDto>>(stocks));
+    }
 
     [HttpGet("{stockId}")]
     public async Task<ActionResult<StockDto>> GetStock(Guid stockId)
@@ -34,7 +40,7 @@ public class StocksController : ControllerBase
     [HttpPost("increase")]
     public async Task<IActionResult> IncreaseStock([FromBody] StockChangeDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         try
         {
@@ -51,7 +57,7 @@ public class StocksController : ControllerBase
     [HttpPost("decrease")]
     public async Task<IActionResult> DecreaseStock([FromBody] StockChangeDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         try
         {
@@ -68,7 +74,7 @@ public class StocksController : ControllerBase
     [HttpPost("move")]
     public async Task<IActionResult> MoveStock([FromBody] StockMoveDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         try
         {
@@ -91,7 +97,7 @@ public class StocksController : ControllerBase
     [HttpPost("reserve")]
     public async Task<IActionResult> ReserveStock([FromBody] StockReservationRequestDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         try
         {
@@ -108,7 +114,7 @@ public class StocksController : ControllerBase
     [HttpPost("release")]
     public async Task<IActionResult> ReleaseReservation([FromBody] StockReservationReleaseDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         try
         {
