@@ -5,13 +5,18 @@ import { LabelComponent } from "../../../../shared/components/form/label/label.c
 import { InputDetailComponent } from "../../../../shared/components/form/input/input-detail.component";
 import { DetailActionsComponent } from "../../../../shared/components/form/detail-actions/detail-actions.component";
 import { Zone } from '../../model/zone';
-import { ZoneService } from '../../../services/zone-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
+import { ZoneService } from '../../services/zone-service';
 @Component({
   selector: 'app-zone-detail',
   standalone: true,
-  imports: [PageBreadcrumbComponent, ComponentCardComponent, LabelComponent, InputDetailComponent, DetailActionsComponent],
+  imports: [
+    PageBreadcrumbComponent, 
+    ComponentCardComponent, 
+    LabelComponent, 
+    InputDetailComponent, 
+    DetailActionsComponent],
   templateUrl: './zone-detail.component.html'
 })
 export class ZoneDetailComponent implements OnInit {
@@ -22,8 +27,18 @@ export class ZoneDetailComponent implements OnInit {
   constructor(private zoneService: ZoneService, private warehouseService: WarehouseService, private activatedRoute: ActivatedRoute, private router: Router) { }
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.zone = this.zoneService.getZone(this.id)
-    this.zone.warehouseName = this.warehouseService.getWarehouse(this.zone.warehouseId)?.warehouseName!;
+    this.zoneService.getZone(this.id).subscribe({
+      next: (result: Zone) => {
+        this.zone = result;
+        console.log(this.zone)
+        this.warehouseService.getWarehouse(this.zone.warehouseId).subscribe({
+          next: (responce) => {
+            this.zone.warehouseName = responce?.name
+          }
+        });
+      }
+    })
+
   }
   onBack() {
     this.router.navigateByUrl('/zones');

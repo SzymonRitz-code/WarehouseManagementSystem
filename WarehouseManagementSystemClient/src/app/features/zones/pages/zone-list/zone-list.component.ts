@@ -2,19 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
-import { ZoneService } from '../../../services/zone-service';
+import { ZoneService } from '../../services/zone-service';
 import { Zone } from '../../model/zone';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
+import { Observable } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-zones',
   standalone: true,
-  imports: [PageBreadcrumbComponent, ComponentCardComponent, TableComponent],
+  imports: [CommonModule, PageBreadcrumbComponent, ComponentCardComponent, TableComponent],
   templateUrl: './zone-list.component.html'
 })
 export class ZoneListComponent implements OnInit {
 
-  zones: Zone[] = [];
+  zones$!: Observable<Zone[]>;
 
   columns = [
     { key: 'code', label: 'Code', sortable: true },
@@ -35,7 +37,7 @@ export class ZoneListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.zones = this.zoneService.zones;
+    this.zones$ = this.zoneService.getZones();
   }
 
 

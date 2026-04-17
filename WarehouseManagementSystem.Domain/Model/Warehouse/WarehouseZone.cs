@@ -51,7 +51,14 @@ public class WarehouseZone
 
         Name = name.Trim();
     }
-
+    public void SetTemperatureType(TemperatureType temperatureType)
+    {
+        TemperatureType = temperatureType;
+    }
+    public void SetWarehouse(Guid warehouseId)
+    {
+        WarehouseId = warehouseId;
+    }
     public void SetPickingZone(bool value) => IsPickingZone = value;
 
     public bool ContainsStock() => Stocks.Any();

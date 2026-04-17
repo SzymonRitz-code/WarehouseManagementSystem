@@ -1,30 +1,38 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using WarehouseManagementSystem.Domain.Enums;
 
-namespace WarehouseManagementSystem.API.DTO
+namespace WarehouseManagementSystem.API.DTO;
+
+public class WarehouseZoneDto : CreateWarehouseZoneDto
 {
-    public record struct WarehouseZoneDto(
-        [property: Required] Guid Id,
+    [Required]
+    public Guid Id { get; set; }
 
-        [property: Required, StringLength(30)]
-        string Code,
+    [Required]
+    public DateTimeOffset CreatedAt { get; set; }
 
-        [property: Required, StringLength(200)]
-        string Name,
+    [StringLength(200)]
+    public string? WarehouseName { get; set; }
 
-        [property: Required]
-        TemperatureType TemperatureType, // enum zgodny z Rich model
+}
+public class CreateWarehouseZoneDto
+{
+    [Required, StringLength(30)]
+    public string Code { get; set; }
 
-        [property: Required]
-        bool IsPickingZone,
+    [Required]
+    public string Name { get; set; }
 
-        [property: Required]
-        DateTimeOffset CreatedAt,
+    [Required]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public TemperatureType TemperatureType { get; set; } // enum zgodny z Rich model
 
-        [property: Required]
-        Guid WarehouseId,
+    [Required]
+    public bool IsPickingZone { get; set; }
 
-        [property: Required, StringLength(200)]
-        string WarehouseName
-    );
+    [Required]
+    public Guid WarehouseId { get; set; }
+
+
 }
