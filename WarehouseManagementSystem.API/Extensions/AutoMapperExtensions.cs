@@ -38,7 +38,7 @@
                 .ForMember(dto => dto.ProductBatchNumber, opt => opt.MapFrom(s => s.ProductBatch != null ? s.ProductBatch.BatchNumber : null))
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(s => s.Product.Name))
                 .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(s => s.Warehouse.Name))
-                .ForMember(dto => dto.WarehouseZoneName, opt => opt.MapFrom(s => s.WarehouseZone.Name))
+                .ForMember(dto => dto.ZoneName, opt => opt.MapFrom(s => s.WarehouseZone.Name))
                 .ReverseMap();
         }
 
@@ -57,6 +57,9 @@
             cfg.CreateMap<ProductBatch, ProductBatchDto>()
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name))
                 .ReverseMap();
+            cfg.CreateMap<ProductBatch, ProductBatchListDto>()
+                .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name))
+                .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name));
         }
 
         public static void AddDocumentMappings(this IMapperConfigurationExpression cfg)

@@ -66,7 +66,6 @@ export class DocumentFormComponent implements OnInit {
     })
     if (this.id) {
       this.document = this.documentService.getDocument(this.id);
-      console.log(`Editing DOcument: ${this.document}`)
       this.documentForm.patchValue({
         number: this.document.number,
         documentDate: this.document.documentDate,
@@ -87,8 +86,16 @@ export class DocumentFormComponent implements OnInit {
         }));
       });
     }
-    this.sourceOptions = this.warehouseService.warehouses.map(w => ({ value: w.id, label: w.warehouseName }));
-    this.targetOptions = this.warehouseService.warehouses.map(w => ({ value: w.id, label: w.warehouseName }));
+    this.warehouseService.getWarehouses().subscribe({
+      next: (responce) => {
+        this.sourceOptions = responce.map(w => ({ value: w.id, label: w.name }));
+      }
+    })
+    this.warehouseService.getWarehouses().subscribe({
+      next: (responce) => {
+        this.targetOptions = responce.map(w => ({ value: w.id, label: w.name }));
+      }
+    })
     this.documentTyoeOptions = Object.values(DocumentType).map(d => ({ value: d, label: d }))
   }
   get documentItemsFormArray(): FormArray {

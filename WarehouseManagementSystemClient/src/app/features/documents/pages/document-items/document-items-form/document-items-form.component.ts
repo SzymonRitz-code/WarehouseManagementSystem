@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ZoneService } from '../../../../services/zone-service';
+import { ZoneService } from '../../../../zones/services/zone-service';
 import { CommonModule } from '@angular/common';
 import { InputSelectComponent } from "../../../../../shared/components/form/input/input-select/input-select.component";
 import { LabelComponent } from "../../../../../shared/components/form/label/label.component";
@@ -47,9 +47,17 @@ export class DocumentItemsFormComponent implements OnChanges, OnInit {
 
   /** Inicjalizacja list produktów i stref */
   private initOptions() {
-    this.productOptions = this.productService.products.map(p => ({ value: p.id, label: p.name }));
-    this.sourceZoneOptions = this.zoneService.zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
-    this.targetZoneOptions = this.zoneService.zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+    this.productService.getProducts().subscribe({
+      next: (resopnce) => {
+        this.productOptions = resopnce.map(p => ({ value: p.id, label: p.name }));
+      }
+    })
+    this.zoneService.getZones().subscribe({next: (zones) => {
+      this.sourceZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+    }});
+    this.zoneService.getZones().subscribe({next: (zones) => {
+      this.targetZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+    }});
   }
 
   /** Aktualizacja formularza przy zmianie wejściowego item */

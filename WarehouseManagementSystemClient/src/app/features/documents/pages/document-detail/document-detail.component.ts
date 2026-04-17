@@ -9,9 +9,8 @@ import { DocumentService } from '../../services/document-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
-import { DocumentItemsComponent } from "../document-items/document-items-list/document-items.component";
 import { DocumentItemsDetailComponent } from "../document-items/app-document-items-detail/app-document-items-detail.component";
-import { ZoneService } from '../../../services/zone-service';
+import { ZoneService } from '../../../zones/services/zone-service';
 import { ProductService } from '../../../products/services/product-service';
 
 @Component({
@@ -43,16 +42,34 @@ export class DocumentDetailComponent implements OnInit {
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
     this.document = this.documentService.getDocument(this.id);
-    this.document.sourceWarehouseName = this.warhouseService.getWarehouse(this.document.sourceWarehouseId!)?.warehouseName;
-    this.document.targetWarehouseName = this.warhouseService.getWarehouse(this.document.targetWarehouseId!)?.warehouseName;
+    this.warhouseService.getWarehouse(this.document.sourceWarehouseId!).subscribe({
+      next: (responce) => {
+        this.document!.sourceWarehouseName = responce?.name
+      }
+    });
+    this.warhouseService.getWarehouse(this.document.targetWarehouseId!).subscribe({
+      next: (responce) => {
+        this.document!.targetWarehouseName = responce?.name
+      }
+    });
     this.document.documentItems
     this.document.documentItems.forEach(item => {
       this.productService.getProduct(item.productId).subscribe({
         next:
           (res) => { item.productName = res.name; }
       });
-      item.sourceZoneName = this.zoneService.getZone(item.sourceZoneId)?.name;
-      item.targetZoneName = this.zoneService.getZone(item.targetZoneId)?.name;
+
+      this.zoneService.getZone(item.sourceZoneId).subscribe({
+        next: (responce) => {
+          item.sourceZoneName = responce.name;
+        }
+      });
+      this.zoneService.getZone(item.targetZoneId).subscribe({
+        next: (responce) => {
+          item.targetZoneName = responce.name;
+        }
+      })
+
     });
 
   }

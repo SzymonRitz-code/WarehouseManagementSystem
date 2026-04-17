@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ZoneService } from '../../../../services/zone-service';
+import { ZoneService } from '../../../../zones/services/zone-service';
 import { InputSelectComponent } from '../../../../../shared/components/form/input/input-select/input-select.component';
 import { InputFieldComponent } from "../../../../../shared/components/form/input/input-field.component";
 import { Product } from '../../../../products/model/product';
@@ -28,9 +28,21 @@ export class DocumentItemsComponent implements OnInit {
 
   ngOnInit(): void {
     // przygotowanie list stref
-    this.productOptions = this.productService.products.map(p => ({ value: p.id, label: p.name }))
-    this.sourceZoneOptions = this.zoneService.zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
-    this.targetZoneOptions = this.zoneService.zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+    this.productService.getProducts().subscribe({
+      next: (resopnce) => {
+        this.productOptions = resopnce.map(p => ({ value: p.id, label: p.name }))
+      }
+    })
+    this.zoneService.getZones().subscribe({
+      next: (zones) => {
+        this.sourceZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+      }
+    });
+    this.zoneService.getZones().subscribe({
+      next: (zones) => {
+        this.targetZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+      }
+    });
   }
 
   /** Otwiera modal do dodania nowej pozycji */

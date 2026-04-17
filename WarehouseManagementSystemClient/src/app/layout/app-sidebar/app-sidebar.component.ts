@@ -89,7 +89,6 @@ export class AppSidebarComponent {
             </svg>`,
       subItems: [
         { name: "Stocks List", path: "/stocks" },
-        { name: "Stock Availability", path: "/stocks/availability" },
         { name: "Stock Moves", path: "/stocks/move" }
         // rezerwacje i stock-move → dostępne w Stock Detail
       ],
