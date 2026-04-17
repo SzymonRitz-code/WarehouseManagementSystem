@@ -21,7 +21,11 @@ export class WarehouseDetailComponent implements OnInit {
   constructor(private router: Router, private activatedRoute: ActivatedRoute, private warehouseService: WarehouseService) { }
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.warehouse = this.warehouseService.getWarehouse(this.id) as Warehouse
+    this.warehouseService.getWarehouse(this.id).subscribe({
+      next: (responce: Warehouse) => {
+        this.warehouse = responce
+      }
+    })
   }
   onEdit() {
     this.router.navigateByUrl(`/warehouses/form/${(this.warehouse as Warehouse).id}`)

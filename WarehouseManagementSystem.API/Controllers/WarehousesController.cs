@@ -60,15 +60,50 @@ public class WarehousesController : ControllerBase
 
         return Ok(_mapper.Map<WarehouseDto>(warehouse));
     }
+    [HttpPost]
+    public async Task<ActionResult<WarehouseDto>> PostWarehouse(CreateWarehouseDto warehouseDto)
+    {
+        if (_unitOfWork.Warehouses.Any(w => w.Code == warehouseDto.Code))
+        {
+            ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
+        }
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        var warehouse = new Warehouse(
+            warehouseDto.Code,
+            warehouseDto.Name,
+            warehouseDto.Country,
+            warehouseDto.City,
+            warehouseDto.Address);
+
+        try
+        {
+            _unitOfWork.Warehouses.Add(warehouse);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex) {
+            throw;
+        }
+
+
+        return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, warehouseDto);
+    }
 
     [HttpPut("{warehouseId}")]
-    public async Task<IActionResult> PutWarehouse(Guid warehouseId, WarehouseDto warehouseDto)
+    public async Task<IActionResult> PutWarehouse([FromRoute] Guid warehouseId, WarehouseDto warehouseDto)
     {
         if (warehouseId != warehouseDto.Id) return BadRequest();
         if (!ModelState.IsValid) return BadRequest(ModelState);
+        var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
+        if (warehouse == null) return NotFound();
 
-        var warehouseEntity = _mapper.Map<Warehouse>(warehouseDto);
-        _unitOfWork.Entry(warehouseEntity).State = EntityState.Modified;
+        warehouse.SetCode(warehouseDto.Code);
+        warehouse.SetName(warehouseDto.Name);
+        warehouse.SetLocation(warehouseDto.Country, warehouseDto.City, warehouseDto.Address);
+
+        if (warehouseDto.IsActive) { warehouse.Activate(); }
+        else { warehouse.Deactivate(); }
+
 
         try
         {
@@ -83,17 +118,7 @@ public class WarehousesController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost]
-    public async Task<ActionResult<WarehouseDto>> PostWarehouse(WarehouseDto warehouseDto)
-    {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var warehouseEntity = _mapper.Map<Warehouse>(warehouseDto);
-        _unitOfWork.Warehouses.Add(warehouseEntity);
-        await _unitOfWork.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouseEntity.Id }, warehouseDto);
-    }
 
     [HttpDelete("{warehouseId}")]
     public async Task<IActionResult> DeleteWarehouse(Guid warehouseId)

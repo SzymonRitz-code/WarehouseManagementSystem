@@ -2,36 +2,59 @@
     <app-page-breadcrumb pageTitle="Warehouse Form" />
 
     <app-component-card title="Warehouse">
-        <form [formGroup]="warehouseForm" (ngSubmit)="onSave()">
+        <form [formGroup]="warehouseForm" (ngSubmit)="warehouseForm.valid && onSave()">
             <div class="space-y-6">
                 <div>
                     <app-label for="inputCode">Code</app-label>
-                    <app-input-field id="inputCode" type="text" name="code" formControlName="code" [required]="true"
-                        [maxlength]="10" hint="Enter warehouse code"></app-input-field>
+                    <app-input-field id="inputCode" type="text" name="warehouseCode" formControlName="code"
+                        [required]="true" [maxlength]="10" hint="Enter warehouse code"></app-input-field>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="warehouseForm.get('code')?.errors?.['server']">
+                        {{ warehouseForm.get('code')?.errors?.['server'] }}
+                    </div>
                 </div>
                 <div>
-                    <app-label for="inputWarehouseName">Warehouse Name</app-label>
-                    <app-input-field id="inputWarehouseName" name="warehouseName" formControlName="warehouseName"
+                    <app-label for="inputWarehouseName">Name</app-label>
+                    <app-input-field id="inputWarehouseName" name="warehouseName" formControlName="name"
                         [required]="true"></app-input-field>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="warehouseForm.get('name')?.errors?.['server']">
+                        {{ warehouseForm.get('name')?.errors?.['server'] }}
+                    </div>
                 </div>
                 <div>
                     <app-label for="inputCountry">Country</app-label>
                     <app-input-field id="inputCountry" name="country" formControlName="country"
                         [required]="true"></app-input-field>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="warehouseForm.get('country')?.errors?.['server']">
+                        {{ warehouseForm.get('country')?.errors?.['server'] }}
+                    </div>
+                </div>
+                <div>
+                    <app-label for="inputCity">City</app-label>
+                    <app-input-field id="inputCity" name="city" formControlName="city"
+                        [required]="true"></app-input-field>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="warehouseForm.get('city')?.errors?.['server']">
+                        {{ warehouseForm.get('city')?.errors?.['server'] }}
+                    </div>
                 </div>
                 <div>
                     <app-label for="inputAddres">Addres</app-label>
-                    <app-input-field id="inputAddres" name="addres" formControlName="addres"
+                    <app-input-field id="inputAddres" name="address" formControlName="address"
                         [required]="true"></app-input-field>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="warehouseForm.get('address')?.errors?.['server']">
+                        {{ warehouseForm.get('address')?.errors?.['server'] }}
+                    </div>
                 </div>
                 <div>
                     <app-label for="inputStatus">Is Active</app-label>
-                    <app-checkbox id="inputStatus" name="status" formControlName="status" [required]="true"></app-checkbox>
+                    <app-checkbox id="inputStatus" name="isActive"  formControlName="isActive"
+                        [required]="true"></app-checkbox>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="warehouseForm.get('isActive')?.errors?.['server']">
+                        {{ warehouseForm.get('isActive')?.errors?.['server'] }}
+                    </div>
                 </div>
 
             </div>
-            <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()"
-                (submit)="warehouseForm.valid && onSave()" [disabled]="warehouseForm.invalid" />
+            <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="warehouseForm.invalid" />
         </form>
     </app-component-card>
 </div>

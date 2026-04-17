@@ -5,24 +5,25 @@
         <div class="space-y-6">
             <div>
                 <app-label for="inputCode">Code</app-label>
-                <app-input-detail id="inputCode" type="text" name="code" [value]="warehouse.code"></app-input-detail>
+                <app-input-detail id="inputCode" type="text" name="warehouseCode" [value]="warehouse.code"></app-input-detail> 
+                <!-- Trzeba dodawać znak zapytania bo dane nie azwsze pokazują sięodrazu -->
             </div>
             <div>
                 <app-label for="inputWarehouseName">Warehouse Name</app-label>
                 <app-input-detail id="inputWarehouseName" name="warehouseName"
-                    [value]="warehouse.warehouseName"></app-input-detail>
+                    [value]="warehouse.name"></app-input-detail>
             </div>
             <div>
                 <app-label for="inputCountry">Country</app-label>
                 <app-input-detail id="inputCountry" name="country" [value]="warehouse.country"></app-input-detail>
             </div>
             <div>
-                <app-label for="inputAddres">Addres</app-label>
-                <app-input-detail id="inputAddres" name="addres" [value]="warehouse.addres"></app-input-detail>
+                <app-label for="inputAddress">Address</app-label>
+                <app-input-detail id="inputAddress" name="address" [value]="warehouse.address"></app-input-detail>
             </div>
             <div> 
                 <app-label for="inputStatus">Is Active</app-label>
-                <app-input-detail id="inputStatus" name="status" [value]="warehouse.status"></app-input-detail>
+                <app-input-detail id="inputStatus" name="status" [value]="warehouse.isActive" [type]="'boolean'"></app-input-detail>
             </div>
         </div>
 

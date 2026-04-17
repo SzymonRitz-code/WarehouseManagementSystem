@@ -1,6 +1,7 @@
-export interface CreateWarehouse  {
-    code: string,
-    warehouseName: string,
-    country: string,
-    addres: string
-}
+export interface CreateWarehouse {
+    code: string;
+    name: string;
+    city: string;
+    country: string;
+    address: string;
+} 

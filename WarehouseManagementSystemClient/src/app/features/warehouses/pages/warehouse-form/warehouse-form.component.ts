@@ -6,12 +6,12 @@ import { InputFieldComponent } from "../../../../shared/components/form/input/in
 import { FormActionsComponent } from "../../../../shared/components/form/form-actions/form-actions.component";
 import { Warehouse } from '../../model/warehouse';
 import { CreateWarehouse } from '../../model/create-warehouse';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { WarehouseService } from '../../services/warehouse-service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { RadioComponent } from "../../../../shared/components/form/input/radio.component";
+import { ActivatedRoute, isActive, Router } from '@angular/router';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
+import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
 
 @Component({
   selector: 'app-warehouse-form',
@@ -25,19 +25,19 @@ import { CheckboxComponent } from "../../../../shared/components/form/input/chec
     CommonModule,
     ReactiveFormsModule,
     CheckboxComponent
-],
+  ],
   templateUrl: './warehouse-form.component.html'
 })
 export class WarehouseFormComponent implements OnInit {
 
-  id: string | null = '';
+
+  id!: string | null;
   warehouse!: Warehouse | CreateWarehouse;
   warehouseForm!: FormGroup;
 
   constructor(
     private fb: FormBuilder,
-    private warehouseService:
-      WarehouseService,
+    private warehouseService: WarehouseService,
     private router: Router,
     private activatedRoute: ActivatedRoute) { }
 
@@ -45,33 +45,54 @@ export class WarehouseFormComponent implements OnInit {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
 
     this.warehouseForm = this.fb.nonNullable.group({
-      id:[''],
+      id: [this.id || null],
       code: ['', Validators.required],
-      warehouseName: ['', Validators.required],
+      name: ['', Validators.required],
       country: ['', Validators.required],
-      addres: ['', Validators.required],
-      status: ['', Validators.required]
+      city: ['', Validators.required],
+      address: ['', Validators.required],
+      isActive: [true, Validators.required]
     });
     if (this.id) {
-      this.warehouse = this.warehouseService.getWarehouse(this.id)!;
-      this.warehouseForm.patchValue({
-        id: (this.warehouse as Warehouse).id,
-        code: this.warehouse.code,
-        warehouseName: this.warehouse.warehouseName,
-        country: this.warehouse.country,
-        addres: this.warehouse.addres,
-        status: (this.warehouse as Warehouse).status
-      })
+      this.warehouseService.getWarehouse(this.id).subscribe({
+        next: (responce) => {
+          this.warehouse = responce;
+          this.warehouseForm.patchValue({
+            id: (this.warehouse as Warehouse).id,
+            code: this.warehouse.code,
+            name: this.warehouse.name,
+            country: this.warehouse.country,
+            city: this.warehouse.city,
+            address: this.warehouse.address,
+            isActive: (this.warehouse as Warehouse).isActive,
+            createdAt: (this.warehouse as Warehouse).createdAt
+          })
+        },
+        error: (err) => { console.error(err) }
+      });
     }
 
   }
+
   onSave() {
-    this.warehouse = this.warehouseForm.value
-    console.log(this.warehouse)
-    if(this.id === null){
-    this.warehouse = this.warehouseService.addWarehouse(this.warehouse) as Warehouse;
-    }
-    this.router.navigateByUrl(`/warehouses/detail/${(this.warehouse as Warehouse).id}`);
+    if (this.warehouseForm.invalid) return;
+
+    const warehouse = this.warehouseForm.getRawValue()
+    const request$ = this.id
+      ? this.warehouseService.updateWarehouse(warehouse)
+      : this.warehouseService.addWarehouse(warehouse);
+
+    request$.subscribe({
+      next: (responce: Warehouse) => {
+        const id = responce?.id ?? this.id;
+        this.router.navigateByUrl(`/warehouses/detail/${id}`);
+      },
+      error: (err) => {
+        console.error(err);
+        setServerErrors(err, this.warehouseForm);
+      }
+    })
+
   }
   onBack() {
     this.router.navigateByUrl('/warehouses');

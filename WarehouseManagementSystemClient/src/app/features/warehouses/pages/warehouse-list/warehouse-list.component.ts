@@ -6,6 +6,7 @@ import { Warehouse } from '../../model/warehouse';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { CommonModule } from '@angular/common';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-warehouse-list',
@@ -13,17 +14,17 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule, ComponentCardComponent, TableComponent, PageBreadcrumbComponent],
   templateUrl: './warehouse-list.component.html'
 })
-export class WarehouseListComponent implements OnInit {
+export class WarehouseListComponent implements OnInit { 
 
-  warehouses: Warehouse[] = [];
+  warehouses$!: Observable<Warehouse[]>;
 
   constructor(private warehouseService: WarehouseService, private router: Router) { }
 
   ngOnInit(): void {
-    this.warehouses = this.warehouseService.warehouses;
+    this.warehouses$ = this.warehouseService.getWarehouses();
   }
+
   columns = [
-    { key: 'id', label: 'ID', sortable: true },
     { key: 'code', label: 'Code', sortable: true },
     { key: 'WarehouseName', label: 'Warehouse Name', sortable: true },
     { key: 'country', label: 'Country', sortable: true },
@@ -34,6 +35,7 @@ export class WarehouseListComponent implements OnInit {
     { key: 'Status', label: 'Status', sortable: true },
     { key: 'createdAt', label: 'CreatedAt', sortable: true, type: 'date' }
   ];
+
   warehouseActions = [
     { label: 'Edit', action: 'edit' },
     { label: 'Details', action: 'details' },

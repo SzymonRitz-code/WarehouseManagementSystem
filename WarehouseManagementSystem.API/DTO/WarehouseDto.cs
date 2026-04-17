@@ -2,28 +2,11 @@
 
 namespace WarehouseManagementSystem.API.DTO
 {
-    public record struct WarehouseDto(
-        [property: Required] Guid Id,
-
-        [property: Required, StringLength(30)]
-        string Code,
-
-        [property: Required, StringLength(200)]
-        string Name,
-
-        [property: Required, StringLength(200)]
-        string Country,
-
-        [property: Required, StringLength(200)]
-        string City,
-
-        [property: Required, StringLength(200)]
-        string Address,
-
+    public class WarehouseDto : CreateWarehouseDto 
+    {
         [property: Required]
-        bool IsActive,
-
+        public Guid Id { get; set; }
         [property: Required]
-        DateTimeOffset CreatedAt
-    );
+        public DateTimeOffset CreatedAt { get; set; }
+    }
 }
