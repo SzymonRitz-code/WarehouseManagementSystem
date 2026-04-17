@@ -30,6 +30,7 @@ export class ProductListComponent implements OnInit {
   productActions = [
     { label: 'Edit', action: 'edit' },
     { label: 'Details', action: 'details' },
+    { label: 'Batches', action: 'manageBatches', visible: (row: Product) => row.requiresBatch === true },
   ];
 
   constructor(private router: Router, private productService: ProductService) { }
@@ -46,12 +47,17 @@ export class ProductListComponent implements OnInit {
     const { row, action } = event;
 
     switch (action) {
+      
       case 'edit':
         this.onEdit(row);
         break;
 
       case 'details':
         this.onDetails(row);
+        break;
+
+      case 'manageBatches':
+        this.onManageBatches(row);
         break;
     }
   }
@@ -60,5 +66,8 @@ export class ProductListComponent implements OnInit {
   }
   onEdit(row: Product) {
     this.router.navigateByUrl(`/products/form/${row.id}`)
+  }
+  onManageBatches(row: Product) {
+    this.router.navigateByUrl(`/products/${row.id}/batches`)
   }
 }

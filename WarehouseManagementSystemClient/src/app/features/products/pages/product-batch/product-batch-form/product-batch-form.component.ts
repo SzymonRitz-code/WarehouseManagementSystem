@@ -57,7 +57,7 @@ export class ProductBatchFormComponent implements OnInit {
       batchNumber: ['', [Validators.required, Validators.maxLength(50)]],
       productId: ['', [Validators.required]],
       expirationDate: [null, []],
-      manufacturedDate:[null, []]
+      manufacturedDate: [null, []]
     });
     if (this.batchId) {
       this.batchService.getBatch(this.productId, this.batchId).subscribe({
@@ -82,15 +82,14 @@ export class ProductBatchFormComponent implements OnInit {
 
   onSave() {
     const batch: Batch | CreateBatch = this.batchForm.getRawValue();
-    console.log('Saving batch:', batch);
     const request$ = this.batchId
       ? this.batchService.updateBatch(this.productId, this.batchId, batch)
       : this.batchService.createBatch(this.productId, batch);
 
     request$.subscribe({
       next: (responce: Batch) => {
-        console.log('Batch saved successfully:', responce);
-        this.router.navigateByUrl(`/products/${this.productId}/batches/detail/${responce.id}`)
+        const id = responce?.id ?? this.batchId;
+        this.router.navigateByUrl(`/products/${this.productId}/batches/detail/${id}`)
       },
       error: (err) => {
         setServerErrors(err, this.batchForm);

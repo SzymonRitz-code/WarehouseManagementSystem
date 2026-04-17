@@ -45,10 +45,9 @@ public class ProductsController : ControllerBase
     {
         if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku))
         {
-            ModelState.AddModelError(nameof(productDto.Sku), "Sku Already exists");
-            return ValidationProblem(ModelState);
+            ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
         }
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var product = new Product(
             productDto.Sku,
@@ -76,9 +75,33 @@ public class ProductsController : ControllerBase
         var product = await _unitOfWork.Products.FindAsync(productId);
         if (product == null) return NotFound();
 
-        _mapper.Map(productDto, product);
-        _unitOfWork.Products.Update(product);
-        await _unitOfWork.SaveChangesAsync();
+        product.SetName(productDto.Name);
+        product.SetSku(productDto.Sku);
+        product.SetUnit(productDto.Unit);
+
+        if (productDto.RequiresBatch ?? false)
+            product.RequireBatchTracking();
+        else product.DisableBatchTracking();
+
+        if (productDto.IsActive ?? false)
+            product.Activate();
+        else product.Deactivate();
+
+        product.SetWeight(productDto.Weight);
+        product.SetVolume(productDto.Volume);
+
+        product.SetDescription(productDto.Description);
+
+        try
+        {
+            _unitOfWork.Products.Update(product);
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+
 
         return NoContent();
     }

@@ -19,7 +19,7 @@ export class ProductService {
   }
 
   getProduct(id: string) {
-    return this.http.get<Product>(`${environment.apiUrl}/products/${id}`);
+    return this.http.get<Product>(`${this.apiUrl}/products/${id}`);
   }
 
   addProduct(product: CreateProduct) {

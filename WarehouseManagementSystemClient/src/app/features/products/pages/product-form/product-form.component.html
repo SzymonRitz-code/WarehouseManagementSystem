@@ -6,7 +6,7 @@
       <div class="space-y-6">
         <div>
           <app-label for="inputName">Name</app-label>
-          <app-input-field id="inputName" type="text" name="name" formControlName="name" [required]="true"
+          <app-input-field id="inputName" type="text" name="productName" formControlName="name" [required]="true"
             [maxlength]="30" hint="Enter product name"></app-input-field>
           <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('name')?.errors?.['server']">
             {{ productForm.get('name')?.errors?.['server'] }}
@@ -21,7 +21,7 @@
         </div>
         <div>
           <app-label for="inputUnit">Unit</app-label>
-          <app-input-select id="inputUnit" name="unit" formControlName="unit" [options]="unitOptions"
+          <app-input-select id="inputUnit" name="productUnit" formControlName="unit" [options]="unitOptions"
             [required]="true"></app-input-select>
           <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('unit')?.errors?.['server']">
             {{ productForm.get('unit')?.errors?.['server'] }}

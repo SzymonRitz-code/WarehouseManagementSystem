@@ -1,4 +1,4 @@
-import { Component, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, OnInit} from '@angular/core';
 import { PageBreadcrumbComponent } from "../../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../../shared/components/table/table.component";
@@ -72,11 +72,9 @@ export class ProductBatchListComponent implements OnInit {
 
   }
   goToForm() {
-    console.log('Go to form');
     this.router.navigateByUrl(`/products/${this.id}/batches/form`);
   }
   onDetails(row: Batch) {
-    console.log('Go to details', row);
     this.router.navigateByUrl(`/products/${this.id}/batches/detail/${row.id}`);
   }
   onEdit(row: Batch) {

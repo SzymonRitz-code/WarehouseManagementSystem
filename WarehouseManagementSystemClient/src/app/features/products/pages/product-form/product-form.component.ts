@@ -48,6 +48,7 @@ export class ProductFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id');
+
     this.productForm = this.fb.group({
       id: [this.id || null],
       name: ['', [Validators.required, Validators.maxLength(200)]],
@@ -59,6 +60,7 @@ export class ProductFormComponent implements OnInit {
       weight: [1, [Validators.required, Validators.min(1)]],
       volume: [1, [Validators.required, Validators.min(1)]]
     })
+    
     if (this.id) {
       this.productService.getProduct(this.id).subscribe({
         next: (res: Product) => {
@@ -72,7 +74,8 @@ export class ProductFormComponent implements OnInit {
             requiresBatch: this.product.requiresBatch,
             isActive: this.product.isActive,
             weight: this.product.weight,
-            volume: this.product.volume
+            volume: this.product.volume,
+            createdAt: (this.product as Product).createdAt // TODO: Check if other forms also fill createdAt
           });
         },
         error: (err) => { console.error(err) }
@@ -92,7 +95,10 @@ export class ProductFormComponent implements OnInit {
 
     request$.subscribe({
       next: (response: Product) => {
-        this.router.navigateByUrl(`/products/detail/${this.id}`);
+        // Trzeba dodać response.id, bo w przypadku tworzenia produktu id jest generowane po stronie serwera
+        // a w przypadku aktualizacji produktu id jest już dostępne w productForm.getRawValue()
+        const id =  response?.id ?? this.id;
+        this.router.navigateByUrl(`/products/detail/${id}`);
       },
       error: (err) => {
         console.error(err);
