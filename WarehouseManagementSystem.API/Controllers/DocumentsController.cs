@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Controllers;
@@ -21,7 +22,51 @@ public class DocumentsController : ControllerBase
         _queryService = queryService;
         _mapper = mapper;
     }
+    /// <summary>
+    /// Pobranie dokumentu po Id
+    /// </summary>
+    //[HttpGet("paginated")]
+    //public async Task<ActionResult<DocumentDto>> GetDocuments([FromQuery]int page,[FromQuery] int pagesize)
+    //{
+    //    var documents = await _queryService.GetPagedAsync(page, pagesize);
+    //    return Ok(_mapper.Map<DocumentDto>(documents));
+    //}
 
+    /// <summary>
+    /// Pobranie isty dokumentów
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<DocumentListDto>> GetDocuments()
+    {
+        try
+        {
+            var documents = await _queryService.GetDocumentsAsync();
+            return Ok(_mapper.Map<List<DocumentListDto>>(documents));
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+        return Ok(new List<DocumentListDto>());
+    }
+    /// <summary>
+    /// Pobranie oczekujących dokumentów
+    /// </summary>
+    [HttpGet("pending")]
+    public async Task<ActionResult<IEnumerable<DocumentListDto>>> GetPendingDocuments()
+    {
+        try
+        {
+            var pending = await _queryService.GetPendingDocumentsAsync();
+            return Ok(_mapper.Map<IEnumerable<DocumentListDto>>(pending));
+
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+        return Ok(new List<DocumentListDto>());
+    }
     /// <summary>
     /// Pobranie dokumentu po Id
     /// </summary>
@@ -38,15 +83,15 @@ public class DocumentsController : ControllerBase
     /// Tworzy dokument wraz z pozycjami (DocumentItemDraft → DocumentItem)
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto request)
+    public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto documentDto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        if (request.Items == null || !request.Items.Any())
+        if (documentDto.Items == null || !documentDto.Items.Any())
             return BadRequest("Document must have at least one item.");
 
         // Mapujemy DTO → ValueObject (DocumentItemDraft)
-        var itemDrafts = request.Items.Select(i => new DocumentItemDraft(
+        var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(
             productId: i.ProductId,
             quantity: i.Quantity,
             productBatchId: i.ProductBatchId,
@@ -56,24 +101,66 @@ public class DocumentsController : ControllerBase
 
         // Tworzymy dokument poprzez serwis domenowy
         var document = await _commandService.CreateDocumentAsync(
-            type: request.Type,
-            createdById: request.CreatedById,
-            sourceWarehouseId: request.SourceWarehouseId,
+            type: documentDto.Type,
+            createdBy: UserService.GetUser(), // TODO dodać do pozostałych klas CreatedBy i ewentualnie modifiedBy 
+            sourceWarehouseId: documentDto.SourceWarehouseId,
             items: itemDrafts,
-            documentDate: request.DocumentDate,
-            targetWarehouseId: request.TargetWarehouseId,
-            notes: request.Notes
+            documentDate: documentDto.DocumentDate,
+            targetWarehouseId: documentDto.TargetWarehouseId,
+            notes: documentDto.Notes
         );
 
         // Mapujemy agregat domenowy → DTO do zwrócenia
-        var documentDto = _mapper.Map<DocumentDto>(document);
+        DocumentDto createdDto = null;
+        try
+        {
+            createdDto = _mapper.Map<DocumentDto>(document);
+        }
+        catch (Exception ex)
+        {
 
-        return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, documentDto);
+        }
+
+
+        return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, createdDto);
+    }
+    [HttpPut("{documentId}")]
+    public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] DocumentDto documentDto)
+    {
+        if (documentId != documentDto.Id)
+            return BadRequest("Route ID and body ID mismatch");
+
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        if (documentDto.Items == null || !documentDto.Items.Any())
+            return BadRequest("Document must have at least one item.");
+
+        // Mapujemy DTO → ValueObject (DocumentItemDraft)
+        var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(
+            productId: i.ProductId,
+            quantity: i.Quantity,
+            productBatchId: i.ProductBatchId,
+            sourceZoneId: i.SourceZoneId,
+            targetZoneId: i.TargetZoneId
+        )).ToList();
+
+        // Tworzymy dokument poprzez serwis domenowy
+        var document = await _commandService.UpdateDocumentAsync(
+            documentId: documentDto.Id,
+            type: documentDto.Type,
+            sourceWarehouseId: documentDto.SourceWarehouseId,
+            items: itemDrafts,
+            documentDate: documentDto.DocumentDate,
+            targetWarehouseId: documentDto.TargetWarehouseId,
+            notes: documentDto.Notes
+        );
+        return NoContent();
     }
     /// <summary>
     /// Potwierdza dokument
     /// </summary>
     [HttpPut("{documentId}/transfer")]
+    [Obsolete("MVP flow. Not used in current MM document-driven process. Reserved for future workflow-based transfer execution.")]
     public async Task<IActionResult> TransferDocument(Guid documentId, [FromQuery] Guid transferStartedById)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -81,13 +168,14 @@ public class DocumentsController : ControllerBase
         return NoContent();
     }
     /// <summary>
-    /// Potwierdza dokument
+    /// Rozpoczyna transwer dokument
     /// </summary>
     [HttpPut("{documentId}/confirm")]
-    public async Task<IActionResult> ConfirmDocument(Guid documentId, [FromQuery] Guid confirmedById)
+    public async Task<IActionResult> ConfirmDocument(Guid documentId)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        await _commandService.ConfirmDocumentAsync(documentId, confirmedById);
+        // Coś w stylu User.Identity.Name
+        await _commandService.ConfirmDocumentAsync(documentId, UserService.GetUser());
         return NoContent();
     }
 
@@ -128,15 +216,7 @@ public class DocumentsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(drafts));
     }
 
-    /// <summary>
-    /// Pobranie dokumentów oczekujących potwierdzenia
-    /// </summary>
-    [HttpGet("pending")]
-    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetPendingConfirmation()
-    {
-        var pending = await _queryService.GetPendingConfirmationAsync();
-        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(pending));
-    }
+
 
     /// <summary>
     /// Pobranie ostatnich dokumentów (np. dashboard)

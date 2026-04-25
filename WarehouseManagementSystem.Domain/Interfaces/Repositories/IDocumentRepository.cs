@@ -5,4 +5,5 @@ namespace WarehouseManagementSystem.Domain.Interfaces.Repositories;
 
 public interface IDocumentRepository : IRepository<Document>
 {
+    Task<Document> GetDocumentWithItems(Guid id);
 }

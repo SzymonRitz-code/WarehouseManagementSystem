@@ -1,4 +1,5 @@
-﻿using WarehouseManagementSystem.Domain.Enums;
+﻿using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -6,6 +7,10 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 
 public interface IDocumentQueryService
 {
+    /// <summary>
+    /// Pobiera wszystkie dokumenty.
+    /// </summary>
+    Task<IReadOnlyList<DocumentListDto>> GetDocumentsAsync(CancellationToken ct = default);
     /// <summary>
     /// Pobiera dokument po Id wraz z pozycjami.
     /// </summary>
@@ -32,8 +37,13 @@ public interface IDocumentQueryService
     /// <summary>
     /// Pobiera dokumenty wymagające potwierdzenia.
     /// </summary>
+    [Obsolete]
     Task<IReadOnlyList<Document>> GetPendingConfirmationAsync(CancellationToken ct = default);
 
+    /// <summary>
+    /// Pobiera dokumenty wymagające akcji.
+    /// </summary>
+    Task<IReadOnlyList<DocumentListDto>> GetPendingDocumentsAsync(CancellationToken ct = default);
     /// <summary>
     /// Pobiera dokumenty powiązane z magazynem.
     /// Uwzględnia Source i Target warehouse.
@@ -62,4 +72,9 @@ public interface IDocumentQueryService
     Task<IReadOnlyList<Document>> GetRecentAsync(
         int take,
         CancellationToken ct = default);
+    Task<IReadOnlyList<Document>> GetPagedAsync(
+        int page,
+        int pageSize,
+        CancellationToken ct = default);
+
 }

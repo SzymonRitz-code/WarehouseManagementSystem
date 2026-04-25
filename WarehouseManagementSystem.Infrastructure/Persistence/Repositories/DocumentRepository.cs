@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq.Expressions;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
@@ -37,6 +38,10 @@ public class DocumentRepository : IDocumentRepository
     public async Task<Document> FindAsync(Guid id)
     {
         return await _context.Documents.FindAsync(id);
+    }
+    public async Task<Document> GetDocumentWithItems(Guid id)
+    {
+        return await _context.Documents.Include(d => d.Items).FirstOrDefaultAsync(d => d.Id == id);
     }
 
     public Document Update(Document entity)

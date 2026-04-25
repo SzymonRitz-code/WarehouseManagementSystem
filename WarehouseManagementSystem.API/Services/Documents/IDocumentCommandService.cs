@@ -15,7 +15,7 @@ public interface IDocumentCommandService
     /// Tworzy nowy dokument magazynowy.
     /// </summary>
     /// <param name="type">Typ dokumentu (PZ, WZ, MM)</param>
-    /// <param name="createdById">Osoba dodająca  (w przypadku MM)</param>
+    /// <param name="createdBy">Osoba dodająca  (w przypadku MM)</param>
     /// <param name="sourceWarehouseId">Magazyn docelowy lub źródłowy (w przypadku MM)</param>
     /// <param name="items">Pozycje dokumentu (Stock)</param>
     /// <param name="documentDate">Data dokumentu</param>
@@ -24,12 +24,34 @@ public interface IDocumentCommandService
     /// <returns>Utworzony dokument domenowy</returns>
     Task<Document> CreateDocumentAsync(
          DocumentType type,
-         Guid createdById,
+         Domain.ValueObjects.UserSnapshot createdBy,
          Guid sourceWarehouseId,
          IEnumerable<DocumentItemDraft> items,
          DateTime documentDate,
          Guid? targetWarehouseId = null,
          string? notes = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Aktualizuje dokument dla stanu Draft
+    /// </summary>
+    /// <param name="documentId"></param>
+    /// <param name="type"></param>
+    /// <param name="sourceWarehouseId"></param>
+    /// <param name="items"></param>
+    /// <param name="documentDate"></param>
+    /// <param name="targetWarehouseId"></param>
+    /// <param name="notes"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    Task<Document> UpdateDocumentAsync(
+        Guid documentId,
+        DocumentType type,
+        Guid sourceWarehouseId,
+        List<DocumentItemDraft> items,
+        DateTime documentDate,
+        Guid? targetWarehouseId,
+        string? notes,
         CancellationToken ct = default);
 
     /// <summary>
@@ -42,10 +64,11 @@ public interface IDocumentCommandService
     /// <summary>
     /// Potwierdza dokument.
     /// </summary>
-    Task ConfirmDocumentAsync(Guid documentId, Guid confirmedById);
+    Task ConfirmDocumentAsync(Guid documentId, Domain.ValueObjects.UserSnapshot confirmedBy);
 
     /// <summary>
     /// Anuluje dokument.
     /// </summary>
     Task CancelDocumentAsync(Guid documentId);
-} 
+
+}

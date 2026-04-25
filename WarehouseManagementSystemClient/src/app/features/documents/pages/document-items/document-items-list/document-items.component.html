@@ -34,23 +34,23 @@
 
           <td class="p-2">
             <app-input-select [id]="'productid-'+i" [options]="productOptions" placeholder="Select Product"
-              className="dark:bg-dark-900" [required]="true" formControlName="productId" [required]="true"
+              className="dark:bg-dark-900" formControlName="productId" [required]="true"
               hint="Choose Source Zone" />
           </td>
 
           <td class="p-2">
-            <app-input-field  [id]="'quantity-'+i"  type="number" formControlName="quantity" class="w-full border rounded px-2 py-1" />
+            <app-input-field  [id]="'quantity-'+i"  type="number" formControlName="quantity" />
           </td>
 
           <td class="p-2">
             <app-input-select [id]="'sourceZoneId-'+i" [options]="sourceZoneOptions" placeholder="Select Source Zone "
-              className="dark:bg-dark-900" [required]="true" formControlName="sourceZoneId" [required]="true"
+              className="dark:bg-dark-900" formControlName="sourceZoneId" [required]="true"
               hint="Choose Source Zone" />
           </td>
 
           <td class="p-2">
             <app-input-select [id]="'targetZoneId-'+i" [options]="targetZoneOptions" placeholder="Select Target Zone "
-              className="dark:bg-dark-900" [required]="true" formControlName="targetZoneId" [required]="true"
+              className="dark:bg-dark-900" formControlName="targetZoneId"
               hint="Choose targetOptions Zone" />
           </td>
 

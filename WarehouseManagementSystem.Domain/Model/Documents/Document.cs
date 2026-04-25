@@ -1,6 +1,6 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
-using WarehouseManagementSystem.Domain.Model.SecurityDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 
@@ -14,20 +14,18 @@ public class Document
     private Document() { } // EF
 
     public Document(
-        string number,
         DateTime documentDate,
         DocumentType type,
-        Guid createdById,
+        ValueObjects.UserSnapshot createdByUser,
         Guid? sourceWarehouseId = null,
         Guid? targetWarehouseId = null,
         string? notes = null)
     {
         Id = Guid.NewGuid();
-        SetNumber(number);
         DocumentDate = documentDate;
         Type = type;
         Status = DocumentStatus.Draft;
-        CreatedById = createdById;
+        CreatedByUser = createdByUser;
         SourceWarehouseId = sourceWarehouseId;
         TargetWarehouseId = targetWarehouseId;
         SetNotes(notes);
@@ -35,26 +33,23 @@ public class Document
     }
 
     public Guid Id { get; private set; }
-    public string Number { get; private set; }
+    public string? Number { get; private set; }
     public DateTime DocumentDate { get; private set; }
     public DocumentType Type { get; private set; }
     public DocumentStatus Status { get; private set; }
     public byte[] RowVersion { get; private set; }
 
     public string? Notes { get; private set; }
-    public DateTimeOffset? CreatedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? ConfirmedAt { get; private set; }
     public DateTimeOffset? TransferStartedAt { get; private set; }
 
-
-    public Guid CreatedById { get; private set; }
-    public User CreatedBy { get; private set; }
-
-    public Guid? ConfirmedById { get; private set; }
-    public User? ConfirmedBy { get; private set; }
+    public UserSnapshot CreatedByUser { get; private set; }
+    public UserSnapshot? ConfirmedByUser { get; private set; }
 
     public Guid? TransferStartedById { get; private set; }
-    public User? TransferStartedBy { get; private set; }
+    public string? TransferStartedByName { get; private set; }
+    public string? TransferStartedByEmail { get; private set; }
 
     public Guid? SourceWarehouseId { get; private set; }
     public Warehouse? SourceWarehouse { get; private set; }
@@ -100,7 +95,16 @@ public class Document
 
         _items.Add(item);
     }
+    public void ReplaceItems(IEnumerable<DocumentItem> newItems)
+    {
+        EnsureDraft();
+        if (!newItems.Any())
+            throw new InvalidOperationException("Document must have at least one item.");
 
+        _items.Clear();
+        foreach (var item in newItems)
+            _items.Add(item);
+    }
     public void RemoveItem(Guid itemId)
     {
         EnsureDraft();
@@ -124,7 +128,7 @@ public class Document
         TransferStartedById = userId;
     }
 
-    public void Confirm(Guid confirmedById)
+    public void Confirm(ValueObjects.UserSnapshot confirmedByUser)
     {
         if (!_items.Any())
             throw new InvalidOperationException("Cannot confirm document without items.");
@@ -133,17 +137,17 @@ public class Document
             throw new InvalidOperationException("Only draft document can be confirmed.");
 
         Status = DocumentStatus.Confirmed;
-        ConfirmedById = confirmedById;
+        ConfirmedByUser = confirmedByUser;
         ConfirmedAt = DateTimeOffset.UtcNow;
     }
 
-    public void CompleteTransfer(Guid confirmedById)
+    public void CompleteTransfer(ValueObjects.UserSnapshot confirmedByUser)
     {
         if (Status != DocumentStatus.Transfer)
             throw new InvalidOperationException("Only transferred document can be completed.");
 
         Status = DocumentStatus.Confirmed;
-        ConfirmedById = confirmedById;
+        ConfirmedByUser = confirmedByUser;
         ConfirmedAt = DateTimeOffset.UtcNow;
     }
 
@@ -162,5 +166,23 @@ public class Document
     {
         if (Status != DocumentStatus.Draft)
             throw new InvalidOperationException("Only draft document can be modified.");
+    }
+
+    public void SetSourceWarehouse(Guid sourceWarehouseId)
+    {
+        EnsureDraft();
+        SourceWarehouseId = sourceWarehouseId;
+    }
+
+    public void SetTargetWarehouse(Guid? targetWarehouseId)
+    {
+        EnsureDraft();
+        TargetWarehouseId = targetWarehouseId;
+    }
+
+    public void SetDocumentType(DocumentType type)
+    {
+        EnsureDraft();
+        Type = type;
     }
 }

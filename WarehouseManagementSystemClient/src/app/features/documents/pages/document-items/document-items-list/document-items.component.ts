@@ -90,9 +90,10 @@ export class DocumentItemsComponent implements OnInit {
       productId: [null, Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
       sourceZoneId: [null, Validators.required],
-      targetZoneId: [null, Validators.required],
+      targetZoneId: [null],
     });
 
     this.formArray.push(newItem);
+    this.formArray.get('documentItems')?.updateValueAndValidity();
   }
 }

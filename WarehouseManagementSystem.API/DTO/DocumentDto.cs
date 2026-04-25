@@ -3,53 +3,38 @@ using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public record struct DocumentDto(
-    [property: Required] Guid Id,
+public class DocumentDto : CreateDocumentDto
+{
+    [Required]
+    public Guid Id { get; set; }
 
-    [property: Required, StringLength(50)]
-    string Number,
+    [Required]
+    public DocumentStatus Status { get; set; }
 
-    [property: Required]
-    DateTime DocumentDate,
+    [Required]
+    public DateTimeOffset CreatedAt { get; set; }
 
-    [property: Required]
-    DocumentType Type,
+    public DateTimeOffset? ConfirmedAt { get; set; }
 
-    [property: Required]
-    DocumentStatus Status,
+    [Required]
+    public Guid CreatedById { get; set; }
 
-    [property: StringLength(1000)]
-    string? Notes, 
+    [Required, StringLength(200)]
+    public string? CreatedByName { get; set; } = string.Empty;
 
-    [property: Required]
-    DateTimeOffset CreatedAt,
+    [Required, EmailAddress, StringLength(255)]
+    public string? CreatedByEmail { get; set; } = string.Empty;
 
-    DateTimeOffset? ConfirmedAt,
+    public Guid? ConfirmedById { get; set; }
 
-    [property: Required]
-    Guid CreatedById,
+    [StringLength(200)]
+    public string? ConfirmedByName { get; set; }
 
-    [property: Required, StringLength(200)]
-    string CreatedByName,
+    [EmailAddress, StringLength(255)]
+    public string? ConfirmedByEmail { get; set; }
+    [StringLength(200)]
+    public string? SourceWarehouseName { get; set; }
 
-    [property: Required, EmailAddress, StringLength(255)]
-    string CreatedByEmail,
-
-    Guid? ConfirmedById,
-
-    [property: StringLength(200)]
-    string? ConfirmedByName,
-
-    [property: EmailAddress, StringLength(255)]
-    string? ConfirmedByEmail,
-
-    Guid? SourceWarehouseId,
-
-    [property: StringLength(200)]
-    string? SourceWarehouseName,
-
-    Guid? TargetWarehouseId,
-
-    [property: StringLength(200)]
-    string? TargetWarehouseName
-);
+    [StringLength(200)]
+    public string? TargetWarehouseName { get; set; }
+}

@@ -12,11 +12,10 @@ import { LabelComponent } from "../../../../shared/components/form/label/label.c
 import { FormActionsComponent } from "../../../../shared/components/form/form-actions/form-actions.component";
 import { InputSelectComponent } from '../../../../shared/components/form/input/input-select/input-select.component';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
-import { InputFieldComponent } from '../../../../shared/components/form/input/input-field.component';
 import { DatePickerComponent } from "../../../../shared/components/form/date-picker/date-picker.component";
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
 import { DocumentItemsComponent } from "../document-items/document-items-list/document-items.component";
-import { DocumentItem } from '../../model/document-item';
+import { minFormArrayLength } from '../../../../core/guards/vaildators';
 
 @Component({
   selector: 'app-document-form',
@@ -25,7 +24,6 @@ import { DocumentItem } from '../../model/document-item';
     PageBreadcrumbComponent,
     ComponentCardComponent,
     InputSelectComponent,
-    InputFieldComponent,
     LabelComponent,
     FormActionsComponent,
     ReactiveFormsModule,
@@ -55,36 +53,40 @@ export class DocumentFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.documentForm = this.fb.nonNullable.group({
-      number: ['', Validators.required],
+    this.documentForm = this.fb.group({
       documentDate: [null, Validators.required],
       type: [null, Validators.required],
       notes: [''],
-      sourceWarehouseId: [null],
+      sourceWarehouseId: [null, Validators.required],
       targetWarehouseId: [null],
-      documentItems: this.fb.array([])
+      items: this.fb.array([], [minFormArrayLength(1)])
     })
     if (this.id) {
-      this.document = this.documentService.getDocument(this.id);
-      this.documentForm.patchValue({
-        number: this.document.number,
-        documentDate: this.document.documentDate,
-        type: this.document.type,
-        notes: this.document.notes,
-        sourceWarehouseId: this.document.sourceWarehouseId,
-        targetWarehouseId: this.document.targetWarehouseId,
-      })
-      this.documentItemFormArray = this.documentForm.get('documentItems') as FormArray;
+      this.documentService.getDocument(this.id).subscribe
+        ({
+          next: (response) => {
+            this.document = response;
 
-      this.document.documentItems.forEach(item => {
-        this.documentItemFormArray.push(this.fb.group({
-          id: [item.id],
-          productId: [item.productId, Validators.required],
-          quantity: [item.quantity, [Validators.required, Validators.min(1)]],
-          sourceZoneId: [item.sourceZoneId],
-          targetZoneId: [item.targetZoneId],
-        }));
-      });
+            this.documentForm.patchValue({
+              documentDate: this.document.documentDate,
+              type: this.document.type,
+              notes: this.document.notes,
+              sourceWarehouseId: this.document.sourceWarehouseId,
+              targetWarehouseId: this.document.targetWarehouseId,
+            })
+            this.documentItemFormArray = this.documentForm.get('documentItems') as FormArray;
+
+            this.document.items.forEach(item => {
+              this.documentItemFormArray.push(this.fb.group({
+                id: [item.id],
+                productId: [item.productId, Validators.required],
+                quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+                sourceZoneId: [item.sourceZoneId, Validators.required],
+                targetZoneId: [item.targetZoneId],
+              }));
+            });
+          }
+        })
     }
     this.warehouseService.getWarehouses().subscribe({
       next: (responce) => {
@@ -99,12 +101,23 @@ export class DocumentFormComponent implements OnInit {
     this.documentTyoeOptions = Object.values(DocumentType).map(d => ({ value: d, label: d }))
   }
   get documentItemsFormArray(): FormArray {
-    return this.documentForm.get('documentItems') as FormArray;
+    return this.documentForm.get('items') as FormArray;
   }
+
   onSave() {
     this.document = this.documentForm.value;
-    this.document = this.documentService.addDocument(this.document);
-    this.router.navigateByUrl(`/documents/detail/${(this.document as Document).id}`);
+
+    const responce$ = this.id
+      ? this.documentService.updateDocument(this.document as Document)
+      : this.documentService.addDocument(this.document as CreateDocument);
+
+    responce$.subscribe({
+      next: (responce) => {
+        const id = responce.id ?? this.id;
+        this.router.navigateByUrl(`/documents/detail/${id}`);
+      }
+    });
+
   }
   onBack() {
     this.router.navigateByUrl('/documents');

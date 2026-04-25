@@ -28,7 +28,7 @@ public class DocumentCommandService : IDocumentCommandService
 
     public async Task<Document> CreateDocumentAsync(
         DocumentType type,
-        Guid createdById,
+        UserSnapshot createdBy,
         Guid sourceWarehouseId,
         IEnumerable<DocumentItemDraft> items,
         DateTime documentDate,
@@ -39,16 +39,10 @@ public class DocumentCommandService : IDocumentCommandService
         if (items == null || !items.Any())
             throw new ArgumentException("Document must have at least one item.", nameof(items));
 
-        var documentNumber = await _numberGenerator.GenerateAsync(
-            type,
-            sourceWarehouseId,
-            documentDate);
-
         var document = new Document(
-            number: documentNumber,
             documentDate: documentDate,
             type: type,
-            createdById: createdById,
+            createdByUser: createdBy,
             sourceWarehouseId: sourceWarehouseId,
             targetWarehouseId: targetWarehouseId,
             notes: notes
@@ -66,13 +60,57 @@ public class DocumentCommandService : IDocumentCommandService
 
             document.AddItem(item);
         }
+        try
+        {
+            _unitOfWork.Documents.Add(document);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
 
-        _unitOfWork.Documents.Add(document);
+        }
+
+
+        return document;
+    }
+    public async Task<Document> UpdateDocumentAsync(
+        Guid documentId,
+        DocumentType type,
+        Guid sourceWarehouseId,
+        List<DocumentItemDraft> items,
+        DateTime documentDate,
+        Guid? targetWarehouseId = null,
+        string? notes = null,
+        CancellationToken ct = default)
+    {
+        if (items == null || !items.Any())
+            throw new ArgumentException("Document must have at least one item.", nameof(items));
+
+        var document = await _unitOfWork.Documents.FindAsync(documentId) ?? throw new InvalidOperationException("Document not found.");
+
+        document.ChangeDate(documentDate);
+        document.SetDocumentType(type);
+        document.SetSourceWarehouse(sourceWarehouseId);
+        document.SetTargetWarehouse(targetWarehouseId);
+        document.SetNotes(notes);
+
+        var itemsToReplace = items.Select(draft => new DocumentItem(
+                productId: draft.ProductId,
+                quantity: draft.Quantity,
+                productBatchId: draft.ProductBatchId,
+                sourceZoneId: draft.SourceZoneId,
+                targetZoneId: draft.TargetZoneId
+            )).ToList();
+
+        document.ReplaceItems(itemsToReplace);
+
+        _unitOfWork.Documents.Update(document);
         await _unitOfWork.SaveChangesAsync(ct);
 
         return document;
     }
-
+    [Obsolete("MVP flow. Not used in current MM document-driven process. Reserved for future workflow-based transfer execution.")]
+    // TODO: Future phase - workflow-based transfer execution (MM v2)
     public async Task StartTransferAsync(Guid documentId, Guid userId)
     {
         var document = await _unitOfWork.Documents.FindAsync(documentId)
@@ -81,9 +119,9 @@ public class DocumentCommandService : IDocumentCommandService
 
         await _unitOfWork.SaveChangesAsync();
     }
-    public async Task ConfirmDocumentAsync(Guid documentId, Guid confirmedById)
+    public async Task ConfirmDocumentAsync(Guid documentId, Domain.ValueObjects.UserSnapshot confirmedBy)
     {
-        var document = await _unitOfWork.Documents.FindAsync(documentId)
+        var document = await _unitOfWork.Documents.GetDocumentWithItems(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
 
         switch (document.Type)
@@ -132,7 +170,12 @@ public class DocumentCommandService : IDocumentCommandService
                 }
                 break;
         }
-        document.Confirm(confirmedById);
+        var documentNumber = await _numberGenerator.GenerateAsync(
+            document.Type,
+            document.SourceWarehouseId,
+            document.DocumentDate); //TODO dodać testy sprawdzające czy numer jest poprawnie wygenerowany po zatwierdzeniu dokumentu
+        document.SetNumber(documentNumber);
+        document.Confirm(confirmedBy);
 
         _unitOfWork.Documents.Update(document);
         await _unitOfWork.SaveChangesAsync();
@@ -168,9 +211,11 @@ public class DocumentCommandService : IDocumentCommandService
         }
 
         // Zmiana statusu dokumentu na anulowany
-        document.Cancel(); // zakładam, że masz metodę domenową Cancel()
+        document.Cancel();
 
         _unitOfWork.Documents.Update(document);
         await _unitOfWork.SaveChangesAsync();
     }
+
+
 }

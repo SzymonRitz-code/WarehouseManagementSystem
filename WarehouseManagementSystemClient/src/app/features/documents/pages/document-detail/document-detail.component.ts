@@ -29,6 +29,9 @@ import { ProductService } from '../../../products/services/product-service';
 })
 export class DocumentDetailComponent implements OnInit {
 
+  id!: string;
+  document!: Document;
+
   constructor(
     private documentService: DocumentService,
     private warhouseService: WarehouseService,
@@ -36,42 +39,45 @@ export class DocumentDetailComponent implements OnInit {
     private zoneService: ZoneService,
     private activatedRoute: ActivatedRoute,
     private router: Router) { }
-  id!: string;
-  document!: Document | undefined;
+
 
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.document = this.documentService.getDocument(this.id);
-    this.warhouseService.getWarehouse(this.document.sourceWarehouseId!).subscribe({
+
+    this.documentService.getDocument(this.id).subscribe({
       next: (responce) => {
-        this.document!.sourceWarehouseName = responce?.name
+        this.document = responce;
+        console.log(this.document)
+        this.warhouseService.getWarehouse(this.document.sourceWarehouseId!).subscribe({
+          next: (responce) => {
+            this.document!.sourceWarehouseName = responce?.name
+          }
+        });
+        this.warhouseService.getWarehouse(this.document.targetWarehouseId!).subscribe({
+          next: (responce) => {
+            this.document!.targetWarehouseName = responce?.name
+          }
+        });
+        this.document.items.forEach(item => {
+          this.productService.getProduct(item.productId).subscribe({
+            next:
+              (res) => { item.productName = res.name; }
+          });
+
+          this.zoneService.getZone(item.sourceZoneId).subscribe({
+            next: (responce) => {
+              item.sourceZoneName = responce.name;
+            }
+          });
+          this.zoneService.getZone(item.targetZoneId).subscribe({
+            next: (responce) => {
+              item.targetZoneName = responce.name;
+            }
+          })
+
+        });
       }
     });
-    this.warhouseService.getWarehouse(this.document.targetWarehouseId!).subscribe({
-      next: (responce) => {
-        this.document!.targetWarehouseName = responce?.name
-      }
-    });
-    this.document.documentItems
-    this.document.documentItems.forEach(item => {
-      this.productService.getProduct(item.productId).subscribe({
-        next:
-          (res) => { item.productName = res.name; }
-      });
-
-      this.zoneService.getZone(item.sourceZoneId).subscribe({
-        next: (responce) => {
-          item.sourceZoneName = responce.name;
-        }
-      });
-      this.zoneService.getZone(item.targetZoneId).subscribe({
-        next: (responce) => {
-          item.targetZoneName = responce.name;
-        }
-      })
-
-    });
-
   }
 
   onEdit() {

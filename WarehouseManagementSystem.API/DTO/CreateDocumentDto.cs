@@ -3,18 +3,25 @@ using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public record struct CreateDocumentDto(
+public class CreateDocumentDto
+{
+    [StringLength(50)]
+    public string? Number { get; set; }
+
     [Required]
-    DocumentType Type,
+    public DocumentType Type { get; set; }
+
     [Required]
-    Guid CreatedById,
+    public Guid SourceWarehouseId { get; set; }
+
+    public Guid? TargetWarehouseId { get; set; }
+
     [Required]
-    Guid SourceWarehouseId,
-    Guid? TargetWarehouseId,
-    [Required]
-    DateTime DocumentDate,
+    public DateTime DocumentDate { get; set; }
+
     [StringLength(1000)]
-    string? Notes,
+    public string? Notes { get; set; }
+
     [Required, MinLength(1, ErrorMessage = "Document must have at least one item.")]
-    List<DocumentItemDto> Items
-);
+    public virtual List<CreateDocumentItemDto> Items { get; set; } = [];
+}

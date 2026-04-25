@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Moq;
 using WarehouseManagementSystem.API.Services.Documents;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
@@ -12,7 +13,7 @@ using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Services;
 
-public class DocumentCommandServiceTests
+public class DocumentIntegrationTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IStockService> _stockServiceMock = new();
@@ -21,7 +22,7 @@ public class DocumentCommandServiceTests
 
     private readonly DocumentCommandService _service;
 
-    public DocumentCommandServiceTests()
+    public DocumentIntegrationTests()
     {
         _service = new DocumentCommandService(
             _unitOfWorkMock.Object,
@@ -35,7 +36,7 @@ public class DocumentCommandServiceTests
     {
         Func<Task> act = () => _service.CreateDocumentAsync(
             DocumentType.PZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             Guid.NewGuid(),
             new List<DocumentItemDraft>(),
             DateTime.UtcNow);
@@ -68,7 +69,7 @@ public class DocumentCommandServiceTests
         // Act
         var document = await _service.CreateDocumentAsync(
             DocumentType.PZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             Guid.NewGuid(),
             draftItems,
             DateTime.UtcNow);
@@ -77,7 +78,7 @@ public class DocumentCommandServiceTests
         documentRepoMock.Verify(r => r.Add(document), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        document.Number.Should().Be("DOC-001");
+        document.Number.Should().Be("DOC-001");  // TODO przenieć sprawdzanie numeru dokumentu do innego testu. => do ConfirmDocument 
         document.Items.Should().HaveCount(1);
         document.Items.First().ProductId.Should().Be(draftItems.First().ProductId);
     }
@@ -87,10 +88,9 @@ public class DocumentCommandServiceTests
     {
         // Arrange
         var doc = new Document(
-            "DOC-001",
             DateTime.UtcNow,
             DocumentType.PZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             Guid.NewGuid(),
             null,
             null);
@@ -113,12 +113,11 @@ public class DocumentCommandServiceTests
         var productId = Guid.NewGuid();
         var zoneId = Guid.NewGuid();
         // Arrange
-        var confirmedBy = Guid.NewGuid();
+        var confirmedBy = UserService.GetUser();
         var doc = new Document(
-            "DOC-001",
             DateTime.UtcNow,
             DocumentType.PZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             Guid.NewGuid(),
             null,
             null);
@@ -147,10 +146,9 @@ public class DocumentCommandServiceTests
         var zoneId = Guid.NewGuid();
 
         var doc = new Document(
-            "DOC-001",
             DateTime.UtcNow,
             DocumentType.PZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             warehouseId,
             null,
             null);
@@ -161,7 +159,7 @@ public class DocumentCommandServiceTests
             .Setup(x => x.Documents.FindAsync(doc.Id))
             .ReturnsAsync(doc);
 
-        await _service.ConfirmDocumentAsync(doc.Id, Guid.NewGuid());
+        await _service.ConfirmDocumentAsync(doc.Id, UserService.GetUser());
 
         _stockServiceMock.Verify(x => x.IncreaseStockAsync(
             productId,
@@ -175,17 +173,16 @@ public class DocumentCommandServiceTests
     }
 
     [Fact]
-    public async Task ConfirmDocumentAsync_ShouldDecreaseStock_ForWZ()
+     public async Task ConfirmDocumentAsync_ShouldDecreaseStock_ForWZ()
     {
         var productId = Guid.NewGuid();
         var warehouseId = Guid.NewGuid();
         var zoneId = Guid.NewGuid();
 
         var doc = new Document(
-            "DOC-001",
             DateTime.UtcNow,
             DocumentType.WZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             warehouseId,
             null,
             null);
@@ -196,7 +193,7 @@ public class DocumentCommandServiceTests
             .Setup(x => x.Documents.FindAsync(doc.Id))
             .ReturnsAsync(doc);
 
-        await _service.ConfirmDocumentAsync(doc.Id, Guid.NewGuid());
+        await _service.ConfirmDocumentAsync(doc.Id, UserService.GetUser());
 
         _stockServiceMock.Verify(x => x.DecreaseStockAsync(
             productId,
@@ -216,10 +213,9 @@ public class DocumentCommandServiceTests
         var targetZone = Guid.NewGuid();
 
         var doc = new Document(
-            "DOC-001",
             DateTime.UtcNow,
             DocumentType.MM,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             sourceWarehouse,
             targetWarehouse,
             null);
@@ -230,7 +226,7 @@ public class DocumentCommandServiceTests
             .Setup(x => x.Documents.FindAsync(doc.Id))
             .ReturnsAsync(doc);
 
-        await _service.ConfirmDocumentAsync(doc.Id, Guid.NewGuid());
+        await _service.ConfirmDocumentAsync(doc.Id, UserService.GetUser());
 
         _stockServiceMock.Verify(x => x.MoveStockAsync(
             productId,
@@ -249,7 +245,7 @@ public class DocumentCommandServiceTests
             .Setup(x => x.Documents.FindAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Document?)null);
 
-        Func<Task> act = () => _service.ConfirmDocumentAsync(Guid.NewGuid(), Guid.NewGuid());
+        Func<Task> act = () => _service.ConfirmDocumentAsync(Guid.NewGuid(), UserService.GetUser());
 
         await act.Should()
             .ThrowAsync<InvalidOperationException>()
@@ -260,10 +256,9 @@ public class DocumentCommandServiceTests
     public async Task CancelDocumentAsync_ShouldReleaseReservations_ForWZ()
     {
         var doc = new Document(
-            "DOC-001",
             DateTime.UtcNow,
             DocumentType.WZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             Guid.NewGuid(),
             null,
             null);
@@ -296,10 +291,9 @@ public class DocumentCommandServiceTests
     public async Task CancelDocumentAsync_ShouldCancelDocument_WhenNoReservations()
     {
         var doc = new Document(
-            "DOC-001",
             DateTime.UtcNow,
             DocumentType.WZ,
-            Guid.NewGuid(),
+            UserService.GetUser(),
             Guid.NewGuid(),
             null,
             null);

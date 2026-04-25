@@ -1,23 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { DocumentService } from '../../services/document-service';
+import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { Document } from '../../model/document';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
-import { ActivatedRoute, Router } from '@angular/router';
-import { Document } from '../../model/document';
-import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { DocumentType } from '../../../../core/enums/documentType';
 
 @Component({
-  selector: 'app-document-list',
+  selector: 'app-document-pending-list',
   standalone: true,
   imports: [CommonModule, PageBreadcrumbComponent, ComponentCardComponent, TableComponent],
-  templateUrl: './document-list.component.html'
+  templateUrl: './document-pending-list.component.html'
 })
-export class DocumentListComponent implements OnInit {
+export class DocumentPendingListComponent implements OnInit {
+  goToForm() {
+    this.router.navigateByUrl('/documents/form')
+  }
 
   documents$!: Observable<Document[]>;
-
   columns = [
     { key: 'documentNumber', label: 'Document Number', sortable: true },        // numer nadany w systemie
     { key: 'type', label: 'Type', sortable: true },                             // typ: Receipt / Issue / Transfer / Adjustment
@@ -32,21 +35,23 @@ export class DocumentListComponent implements OnInit {
     { key: 'totalQuantity', label: 'Total Qty', sortable: true }                // suma ilości wszystkich produktów
 
   ];
-
-  documentActions = [    // np. podgląd, edycja, PDF, zatwierdzenie
-    { label: 'Details', action: 'details' },
+  documentActions = [
+    { label: 'Edit', action: 'edit', visible: (row: Document) => row.status === 'Draft' },
+    { label: 'Confirm', action: 'confirm', visible: (row: Document) => row.status === 'Draft' },
+    {
+      label: 'Cancel', 
+      action: 'cancel', 
+      visible:
+        (row: Document) => row.status === 'Draft' || (row.status === 'Confirmed' && row.type === DocumentType.MM)
+    }
   ];
 
   constructor(private router: Router, private documentService: DocumentService) { }
 
   ngOnInit(): void {
-    this.documents$ = this.documentService.getDocuments();
+    this.documents$ = this.documentService.getPendingDocuments();
   }
 
-
-  goToForm() {
-    this.router.navigateByUrl('/documents/form')
-  }
   onDocumentAction(event: { row: Document; action: string }) {
     const { row, action } = event;
 
@@ -55,9 +60,13 @@ export class DocumentListComponent implements OnInit {
         this.onEdit(row);
         break;
 
-      case 'details':
-        this.onDetails(row);
-        break; 
+      case 'confirm':
+        this.onConfirm(row);
+        break;
+
+      case 'cancel':
+        this.onCancel(row);
+        break;
     }
   }
   onCancel(row: Document) {

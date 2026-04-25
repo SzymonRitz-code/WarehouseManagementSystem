@@ -18,10 +18,12 @@
             cfg.AddProductMappings();
             cfg.AddProductBatchMappings();
             cfg.AddDocumentMappings();
+            cfg.AddCreateDocumentMappings();
             cfg.AddDocumentItemMappings();
+            cfg.AddCreateDocumentItemMappings();
             cfg.AddWarehouseMappings();
             cfg.AddWarehouseZoneMappings();
-            cfg.AddCreateDocumentMappings(); // nowo dodane dla CreateDocumentDto
+ 
         }
 
         public static void AddAuditLogMappings(this IMapperConfigurationExpression cfg)
@@ -65,10 +67,14 @@
         public static void AddDocumentMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<Document, DocumentDto>()
-                .ForMember(dto => dto.CreatedByName, opt => opt.MapFrom(d => d.CreatedBy.Name))
-                .ForMember(dto => dto.CreatedByEmail, opt => opt.MapFrom(d => d.CreatedBy.Email))
-                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedBy != null ? d.ConfirmedBy.Name : null))
-                .ForMember(dto => dto.ConfirmedByEmail, opt => opt.MapFrom(d => d.ConfirmedBy != null ? d.ConfirmedBy.Email : null))
+                .ForMember(dto => dto.SourceWarehouseName, opt => opt.MapFrom(d => d.SourceWarehouse != null ? d.SourceWarehouse.Name : null))
+                .ForMember(dto => dto.TargetWarehouseName, opt => opt.MapFrom(d => d.TargetWarehouse != null ? d.TargetWarehouse.Name : null))
+                .ForMember(dto => dto.CreatedById, opt => opt.MapFrom(d => d.CreatedByUser != null ? (Guid?)d.CreatedByUser.Id : null))
+                .ForMember(dto => dto.CreatedByEmail, opt => opt.MapFrom(d => d.CreatedByUser != null ? d.CreatedByUser.Email : null))
+                .ForMember(dto => dto.CreatedByName, opt => opt.MapFrom(d => d.CreatedByUser != null ? d.CreatedByUser.Name : null))
+                .ForMember(dto => dto.ConfirmedById, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? (Guid?)d.ConfirmedByUser.Id : null))
+                .ForMember(dto => dto.ConfirmedByEmail, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Email : null))
+                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null))
                 .ReverseMap();
         }
 
@@ -80,6 +86,10 @@
                 .ForMember(dto => dto.SourceZoneName, opt => opt.MapFrom(di => di.SourceZone != null ? di.SourceZone.Name : null))
                 .ForMember(dto => dto.TargetZoneName, opt => opt.MapFrom(di => di.TargetZone != null ? di.TargetZone.Name : null))
                 .ReverseMap();
+        }
+        public static void AddCreateDocumentItemMappings(this IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<DocumentItem, CreateDocumentItemDto>().ReverseMap();
         }
 
         public static void AddWarehouseMappings(this IMapperConfigurationExpression cfg)
@@ -98,7 +108,6 @@
         {
             cfg.CreateMap<CreateDocumentDto, Document>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
-                .ForMember(dest => dest.CreatedById, opt => opt.MapFrom(src => src.CreatedById))
                 .ForMember(dest => dest.SourceWarehouseId, opt => opt.MapFrom(src => src.SourceWarehouseId))
                 .ForMember(dest => dest.TargetWarehouseId, opt => opt.MapFrom(src => src.TargetWarehouseId))
                 .ForMember(dest => dest.DocumentDate, opt => opt.MapFrom(src => src.DocumentDate))

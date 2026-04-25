@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
@@ -13,6 +14,47 @@ public class DocumentQueryService : IDocumentQueryService
     public DocumentQueryService(WarehouseManagementSystemDbContext context)
     {
         _context = context;
+    }
+    public async Task<IReadOnlyList<DocumentListDto>> GetDocumentsAsync(CancellationToken ct = default)
+    {
+
+        return await (
+            from document in _context.Documents
+            join item in _context.DocumentItems on document.Id equals item.DocumentId into itemJoin
+            from item in itemJoin.DefaultIfEmpty()
+            join sourceWarehouse in _context.Warehouses on document.SourceWarehouseId equals sourceWarehouse.Id
+            join targetWarehouse in _context.Warehouses on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
+            from targetWarehouse in targetJoin.DefaultIfEmpty()
+            group new { document, item, sourceWarehouse, targetWarehouse }
+            by new
+            {
+                document.Id,
+                document.Number,
+                document.Type,
+                document.Status,
+                SourceWarehouseName = sourceWarehouse.Name,
+                TargetWarehouseName = targetWarehouse != null ? targetWarehouse.Name : null,
+                CreatedByName = document.CreatedByUser.Name,
+                ConfirmedByName = document.ConfirmedByUser.Name,
+                document.CreatedAt,
+                document.ConfirmedAt
+            }
+            into g
+            select new DocumentListDto
+            {
+                DocumentNumber = g.Key.Number,
+                Type = g.Key.Type,
+                Status = g.Key.Status,
+                SourceWarehouse = g.Key.SourceWarehouseName,
+                TargetWarehouse = g.Key.TargetWarehouseName,
+                CreatedBy = g.Key.CreatedByName,
+                ConfirmedBy = g.Key.ConfirmedByName,
+                CreatedAt = g.Key.CreatedAt,
+                ConfirmedAt = g.Key.ConfirmedAt,
+                ItemCount = g.Count(x => x.item != null),
+                TotalQuantity = g.Sum(x => (decimal?)x.item.Quantity) ?? 0
+            }
+        ).AsNoTracking().ToListAsync(ct);
     }
 
     public async Task<Document?> GetByIdAsync(Guid documentId, CancellationToken ct = default)
@@ -117,7 +159,7 @@ public class DocumentQueryService : IDocumentQueryService
             .AsNoTracking()
             .ToListAsync(ct);
     }
-
+    [Obsolete]
     public async Task<IReadOnlyList<Document>> GetPendingConfirmationAsync(CancellationToken ct = default)
     {
         // Dokumenty w trakcie procesu operacyjnego
@@ -126,6 +168,49 @@ public class DocumentQueryService : IDocumentQueryService
             .OrderBy(d => d.CreatedAt)
             .AsNoTracking()
             .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<DocumentListDto>> GetPendingDocumentsAsync(CancellationToken ct = default)
+    {
+        return await (
+            from document in _context.Documents
+            join item in _context.DocumentItems on document.Id equals item.DocumentId into itemJoin
+            from item in itemJoin.DefaultIfEmpty()
+            join sourceWarehouse in _context.Warehouses on document.SourceWarehouseId equals sourceWarehouse.Id
+            join targetWarehouse in _context.Warehouses on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
+            from targetWarehouse in targetJoin.DefaultIfEmpty()
+            where document.Status == DocumentStatus.Draft || (document.Status == DocumentStatus.Confirmed && document.Type == DocumentType.MM)
+            group new { document, item, sourceWarehouse, targetWarehouse }
+            by new
+            {
+                document.Id,
+                document.Number,
+                document.Type,
+                document.Status,
+                SourceWarehouseName = sourceWarehouse.Name,
+                TargetWarehouseName = targetWarehouse != null ? targetWarehouse.Name : null,
+                CreatedByName = document.CreatedByUser.Name,
+                ConfirmedByName = document.ConfirmedByUser.Name,
+                document.CreatedAt,
+                document.ConfirmedAt
+            }
+            into g
+            select new DocumentListDto
+            {
+                Id = g.Key.Id,
+                DocumentNumber = g.Key.Number,
+                Type = g.Key.Type,
+                Status = g.Key.Status,
+                SourceWarehouse = g.Key.SourceWarehouseName,
+                TargetWarehouse = g.Key.TargetWarehouseName,
+                CreatedBy = g.Key.CreatedByName,
+                ConfirmedBy = g.Key.ConfirmedByName,
+                CreatedAt = g.Key.CreatedAt,
+                ConfirmedAt = g.Key.ConfirmedAt,
+                ItemCount = g.Count(x => x.item != null),
+                TotalQuantity = g.Sum(x => (decimal?)x.item.Quantity) ?? 0
+            }
+            ).OrderBy(d => d.CreatedAt).AsNoTracking().ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<StockReservation>> GetActiveReservationsAsync(
@@ -194,4 +279,6 @@ public class DocumentQueryService : IDocumentQueryService
             .AsNoTracking()
             .ToListAsync(ct);
     }
+
+
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 namespace WarehouseManagementSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(WarehouseManagementSystemDbContext))]
-    partial class WarehouseManagementSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419144345_DocumentUpdate")]
+    partial class DocumentUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -100,12 +103,10 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("Volume")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("decimal(18,6)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("Weight")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("decimal(18,6)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -151,9 +152,15 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("ConfirmedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("ConfirmedById")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTimeOffset?>("CreatedAt")
                         .IsRequired()
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DocumentDate")
                         .HasColumnType("date");
@@ -186,14 +193,8 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("TransferStartedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("TransferStartedByEmail")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid?>("TransferStartedById")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("TransferStartedByName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -202,15 +203,20 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ConfirmedById");
+
+                    b.HasIndex("CreatedById");
+
                     b.HasIndex("DocumentDate");
 
                     b.HasIndex("Number")
-                        .IsUnique()
-                        .HasFilter("[Number] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("SourceWarehouseId");
 
                     b.HasIndex("TargetWarehouseId");
+
+                    b.HasIndex("TransferStartedById");
 
                     b.ToTable("Documents");
                 });
@@ -312,7 +318,6 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -496,6 +501,17 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
             modelBuilder.Entity("WarehouseManagementSystem.Domain.Model.DocumentsDomain.Document", b =>
                 {
+                    b.HasOne("WarehouseManagementSystem.Domain.Model.SecurityDomain.User", "ConfirmedBy")
+                        .WithMany()
+                        .HasForeignKey("ConfirmedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("WarehouseManagementSystem.Domain.Model.SecurityDomain.User", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("WarehouseManagementSystem.Domain.Model.WarehouseDomain.Warehouse", "SourceWarehouse")
                         .WithMany("SourceDocuments")
                         .HasForeignKey("SourceWarehouseId")
@@ -506,69 +522,20 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                         .HasForeignKey("TargetWarehouseId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.OwnsOne("WarehouseManagementSystem.Domain.ValueObjects.UserSnapshot", "ConfirmedByUser", b1 =>
-                        {
-                            b1.Property<Guid>("DocumentId")
-                                .HasColumnType("uniqueidentifier");
+                    b.HasOne("WarehouseManagementSystem.Domain.Model.SecurityDomain.User", "TransferStartedBy")
+                        .WithMany()
+                        .HasForeignKey("TransferStartedById")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                            b1.Property<string>("Email")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("ConfirmedByEmail");
+                    b.Navigation("ConfirmedBy");
 
-                            b1.Property<Guid>("Id")
-                                .HasColumnType("uniqueidentifier")
-                                .HasColumnName("ConfirmedById");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("ConfirmedByName");
-
-                            b1.HasKey("DocumentId");
-
-                            b1.ToTable("Documents");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DocumentId");
-                        });
-
-                    b.OwnsOne("WarehouseManagementSystem.Domain.ValueObjects.UserSnapshot", "CreatedByUser", b1 =>
-                        {
-                            b1.Property<Guid>("DocumentId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Email")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("CreatedByEmail");
-
-                            b1.Property<Guid>("Id")
-                                .HasColumnType("uniqueidentifier")
-                                .HasColumnName("CreatedById");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("CreatedByName");
-
-                            b1.HasKey("DocumentId");
-
-                            b1.ToTable("Documents");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DocumentId");
-                        });
-
-                    b.Navigation("ConfirmedByUser")
-                        .IsRequired();
-
-                    b.Navigation("CreatedByUser")
-                        .IsRequired();
+                    b.Navigation("CreatedBy");
 
                     b.Navigation("SourceWarehouse");
 
                     b.Navigation("TargetWarehouse");
+
+                    b.Navigation("TransferStartedBy");
                 });
 
             modelBuilder.Entity("WarehouseManagementSystem.Domain.Model.DocumentsDomain.DocumentItem", b =>

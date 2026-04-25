@@ -2,33 +2,36 @@
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public record struct DocumentItemDto(
-    [property: Required] Guid Id,
+public class DocumentItemDto : CreateDocumentDto
+{
+    [Required]
+    public Guid Id { get; set; }
+    [StringLength(200)]
+    public string ProductName { get; set; } = string.Empty;
+    [StringLength(50)]
+    public string? ProductBatchNumber { get; set; }
+    [StringLength(200)]
+    public string? SourceZoneName { get; set; }
+    [StringLength(200)]
+    public string? TargetZoneName { get; set; }
 
-    [property: Required]
-    Guid DocumentId,
 
-    [property: Required]
-    Guid ProductId,
+}
 
-    [property: StringLength(200)]
-    string ProductName,
+public class CreateDocumentItemDto
+{
+    [Required]
+    public Guid DocumentId { get; set; }
 
-    Guid? ProductBatchId,
+    [Required]
+    public Guid ProductId { get; set; }
 
-    [property: StringLength(50)]
-    string? ProductBatchNumber,
+    [Range(0, double.MaxValue)]
+    public decimal Quantity { get; set; }
 
-    Guid? SourceZoneId,
+    public Guid? ProductBatchId { get; set; }
 
-    [property: StringLength(200)]
-    string? SourceZoneName,
+    public Guid? SourceZoneId { get; set; }
 
-    Guid? TargetZoneId,
-
-    [property: StringLength(200)]
-    string? TargetZoneName,
-
-    [property: Range(0, double.MaxValue)]
-    decimal Quantity
-);
+    public Guid? TargetZoneId { get; set; }
+}
