@@ -37,7 +37,8 @@ public class WarehouseZonesController : ControllerBase
 
         return Ok(_mapper.Map<WarehouseZoneDto>(zone));
     }
-
+    
+    //TODO - ustandaryzować nazwnictwo metod w kontrolerze 
     [HttpPut("{warehouseZoneId}")]
     public async Task<IActionResult> PutWarehouseZone(Guid warehouseZoneId, WarehouseZoneDto zoneDto)
      {

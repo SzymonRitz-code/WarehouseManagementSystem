@@ -17,7 +17,7 @@ public class Stock
 
     public DateTimeOffset LastUpdated { get; private set; }
 
-    public byte[]? RowVersion { get; private set; }
+    public byte[] RowVersion { get; private set; }
 
     // FK
     public Guid ProductId { get; private set; }

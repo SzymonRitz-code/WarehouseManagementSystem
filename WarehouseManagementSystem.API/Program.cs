@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Serialization;
-using System.Text.Json.Serialization;
 using WarehouseManagementSystem.API.Extensions;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -25,7 +23,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("WarehouseManagementSystemConnection")));
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("WarehouseManagementSystemConnection")
+    );
+
+    options.EnableSensitiveDataLogging()
+           .EnableDetailedErrors();
+});
 
 // Services
 builder.Services.AddScoped<IDocumentCommandService, DocumentCommandService>();
@@ -45,7 +50,7 @@ builder.Services.AddScoped<IStockService, StockService>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddTransient<IDocumentNumberGenerator,DocumentNumberGenerator>();
+builder.Services.AddTransient<IDocumentNumberGenerator, DocumentNumberGenerator>();
 builder.Services.AddHostedService<ReservationExpirationJob>();
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
 

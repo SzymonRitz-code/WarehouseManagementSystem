@@ -69,7 +69,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
                    .IsRequired();
 
             builder.Property(x => x.RowVersion)
-                   .IsRowVersion();
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
             builder.HasIndex(x => new { x.ProductId, x.WarehouseId, x.WarehouseZoneId, x.ProductBatchId })
                    .IsUnique();
@@ -222,6 +223,12 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
                    .IsRequired()
                    .HasMaxLength(50);
 
+            builder.Property(x => x.Volume)
+                   .HasPrecision(18, 6);
+
+            builder.Property(x => x.Weight)
+                   .HasPrecision(18, 6);
+
             builder.HasIndex(x => x.SKU).IsUnique();
         }
 
@@ -232,10 +239,10 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.Number)
-                   .IsRequired()
+                   .IsRequired(false)
                    .HasMaxLength(50);
 
-            builder.HasIndex(x => x.Number).IsUnique();
+            builder.HasIndex(x => x.Number).IsUnique().HasFilter("[Number] IS NOT NULL");
 
             // Enum stored as string
             builder.Property(x => x.Type)
@@ -265,23 +272,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
                    .HasColumnType("datetimeoffset");
 
             builder.Property(x => x.RowVersion)
-                   .IsRowVersion();
-
-            // Relacje do użytkownika
-            builder.HasOne(x => x.CreatedBy)
-                   .WithMany()
-                   .HasForeignKey(x => x.CreatedById)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(x => x.ConfirmedBy)
-                   .WithMany()
-                   .HasForeignKey(x => x.ConfirmedById)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(x => x.TransferStartedBy)
-                   .WithMany()
-                   .HasForeignKey(x => x.TransferStartedById)
-                   .OnDelete(DeleteBehavior.Restrict);
+                    .IsRowVersion()
+                    .IsConcurrencyToken();
 
             // Relacje do magazynów
             builder.HasOne(x => x.SourceWarehouse)
@@ -299,6 +291,19 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
                    .HasForeignKey(i => i.DocumentId)
                    .OnDelete(DeleteBehavior.Cascade);
 
+            builder.OwnsOne(x => x.CreatedByUser, (Action<OwnedNavigationBuilder<Document, Domain.ValueObjects.UserSnapshot>>)(user =>
+            {
+                user.Property((System.Linq.Expressions.Expression<Func<Domain.ValueObjects.UserSnapshot, Guid>>)(x => (Guid)x.Id)).HasColumnName("CreatedById");
+                user.Property((System.Linq.Expressions.Expression<Func<Domain.ValueObjects.UserSnapshot, string>>)(x => (string)x.Name)).HasColumnName("CreatedByName");
+                user.Property((System.Linq.Expressions.Expression<Func<Domain.ValueObjects.UserSnapshot, string>>)(x => (string)x.Email)).HasColumnName("CreatedByEmail");
+            }));
+
+            builder.OwnsOne(x => x.ConfirmedByUser, (Action<OwnedNavigationBuilder<Document, Domain.ValueObjects.UserSnapshot>>)(user =>
+            {
+                user.Property((System.Linq.Expressions.Expression<Func<Domain.ValueObjects.UserSnapshot, Guid>>)(x => (Guid)x.Id)).HasColumnName("ConfirmedById");
+                user.Property((System.Linq.Expressions.Expression<Func<Domain.ValueObjects.UserSnapshot, string>>)(x => (string)x.Name)).HasColumnName("ConfirmedByName");
+                user.Property((System.Linq.Expressions.Expression<Func<Domain.ValueObjects.UserSnapshot, string>>)(x => (string)x.Email)).HasColumnName("ConfirmedByEmail");
+            }));
             // Indeksy pomocnicze
             builder.HasIndex(x => x.DocumentDate);
             builder.HasIndex(x => x.SourceWarehouseId);

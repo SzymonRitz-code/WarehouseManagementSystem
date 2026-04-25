@@ -27,6 +27,7 @@ import { UserDetailComponent } from './features/users/pages/user-detail/user-det
 import { ProductBatchListComponent } from './features/products/pages/product-batch/product-batch-list/product-batch-list.component';
 import { ProductBatchFormComponent } from './features/products/pages/product-batch/product-batch-form/product-batch-form.component';
 import { ProductBatchDetailComponent } from './features/products/pages/product-batch/product-batch-detail/product-batch-detail.component';
+import { DocumentPendingListComponent } from './features/documents/pages/document-pending-list/document-pending-list.component';
 
 
 export const routes: Routes = [
@@ -48,10 +49,10 @@ export const routes: Routes = [
         path: 'documents',
         children: [
           { path: '', component: DocumentListComponent },
+          { path: 'pending', component: DocumentPendingListComponent },
           { path: 'form', component: DocumentFormComponent },
           { path: 'form/:id', component: DocumentFormComponent },
-          { path: 'detail/:id', component: DocumentDetailComponent },
-          { path: 'items', component: DocumentItemsComponent }
+          { path: 'detail/:id', component: DocumentDetailComponent }
         ]
       },
 

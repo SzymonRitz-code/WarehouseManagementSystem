@@ -84,8 +84,10 @@ export class AppSidebarComponent {
     {
       name: "Stocks",
       icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="3" width="18" height="18" stroke="currentColor" stroke-width="1.5"/>
-            <rect x="7" y="7" width="10" height="10" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="3" y="4" width="18" height="16" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="7" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="7" y1="16" x2="17" y2="16" stroke="currentColor" stroke-width="1.5"/>
             </svg>`,
       subItems: [
         { name: "Stocks List", path: "/stocks" },
@@ -103,20 +105,8 @@ export class AppSidebarComponent {
             </svg>`,
       subItems: [
         { name: "Document List", path: "/documents" },  // filtry status Draft/Confirmed/Transfer/Completed
+        { name: "Pending Documents", path: "/documents/pending" },
         { name: "Document Form", path: "/documents/form" }  // create/edit
-      ],
-    },
-    {
-      name: "Inventory Adjustments",
-      icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="4" width="18" height="16" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="7" y1="8" x2="17" y2="8" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="7" y1="16" x2="17" y2="16" stroke="currentColor" stroke-width="1.5"/>
-            </svg>`,
-      subItems: [
-        { name: "Adjustment List", path: "/adjustments" },
-        { name: "Adjustment Form", path: "/adjustments/form" }  // create/edit
       ],
     },
     {

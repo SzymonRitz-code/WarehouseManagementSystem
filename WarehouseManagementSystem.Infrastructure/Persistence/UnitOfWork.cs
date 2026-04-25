@@ -15,6 +15,8 @@ public class UnitOfWork : IUnitOfWork
     private readonly IWarehouseZoneRepository _warehouseZoneRepository;
     private readonly WarehouseManagementSystemDbContext _context;
 
+    private UnitOfWork() { }
+
     public UnitOfWork(WarehouseManagementSystemDbContext context)
     {
         _context = context ?? throw new NullReferenceException();
