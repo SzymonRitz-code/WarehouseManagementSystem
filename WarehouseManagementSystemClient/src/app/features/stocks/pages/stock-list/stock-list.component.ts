@@ -20,17 +20,20 @@ export class StockListComponent implements OnInit {
 
   ngOnInit(): void {
     this.stocks = this.stockService.getStocks();
+
+    this.stocks.subscribe(data => {
+      console.log('Stocks data:', data);
+    });
   }
 
   columns = [
-    { key: 'id', label: 'ID', sortable: true },
     { key: 'productSku', label: 'Product SKU', sortable: true },
     { key: 'productName', label: 'Product Name', sortable: true },
     { key: 'warehouseName', label: 'Warehouse', sortable: true },
     { key: 'zoneName', label: 'Zone', sortable: true },
-    { key: 'availableQty', label: 'Available Qty', sortable: true },
-    { key: 'reservedQty', label: 'Reserved Qty', sortable: true },
-    { key: 'totalQty', label: 'Total Qty', sortable: true },
+    { key: 'quantityAvailable', label: 'Available Qty', sortable: true },
+    { key: 'quantityReserved', label: 'Reserved Qty', sortable: true },
+    { key: 'quantityTotal', label: 'Total Qty', sortable: true },
     { key: 'unit', label: 'Unit', sortable: true },
     { key: 'lastUpdated', label: 'Last Updated', sortable: true, type: 'date' }
   ];
