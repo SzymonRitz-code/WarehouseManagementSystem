@@ -115,10 +115,11 @@ export class AppSidebarComponent {
             <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
             <path d="M4 20C4 16 8 14 12 14C16 14 20 16 20 20" stroke="currentColor" stroke-width="1.5"/>
            </svg>`,
-      subItems: [
-        { name: "User List", path: "/users" },
-        { name: "User Form", path: "/users/form" }  // create/edit
-      ],
+      // subItems: [
+      //   { name: "User List", path: "/users" },
+      //   { name: "User Form", path: "/users/form" }  // create/edit
+      // ],
+      path: '/users'
     },
     {
       name: "Audit",
