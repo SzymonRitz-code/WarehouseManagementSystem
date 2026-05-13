@@ -74,8 +74,8 @@ export class DocumentFormComponent implements OnInit {
               sourceWarehouseId: this.document.sourceWarehouseId,
               targetWarehouseId: this.document.targetWarehouseId,
             })
-            this.documentItemFormArray = this.documentForm.get('documentItems') as FormArray;
-
+            this.documentItemFormArray = this.documentForm.get('items') as FormArray;
+            console.log('Document items:', this.document.items);
             this.document.items.forEach(item => {
               this.documentItemFormArray.push(this.fb.group({
                 id: [item.id],

@@ -179,7 +179,7 @@ public class DocumentQueryService : IDocumentQueryService
             join sourceWarehouse in _context.Warehouses on document.SourceWarehouseId equals sourceWarehouse.Id
             join targetWarehouse in _context.Warehouses on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
             from targetWarehouse in targetJoin.DefaultIfEmpty()
-            where document.Status == DocumentStatus.Draft || (document.Status == DocumentStatus.Confirmed && document.Type == DocumentType.MM)
+            where document.Status == DocumentStatus.Draft
             group new { document, item, sourceWarehouse, targetWarehouse }
             by new
             {

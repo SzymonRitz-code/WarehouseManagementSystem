@@ -73,7 +73,6 @@ export class DocumentPendingListComponent implements OnInit {
     this.documentService.cancelDocument(row).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
-        console.log(`Document ${updatedDoc.id} cancelled.`);
         this.documents$ = this.documentService.getDocuments(); // Odśwież listę dokumentów
       },
       error: (err) => {
@@ -85,8 +84,7 @@ export class DocumentPendingListComponent implements OnInit {
     this.documentService.confirmDocument(row).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
-        console.log(`Document ${updatedDoc.id} confirmed.`);
-        this.documents$ = this.documentService.getDocuments(); // Odśwież listę dokumentów
+        this.documents$ = this.documentService.getPendingDocuments(); // Odśwież listę dokumentów
       },
       error: (err) => {
         console.error('Error confirming document:', err);
