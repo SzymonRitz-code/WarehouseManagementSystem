@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DropdownComponent } from '../../../ui/dropdown/dropdown.component';
 import { DropdownItemTwoComponent } from '../../../ui/dropdown/dropdown-item/dropdown-item.component-two';
+import { OidcSecurityService } from 'angular-auth-oidc-client';
 
 @Component({
   selector: 'app-user-dropdown',
@@ -12,11 +13,18 @@ import { DropdownItemTwoComponent } from '../../../ui/dropdown/dropdown-item/dro
 export class UserDropdownComponent {
   isOpen = false;
 
+  constructor(private oidcSecurityService: OidcSecurityService) {}
+
   toggleDropdown() {
     this.isOpen = !this.isOpen;
   }
 
   closeDropdown() {
     this.isOpen = false;
+  }
+  signOut() {
+    // Implement your sign-out logic here
+    this.oidcSecurityService.logoffAndRevokeTokens().subscribe();
+    console.log('User signed out');
   }
 }

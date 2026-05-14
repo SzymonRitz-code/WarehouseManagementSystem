@@ -28,12 +28,15 @@ import { ProductBatchFormComponent } from './features/products/pages/product-bat
 import { ProductBatchDetailComponent } from './features/products/pages/product-batch/product-batch-detail/product-batch-detail.component';
 import { DocumentPendingListComponent } from './features/documents/pages/document-pending-list/document-pending-list.component';
 import { SigninFormComponent } from './shared/components/auth/signin-form/signin-form.component';
+import { authGuard } from './core/guards/auth-guard';
+import { SignoutCallbackComponent } from './shared/components/auth/signout-callback/signout-callback.component';
 
 
 export const routes: Routes = [
   {
     path: '',
     component: AppLayoutComponent,
+    canActivate: [authGuard],
     children: [
       //Home
       { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -137,4 +140,8 @@ export const routes: Routes = [
     component: SigninFormComponent,
     title: 'WMS | Sign In'
   },
+  {
+    path: 'signout-callback-oidc',
+    component: SignoutCallbackComponent
+  }
 ];

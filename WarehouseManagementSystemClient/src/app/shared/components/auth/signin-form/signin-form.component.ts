@@ -23,7 +23,6 @@ export class SigninFormComponent implements OnInit {
 
   signInForm!: FormGroup
   showPassword = false;
-  isChecked = false;
 
   constructor(private fb: FormBuilder) { }
 
@@ -34,16 +33,12 @@ export class SigninFormComponent implements OnInit {
     })
   }
 
-  email = '';
-  password = '';
-
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
 
   onSignIn() {
-    console.log('Email:', this.email);
-    console.log('Password:', this.password);
-    console.log('Remember Me:', this.isChecked);
+    console.log('Email:', this.signInForm.get('email')?.value);
+    console.log('Password:', this.signInForm.get('password')?.value);
   }
 }
