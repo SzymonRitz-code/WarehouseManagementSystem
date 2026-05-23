@@ -20,10 +20,6 @@ export class StockListComponent implements OnInit {
 
   ngOnInit(): void {
     this.stocks = this.stockService.getStocks();
-
-    this.stocks.subscribe(data => {
-      console.log('Stocks data:', data);
-    });
   }
 
   columns = [

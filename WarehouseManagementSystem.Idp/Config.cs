@@ -10,7 +10,7 @@ public static class Config
         {
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
-            new IdentityResource("wms",
+            new IdentityResource("wmsUser",
                 new [] {  JwtClaimTypes.Role })
 
         };
@@ -18,10 +18,10 @@ public static class Config
     public static IEnumerable<ApiResource> ApiResources =>
         new ApiResource[]
         {
-            new ApiResource("wms")
+            new ApiResource("wmsApi")
             {
                 Scopes = { "wms.api"},
-                ApiSecrets = { new Secret("259439594-238128".Sha256()) },
+                //ApiSecrets = { new Secret("259439594-238128".Sha256()) },
             }
         };
     public static IEnumerable<ApiScope> ApiScopes =>
@@ -93,17 +93,20 @@ public static class Config
                 RequirePkce = true,
                 RequireClientSecret = false,
 
-                RedirectUris = { "http://localhost:4200/signin-oidc" },
-                FrontChannelLogoutUri = "http://localhost:4200/signout-oidc",
-                PostLogoutRedirectUris = { "http://localhost:4200/signout-callback-oidc" },
+                RedirectUris = { "https://localhost:4200/signin-oidc" },
+                FrontChannelLogoutUri = "https://localhost:4200/signout-oidc",
+                PostLogoutRedirectUris = { "https://localhost:4200/signout-callback-oidc" },
 
-                AllowedCorsOrigins = { "http://localhost:4200" },
+                AllowedCorsOrigins = { "https://localhost:4200" },
 
                 AllowedScopes = {"openid","profile","offline_access","wms.api"},
 
                 AllowAccessTokensViaBrowser = true,
 
-                AllowOfflineAccess = true
+                AllowOfflineAccess = true,
+                AccessTokenLifetime = 3600,                 // serwer wystawia token ważny 1h
+                AbsoluteRefreshTokenLifetime = 2592000,     // 30 days
+                SlidingRefreshTokenLifetime = 1209600,      // 14 days
             }
         };
 }

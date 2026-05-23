@@ -4,18 +4,20 @@ import { AuthModule, OidcSecurityService } from 'angular-auth-oidc-client';
 
 import { routes } from './app.routes';
 import { firstValueFrom } from 'rxjs';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const authConfig = {
-  authority: `https://localhost:7079`,
-  redirectUrl: `http://localhost:4200/signin-oidc`,
-  postLogoutRedirectUri: `http://localhost:4200/signout-callback-oidc`,
+  authority: `https://localhost:44380`,
+  redirectUrl: `https://localhost:4200/signin-oidc`,
+  postLogoutRedirectUri: `https://localhost:4200/signout-callback-oidc`,
 
   clientId: 'angular_spa',
 
   scope: 'openid profile offline_access wms.api',
 
   responseType: 'code',
-
+  secureRoutes: ['https://localhost:44377/api'],
   silentRenew: true,
   useRefreshToken: true,
   renewTimeBeforeTokenExpiresInSeconds: 30,
@@ -34,6 +36,9 @@ export const appConfig: ApplicationConfig = {
       deps: [OidcSecurityService],
       multi: true
     },
+    provideHttpClient(withInterceptors([
+      authInterceptor
+    ])),
     importProvidersFrom(
       AuthModule.forRoot({
         config: authConfig

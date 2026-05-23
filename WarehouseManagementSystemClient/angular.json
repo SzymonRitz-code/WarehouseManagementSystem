@@ -74,7 +74,11 @@
               "buildTarget": "WarehouseManagementSystemClient:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "ssl": true,
+            "host": "localhost"
+          }
         },
         "test": {
           "builder": "@angular/build:unit-test"
