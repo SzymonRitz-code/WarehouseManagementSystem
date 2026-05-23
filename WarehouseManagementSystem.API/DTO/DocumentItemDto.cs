@@ -2,7 +2,7 @@
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public class DocumentItemDto : CreateDocumentDto
+public class DocumentItemDto : CreateDocumentItemDto
 {
     [Required]
     public Guid Id { get; set; }

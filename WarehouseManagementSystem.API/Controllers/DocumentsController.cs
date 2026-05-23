@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Documents;
@@ -8,8 +9,9 @@ using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
-[Route("api/[controller]")]
+[Authorize]
 [ApiController]
+[Route("api/[controller]")]
 public class DocumentsController : ControllerBase
 {
     private readonly IDocumentCommandService _commandService;
@@ -22,6 +24,9 @@ public class DocumentsController : ControllerBase
         _queryService = queryService;
         _mapper = mapper;
     }
+    [HttpGet("test")]
+    [AllowAnonymous]
+    public IActionResult Test() => Ok("działa");
     /// <summary>
     /// Pobranie dokumentu po Id
     /// </summary>
@@ -102,7 +107,7 @@ public class DocumentsController : ControllerBase
         // Tworzymy dokument poprzez serwis domenowy
         var document = await _commandService.CreateDocumentAsync(
             type: documentDto.Type,
-            createdBy: UserService.GetUser(), // TODO dodać do pozostałych klas CreatedBy i ewentualnie modifiedBy 
+            createdBy: UserService.GetUser(HttpContext), // TODO dodać do pozostałych klas CreatedBy i ewentualnie modifiedBy 
             sourceWarehouseId: documentDto.SourceWarehouseId,
             items: itemDrafts,
             documentDate: documentDto.DocumentDate,

@@ -1,4 +1,5 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
 
@@ -131,10 +132,10 @@ public class Document
     public void Confirm(ValueObjects.UserSnapshot confirmedByUser)
     {
         if (!_items.Any())
-            throw new InvalidOperationException("Cannot confirm document without items.");
+            throw new CannotConfirmEmptyDocumentException(Id);
 
         if (Status != DocumentStatus.Draft)
-            throw new InvalidOperationException("Only draft document can be confirmed.");
+            throw new DocumentNotInDraftStateException(Id);
 
         Status = DocumentStatus.Confirmed;
         ConfirmedByUser = confirmedByUser;
@@ -154,10 +155,10 @@ public class Document
     public void Cancel()
     {
         if (Status == DocumentStatus.Cancelled)
-            throw new InvalidOperationException("Document is already cancelled.");
+            throw new DocumentAlreadyCancelledException(Id);
 
         if (Status == DocumentStatus.Confirmed)
-            throw new InvalidOperationException("Confirmed document cannot be cancelled.");
+            throw new DocumentNotInDraftStateException(Id);
 
         Status = DocumentStatus.Cancelled;
     }
@@ -165,7 +166,7 @@ public class Document
     private void EnsureDraft()
     {
         if (Status != DocumentStatus.Draft)
-            throw new InvalidOperationException("Only draft document can be modified.");
+            throw new DocumentNotInDraftStateException(Id);
     }
 
     public void SetSourceWarehouse(Guid sourceWarehouseId)

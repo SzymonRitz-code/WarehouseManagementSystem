@@ -60,15 +60,9 @@ public class DocumentCommandService : IDocumentCommandService
 
             document.AddItem(item);
         }
-        try
-        {
-            _unitOfWork.Documents.Add(document);
-            await _unitOfWork.SaveChangesAsync(ct);
-        }
-        catch (Exception ex)
-        {
 
-        }
+        _unitOfWork.Documents.Add(document);
+        await _unitOfWork.SaveChangesAsync(ct);
 
 
         return document;
@@ -123,59 +117,54 @@ public class DocumentCommandService : IDocumentCommandService
     {
         var document = await _unitOfWork.Documents.GetDocumentWithItems(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
-        try
+
+        switch (document.Type)
         {
-            switch (document.Type)
-            {
-                case DocumentType.PZ: // Przyjęcie towaru
-                    foreach (var item in document.Items)
-                    {
-                        await _stockService.IncreaseStockAsync(
-                            productId: item.ProductId,
-                            warehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
-                            warehouseZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
-                            quantity: item.Quantity,
-                            batchId: item.ProductBatchId
-                        );
-                    }
-                    break;
+            case DocumentType.PZ: // Przyjęcie towaru
+                foreach (var item in document.Items)
+                {
+                    await _stockService.IncreaseStockAsync(
+                        productId: item.ProductId,
+                        warehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
+                        warehouseZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
+                        quantity: item.Quantity,
+                        batchId: item.ProductBatchId
+                    );
+                }
+                break;
 
-                case DocumentType.WZ: // Wydanie towaru
-                    foreach (var item in document.Items)
-                    {
-                        await _stockService.DecreaseStockAsync(
-                            productId: item.ProductId,
-                            warehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
-                            warehouseZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
-                            quantity: item.Quantity,
-                            batchId: item.ProductBatchId
-                        );
-                    }
-                    break;
+            case DocumentType.WZ: // Wydanie towaru
+                foreach (var item in document.Items)
+                {
+                    await _stockService.DecreaseStockAsync(
+                        productId: item.ProductId,
+                        warehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
+                        warehouseZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
+                        quantity: item.Quantity,
+                        batchId: item.ProductBatchId
+                    );
+                }
+                break;
 
-                case DocumentType.MM: // Przesunięcie magazynowe
-                    if (document.TargetWarehouseId == null)
-                        throw new InvalidOperationException("Target warehouse is required for MM.");
+            case DocumentType.MM: // Przesunięcie magazynowe
+                if (document.TargetWarehouseId == null)
+                    throw new InvalidOperationException("Target warehouse is required for MM.");
 
-                    foreach (var item in document.Items)
-                    {
-                        await _stockService.MoveStockAsync(
-                            productId: item.ProductId,
-                            sourceWarehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
-                            sourceZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
-                            targetWarehouseId: document.TargetWarehouseId.Value,
-                            targetZoneId: item.TargetZoneId ?? throw new InvalidOperationException("Target zone is required."),
-                            quantity: item.Quantity,
-                            batchId: item.ProductBatchId
-                        );
-                    }
-                    break;
-            } 
+                foreach (var item in document.Items)
+                {
+                    await _stockService.MoveStockAsync(
+                        productId: item.ProductId,
+                        sourceWarehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
+                        sourceZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
+                        targetWarehouseId: document.TargetWarehouseId.Value,
+                        targetZoneId: item.TargetZoneId ?? throw new InvalidOperationException("Target zone is required."),
+                        quantity: item.Quantity,
+                        batchId: item.ProductBatchId
+                    );
+                }
+                break;
         }
-        catch(Exception ex)
-        {
 
-        }
 
         var documentNumber = await _numberGenerator.GenerateAsync(
             document.Type,
