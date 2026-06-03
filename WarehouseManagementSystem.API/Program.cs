@@ -1,11 +1,13 @@
-﻿using System.IdentityModel.Tokens;
+﻿using System.IdentityModel.Tokens.Jwt;
 using Duende.IdentityModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using WarehouseManagementSystem.API.Extensions;
+using WarehouseManagementSystem.API.Extensions.Middleware;
+using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.Stocks;
@@ -17,7 +19,7 @@ using WarehouseManagementSystem.Infrastructure.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 
-//JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 // Add services to the container.
 // Dodałem NewtonssoftJson bo obługuje patchDocument. Serializacja Enumów z tego powodu powinna być w nim dodana inaczej dojdzie do zgrzytu między dwoma konwerterami
 // Dodanie konwertera przy polu(w klasyczny sposób) nie jest wtedy obsługiwane.
@@ -54,7 +56,10 @@ builder.Services.AddSwaggerGen(o =>
         }
     });
 });
-
+builder.Host.UseSerilog((ctx, lc) => lc
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
+    .Enrich.FromLogContext()
+    .ReadFrom.Configuration(ctx.Configuration));
 builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
 {
     options.UseSqlServer(
@@ -67,21 +72,19 @@ builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
 
 // Services
 builder.Services.AddScoped<IDocumentCommandService, DocumentCommandService>();
+builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
 builder.Services.AddScoped<IGoodsIssueService, GoodsIssueService>();
 builder.Services.AddScoped<IGoodsReceiptService, GoodsReceiptService>();
 builder.Services.AddScoped<IStockTransferService, StockTransferService>();
-builder.Services.AddScoped<IProductBatchQueryService, ProductBatchQueryService>();
-
-
-builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
 builder.Services.AddScoped<IStockQueryService, StockQueryService>();
-
-
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();
+builder.Services.AddScoped<IProductBatchQueryService, ProductBatchQueryService>();
 
 builder.Services.AddScoped<IStockService, StockService>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 builder.Services.AddTransient<IDocumentNumberGenerator, DocumentNumberGenerator>();
 builder.Services.AddHostedService<ReservationExpirationJob>();
@@ -92,6 +95,8 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddWmsMappings();
 });
+
+
 
 builder.Services.AddCors(options =>
 {
@@ -132,6 +137,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         o.MetadataAddress = "https://localhost:44380/.well-known/openid-configuration";
         o.RequireHttpsMetadata = true; // tymczasowo można na falce
         o.Audience = "wmsApi";
+        o.MapInboundClaims = false; // 
 
         o.TokenValidationParameters = new TokenValidationParameters
         {
@@ -193,8 +199,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseCors("AllowWmsClient");
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
