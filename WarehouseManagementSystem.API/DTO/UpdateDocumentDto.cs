@@ -3,8 +3,10 @@ using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public class CreateDocumentDto
+public class UpdateDocumentDto
 {
+    public Guid Id { get; set; }
+
     [Required]
     public DateTime DocumentDate { get; set; }
 
@@ -20,5 +22,5 @@ public class CreateDocumentDto
     public string? Notes { get; set; }
 
     [Required, MinLength(1, ErrorMessage = "Document must have at least one item.")]
-    public virtual List<CreateDocumentItemDto> Items { get; set; } = [];
+    public virtual List<DocumentItemDto> Items { get; set; } = [];
 }

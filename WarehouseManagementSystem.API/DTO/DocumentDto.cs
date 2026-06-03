@@ -3,38 +3,28 @@ using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public class DocumentDto : CreateDocumentDto
+public class DocumentDto
 {
-    [Required]
     public Guid Id { get; set; }
-
-    [Required]
+    public string? Number { get; set; }
+    public DocumentType Type { get; set; }
     public DocumentStatus Status { get; set; }
-
-    [Required]
+    public DateTime DocumentDate { get; set; }
+    public string? Notes { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
-
     public DateTimeOffset? ConfirmedAt { get; set; }
 
-    [Required]
-    public Guid CreatedById { get; set; }
-
-    [Required, StringLength(200)]
-    public string? CreatedByName { get; set; } = string.Empty;
-
-    [Required, EmailAddress, StringLength(255)]
-    public string? CreatedByEmail { get; set; } = string.Empty;
-
-    public Guid? ConfirmedById { get; set; }
-
-    [StringLength(200)]
-    public string? ConfirmedByName { get; set; }
-
-    [EmailAddress, StringLength(255)]
-    public string? ConfirmedByEmail { get; set; }
-    [StringLength(200)]
+    public Guid SourceWarehouseId { get; set; }
     public string? SourceWarehouseName { get; set; }
-
-    [StringLength(200)]
+    public Guid? TargetWarehouseId { get; set; }
     public string? TargetWarehouseName { get; set; }
+
+    public Guid CreatedById { get; set; }
+    public string CreatedByName { get; set; }
+    public string CreatedByEmail { get; set; }
+    public Guid? ConfirmedById { get; set; }
+    public string? ConfirmedByName { get; set; }
+    public string? ConfirmedByEmail { get; set; }
+
+    public List<DocumentItemDto> Items { get; set; } = [];
 }
