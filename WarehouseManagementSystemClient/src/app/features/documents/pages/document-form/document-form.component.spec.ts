@@ -10,7 +10,7 @@ describe('DocumentFormComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DocumentFormComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(DocumentFormComponent);
     component = fixture.componentInstance;

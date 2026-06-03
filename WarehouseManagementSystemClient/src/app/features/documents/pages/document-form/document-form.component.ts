@@ -16,6 +16,7 @@ import { DatePickerComponent } from "../../../../shared/components/form/date-pic
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
 import { DocumentItemsComponent } from "../document-items/document-items-list/document-items.component";
 import { minFormArrayLength } from '../../../../core/guards/vaildators';
+import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
 
 @Component({
   selector: 'app-document-form',
@@ -115,6 +116,10 @@ export class DocumentFormComponent implements OnInit {
       next: (responce) => {
         const id = responce.id ?? this.id;
         this.router.navigateByUrl(`/documents/detail/${id}`);
+      },
+      error: (err) => {
+        console.error(err);
+        setServerErrors(err, this.documentForm);
       }
     });
 
