@@ -151,8 +151,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("ConfirmedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTimeOffset?>("CreatedAt")
-                        .IsRequired()
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<DateTime>("DocumentDate")
@@ -162,7 +161,6 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Number")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -560,8 +558,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                                 .HasForeignKey("DocumentId");
                         });
 
-                    b.Navigation("ConfirmedByUser")
-                        .IsRequired();
+                    b.Navigation("ConfirmedByUser");
 
                     b.Navigation("CreatedByUser")
                         .IsRequired();
