@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
@@ -8,8 +9,9 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
-[Route("api/[controller]")]
+[Authorize]
 [ApiController]
+[Route("api/[controller]")]
 public class WarehousesController : ControllerBase
 {
     private readonly IStockQueryService _stockQueryService;

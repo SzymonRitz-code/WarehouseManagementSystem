@@ -5,6 +5,7 @@ using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.User;
+using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Controllers;
@@ -90,10 +91,10 @@ public class DocumentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto documentDto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-
         if (documentDto.Items == null || !documentDto.Items.Any())
-            return BadRequest("Document must have at least one item.");
+            ModelState.AddModelError(nameof(documentDto.Items), "Document must have at least one item.");
+
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         // Mapujemy DTO → ValueObject (DocumentItemDraft)
         var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(
@@ -105,32 +106,32 @@ public class DocumentsController : ControllerBase
         )).ToList();
 
         // Tworzymy dokument poprzez serwis domenowy
-        var document = await _commandService.CreateDocumentAsync(
-            type: documentDto.Type,
-            createdBy: UserService.GetUser(HttpContext), // TODO dodać do pozostałych klas CreatedBy i ewentualnie modifiedBy 
-            sourceWarehouseId: documentDto.SourceWarehouseId,
-            items: itemDrafts,
-            documentDate: documentDto.DocumentDate,
-            targetWarehouseId: documentDto.TargetWarehouseId,
-            notes: documentDto.Notes
-        );
-
-        // Mapujemy agregat domenowy → DTO do zwrócenia
-        DocumentDto createdDto = null;
+        Document document;
         try
         {
-            createdDto = _mapper.Map<DocumentDto>(document);
+            document = await _commandService.CreateDocumentAsync(
+                type: documentDto.Type,
+                createdBy: UserService.GetUser(HttpContext), // TODO dodać do pozostałych klas CreatedBy i ewentualnie modifiedBy 
+                sourceWarehouseId: documentDto.SourceWarehouseId,
+                items: itemDrafts,
+                documentDate: documentDto.DocumentDate,
+                targetWarehouseId: documentDto.TargetWarehouseId,
+                notes: documentDto.Notes
+);
         }
         catch (Exception ex)
         {
-
+            throw;
         }
 
+
+        // Mapujemy agregat domenowy → DTO do zwrócenia
+        DocumentDto createdDto = _mapper.Map<DocumentDto>(document);
 
         return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, createdDto);
     }
     [HttpPut("{documentId}")]
-    public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] DocumentDto documentDto)
+    public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] UpdateDocumentDto documentDto)
     {
         if (documentId != documentDto.Id)
             return BadRequest("Route ID and body ID mismatch");
@@ -152,6 +153,7 @@ public class DocumentsController : ControllerBase
         // Tworzymy dokument poprzez serwis domenowy
         var document = await _commandService.UpdateDocumentAsync(
             documentId: documentDto.Id,
+            UserService.GetUser(),
             type: documentDto.Type,
             sourceWarehouseId: documentDto.SourceWarehouseId,
             items: itemDrafts,
@@ -191,7 +193,7 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        await _commandService.CancelDocumentAsync(documentId);
+        await _commandService.CancelDocumentAsync(documentId, UserService.GetUser());
         return NoContent();
     }
 
@@ -220,7 +222,6 @@ public class DocumentsController : ControllerBase
         var drafts = await _queryService.GetDraftsAsync();
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(drafts));
     }
-
 
 
     /// <summary>

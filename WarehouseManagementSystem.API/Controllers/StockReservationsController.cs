@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
 
 namespace WarehouseManagementSystem.API.Controllers
 {
-    [Route("api/Stocks/{stockId}/[controller]")]
+    [Authorize]
     [ApiController]
+    [Route("api/Stocks/{stockId}/[controller]")]
     public class StockReservationsController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;

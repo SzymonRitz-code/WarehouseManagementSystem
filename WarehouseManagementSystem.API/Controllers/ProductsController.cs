@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
-using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.Domain.Interfaces;
@@ -9,8 +8,9 @@ using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
-[Route("api/[controller]")]
+[Authorize]
 [ApiController]
+[Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;

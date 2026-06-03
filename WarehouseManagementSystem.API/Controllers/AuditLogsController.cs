@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
-[Route("api/[controller]")]
+[Authorize]
 [ApiController]
+[Route("api/[controller]")]
 public class AuditLogsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;

@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
-using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
-[Route("api/zones")]
+[Authorize]
 [ApiController]
+[Route("api/zones")]
 public class WarehouseZonesController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;

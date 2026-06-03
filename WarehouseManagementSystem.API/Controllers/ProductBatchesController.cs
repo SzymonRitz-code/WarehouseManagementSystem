@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -7,6 +8,7 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/batches")]
 public class ProductBatchesController : ControllerBase
