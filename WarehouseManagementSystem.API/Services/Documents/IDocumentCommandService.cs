@@ -1,4 +1,5 @@
-﻿using WarehouseManagementSystem.Domain.Enums;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
@@ -46,6 +47,7 @@ public interface IDocumentCommandService
     /// <returns></returns>
     Task<Document> UpdateDocumentAsync(
         Guid documentId,
+        UserSnapshot updatedbyBy,
         DocumentType type,
         Guid sourceWarehouseId,
         List<DocumentItemDraft> items,
@@ -64,11 +66,11 @@ public interface IDocumentCommandService
     /// <summary>
     /// Potwierdza dokument.
     /// </summary>
-    Task ConfirmDocumentAsync(Guid documentId, Domain.ValueObjects.UserSnapshot confirmedBy);
+    Task ConfirmDocumentAsync(Guid documentId, UserSnapshot confirmedBy, CancellationToken ct = default);
 
     /// <summary>
     /// Anuluje dokument.
     /// </summary>
-    Task CancelDocumentAsync(Guid documentId);
+    Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default);
 
 }

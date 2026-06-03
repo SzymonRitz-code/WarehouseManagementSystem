@@ -14,6 +14,11 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
             _context = context;
         }
 
+        public void Add(AuditLog entity)
+        {
+           _context.Add(entity);
+        }
+
         public bool Any(Expression<Func<AuditLog, bool>> predicate)
         {
            return _context.AuditLogs.Any(predicate);

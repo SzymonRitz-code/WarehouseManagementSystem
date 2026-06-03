@@ -1,9 +1,13 @@
-﻿using WarehouseManagementSystem.Domain.Enums;
+﻿using System.Reflection.Metadata;
+using Microsoft.CodeAnalysis;
+using WarehouseManagementSystem.API.Services.AuditLogs;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
+using Document = WarehouseManagementSystem.Domain.Model.DocumentsDomain.Document;
 
 namespace WarehouseManagementSystem.API.Services.Documents;
 
@@ -13,13 +17,19 @@ public class DocumentCommandService : IDocumentCommandService
     private readonly IStockService _stockService;
     private readonly IDocumentNumberGenerator _numberGenerator;
     private readonly ISystemClock _clock;
+    private readonly ILogger<DocumentCommandService> _logger; // TODO Dokońdczyć implemenmtację lgowania
+    private readonly IAuditLogService _auditLogService;
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
         IStockService stockService,
         IDocumentNumberGenerator numberGenerator,
-        ISystemClock systemClock)
+        ISystemClock systemClock,
+        ILogger<DocumentCommandService> logger,
+        IAuditLogService auditLogService)
     {
+        _logger = logger;
+        _auditLogService = auditLogService;
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
@@ -38,6 +48,8 @@ public class DocumentCommandService : IDocumentCommandService
     {
         if (items == null || !items.Any())
             throw new ArgumentException("Document must have at least one item.", nameof(items));
+
+        _logger.LogInformation("Creating document by {UserId}");
 
         var document = new Document(
             documentDate: documentDate,
@@ -62,6 +74,12 @@ public class DocumentCommandService : IDocumentCommandService
         }
 
         _unitOfWork.Documents.Add(document);
+        await _auditLogService.LogAsync( // TODO dokonczyć implementacje logowania zmian w obiekcie - zastanowić się jak ogarnąć Id dodawanego obiektu w tranzakcji
+        entityName: nameof(Document),
+        entityId: document.Id,
+        operation: "Create",
+        performedById: createdBy.Id,
+        ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
 
@@ -69,6 +87,7 @@ public class DocumentCommandService : IDocumentCommandService
     }
     public async Task<Document> UpdateDocumentAsync(
         Guid documentId,
+        UserSnapshot updatedBy,
         DocumentType type,
         Guid sourceWarehouseId,
         List<DocumentItemDraft> items,
@@ -81,6 +100,7 @@ public class DocumentCommandService : IDocumentCommandService
             throw new ArgumentException("Document must have at least one item.", nameof(items));
 
         var document = await _unitOfWork.Documents.FindAsync(documentId) ?? throw new InvalidOperationException("Document not found.");
+        _logger.LogInformation("Confirming document {DocumentId} by {UserId}", documentId, updatedBy.Id);
 
         document.ChangeDate(documentDate);
         document.SetDocumentType(type);
@@ -98,7 +118,13 @@ public class DocumentCommandService : IDocumentCommandService
 
         document.ReplaceItems(itemsToReplace);
 
-        _unitOfWork.Documents.Update(document);
+        _unitOfWork.Documents.Update(document); 
+        await _auditLogService.LogAsync( // TODO dokonczyć implementacje logowania zmian w obiekcie
+                entityName: nameof(Document),
+                entityId: documentId,
+                operation: "Update",
+                performedById: updatedBy.Id,
+                ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         return document;
@@ -113,11 +139,14 @@ public class DocumentCommandService : IDocumentCommandService
 
         await _unitOfWork.SaveChangesAsync();
     }
-    public async Task ConfirmDocumentAsync(Guid documentId, Domain.ValueObjects.UserSnapshot confirmedBy)
+
+    public async Task ConfirmDocumentAsync(Guid documentId, UserSnapshot confirmedBy, CancellationToken ct = default)
     {
+        _logger.LogInformation("Confirming document {DocumentId} by {UserId}", documentId, confirmedBy.Id);
+
         var document = await _unitOfWork.Documents.GetDocumentWithItems(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
-
+        var oldStatus = document.Status;
         switch (document.Type)
         {
             case DocumentType.PZ: // Przyjęcie towaru
@@ -170,18 +199,28 @@ public class DocumentCommandService : IDocumentCommandService
             document.Type,
             document.SourceWarehouseId,
             document.DocumentDate); //TODO dodać testy sprawdzające czy numer jest poprawnie wygenerowany po zatwierdzeniu dokumentu
+
         document.SetNumber(documentNumber);
         document.Confirm(confirmedBy);
 
         _unitOfWork.Documents.Update(document);
+        await _auditLogService.LogAsync(
+            entityName: nameof(Document),
+            entityId: documentId,
+            operation: "Confirm",
+            performedById: confirmedBy.Id,
+            oldValues: new { Status = oldStatus },
+            newValues: new { Status = document.Status, Number = document.Number },
+            ct: ct);
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task CancelDocumentAsync(Guid documentId)
-    {
+    public async Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default)
+    { // TODO Dodać do encji kolumny związane z akcją Cancel
         var document = await _unitOfWork.Documents.FindAsync(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
-
+        _logger.LogInformation("Canceling document {DocumentId} by {UserId}", documentId, canceledBy.Id);
+        var oldStatus = document.Status;
         switch (document.Type)
         {
             case DocumentType.WZ: // Wydanie towaru – mogły być rezerwacje
@@ -210,6 +249,14 @@ public class DocumentCommandService : IDocumentCommandService
         document.Cancel();
 
         _unitOfWork.Documents.Update(document);
+        await _auditLogService.LogAsync(
+            entityName: nameof(Document),
+            entityId: documentId,
+            operation: "Cancel",
+            performedById: canceledBy.Id,
+            oldValues: new { Status = oldStatus },
+            newValues: new { Status = document.Status, Number = document.Number },
+            ct: ct);
         await _unitOfWork.SaveChangesAsync();
     }
 
