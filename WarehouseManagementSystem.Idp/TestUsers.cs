@@ -28,7 +28,7 @@ public class TestUsers
             {
                 new TestUser
                 {
-                    SubjectId = "1",
+                    SubjectId = "11111111-1111-1111-1111-111111111111",
                     Username = "alice",
                     Password = "alice",
                     Claims =
