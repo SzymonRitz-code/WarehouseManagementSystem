@@ -1,7 +1,11 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
+using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Documents;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
@@ -26,6 +30,8 @@ public class DocumentIntegrationTests
     private readonly Mock<IDocumentNumberGenerator> _numberGen = new();
     private readonly Mock<ISystemClock> _clock = new();
     private readonly Mock<IDocumentRepository> _docRepo = new();
+    private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
+    private readonly Mock<IAuditLogService> _auditLogService = new();
 
     private readonly DocumentCommandService _sut;
 
@@ -40,7 +46,10 @@ public class DocumentIntegrationTests
             _uow.Object,
             _stock.Object,
             _numberGen.Object,
-            _clock.Object);
+            _clock.Object,
+            _logger.Object, 
+            _auditLogService.Object
+            );
     }
 
     // =========================================================
@@ -391,7 +400,7 @@ public class DocumentIntegrationTests
         _uow.Setup(u => u.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation>());
 
-        await _sut.CancelDocumentAsync(doc.Id);
+        await _sut.CancelDocumentAsync(doc.Id, UserService.GetUser());
 
         doc.Status.Should().Be(DocumentStatus.Cancelled);
     }
@@ -406,7 +415,7 @@ public class DocumentIntegrationTests
         _uow.Setup(u => u.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation> { reservation });
 
-        await _sut.CancelDocumentAsync(doc.Id);
+        await _sut.CancelDocumentAsync(doc.Id, UserService.GetUser());
 
         _stock.Verify(s => s.ReleaseReservationAsync(reservation.StockId, reservation.Id), Times.Once);
         doc.Status.Should().Be(DocumentStatus.Cancelled);
@@ -420,7 +429,7 @@ public class DocumentIntegrationTests
         _uow.Setup(u => u.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation>());
 
-        await _sut.CancelDocumentAsync(doc.Id);
+        await _sut.CancelDocumentAsync(doc.Id, UserService.GetUser());
 
         _stock.Verify(s =>
             s.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
@@ -435,10 +444,10 @@ public class DocumentIntegrationTests
         _uow.Setup(u => u.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation>());
 
-        Func<Task> act = () => _sut.CancelDocumentAsync(doc.Id);
+        Func<Task> act = () => _sut.CancelDocumentAsync(doc.Id, UserService.GetUser());
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*already cancelled*");
+        await act.Should().ThrowAsync<DocumentAlreadyCancelledException>()
+            .WithMessage($"Document {doc.Id} is already cancelled.");
     }
 
     [Fact]
@@ -451,9 +460,9 @@ public class DocumentIntegrationTests
         _uow.Setup(u => u.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation>());
 
-        Func<Task> act = () => _sut.CancelDocumentAsync(doc.Id);
+        Func<Task> act = () => _sut.CancelDocumentAsync(doc.Id, UserService.GetUser());
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Confirmed document cannot be cancelled*");
+        await act.Should().ThrowAsync<DocumentNotInDraftStateException>()
+            .WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 }

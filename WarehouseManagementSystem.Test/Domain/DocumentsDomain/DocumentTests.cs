@@ -1,8 +1,12 @@
-﻿using FluentAssertions;
+﻿using System.Reflection.Metadata;
+using FluentAssertions;
+using Microsoft.CodeAnalysis;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
+using Document = WarehouseManagementSystem.Domain.Model.DocumentsDomain.Document;
 
 namespace WarehouseManagementSystem.Tests.Domain.DocumentsDomain;
 
@@ -82,7 +86,7 @@ public class DocumentTests
         doc.Confirm(UserService.GetUser());
 
         Action act = () => doc.ChangeDate(DateTime.UtcNow.AddDays(2));
-        act.Should().Throw<InvalidOperationException>().WithMessage("Only draft document can be modified.");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -96,7 +100,7 @@ public class DocumentTests
 
         doc.Confirm(UserService.GetUser());
         Action act = () => doc.AddItem(new DocumentItem(Guid.NewGuid(), 1));
-        act.Should().Throw<InvalidOperationException>().WithMessage("Only draft document can be modified.");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -112,7 +116,7 @@ public class DocumentTests
         doc.AddItem(item);
         doc.Confirm(UserService.GetUser());
         Action act = () => doc.RemoveItem(item.Id);
-        act.Should().Throw<InvalidOperationException>().WithMessage("Only draft document can be modified.");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     // ================= Confirm =================
@@ -135,7 +139,7 @@ public class DocumentTests
     {
         var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
         Action act = () => doc.Confirm(UserService.GetUser());
-        act.Should().Throw<InvalidOperationException>().WithMessage("Cannot confirm document without items.");
+        act.Should().Throw<CannotConfirmEmptyDocumentException>().WithMessage($"Document {doc.Id} cannot be confirmed without items.");
     }
 
     // ================= Cancel =================
@@ -147,7 +151,7 @@ public class DocumentTests
         doc.Status.Should().Be(DocumentStatus.Cancelled);
 
         Action act = () => doc.Cancel();
-        act.Should().Throw<InvalidOperationException>().WithMessage("Document is already cancelled.");
+        act.Should().Throw<DocumentAlreadyCancelledException>().WithMessage($"Document {doc.Id} is already cancelled.");
     }
 
     [Fact]
@@ -158,7 +162,7 @@ public class DocumentTests
         doc.Confirm(UserService.GetUser());
 
         Action act = () => doc.Cancel();
-        act.Should().Throw<InvalidOperationException>().WithMessage("Confirmed document cannot be cancelled.");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     // ================= Transfer =================
@@ -172,7 +176,7 @@ public class DocumentTests
         var now = DateTimeOffset.UtcNow;
 
         Action act = () => doc.StartTransfer(transferUser, now);
-        act.Should().Throw<InvalidOperationException>().WithMessage("Only confirmed document can be transferred.");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -186,7 +190,7 @@ public class DocumentTests
         var now = DateTimeOffset.UtcNow;
 
         Action act = () => doc.StartTransfer(transferUser, now);
-        act.Should().Throw<InvalidOperationException>().WithMessage("Cancelled document cannot be transferred.");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -301,8 +305,8 @@ public class DocumentTests
         var doc = new Document(DateTime.UtcNow, DocumentType.PZ, AnyUser(), Guid.NewGuid());
         doc.SetNumber("PZ/2024/001");
         var act = () => doc.Confirm(AnyUser());
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*without items*");
+        act.Should().Throw<CannotConfirmEmptyDocumentException>()
+            .WithMessage($"Document {doc.Id} cannot be confirmed without items.");
     }
 
     [Fact]
@@ -313,8 +317,8 @@ public class DocumentTests
         doc.Confirm(AnyUser());
 
         var act = () => doc.Confirm(AnyUser());
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Only draft*");
+        act.Should().Throw<DocumentNotInDraftStateException>()
+            .WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -323,7 +327,7 @@ public class DocumentTests
         var doc = DraftWithItem();
         doc.Cancel();
         var act = () => doc.Cancel();
-        act.Should().Throw<InvalidOperationException>().WithMessage("*already cancelled*");
+        act.Should().Throw<DocumentAlreadyCancelledException>().WithMessage($"Document {doc.Id} is already cancelled.");
     }
 
     [Fact]
@@ -333,7 +337,7 @@ public class DocumentTests
         doc.SetNumber("PZ/2024/001");
         doc.Confirm(AnyUser());
         var act = () => doc.Cancel();
-        act.Should().Throw<InvalidOperationException>().WithMessage("*Confirmed document*");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -342,7 +346,7 @@ public class DocumentTests
         var doc = DraftWithItem();
         doc.Cancel();
         var act = () => doc.StartTransfer(Guid.NewGuid(), DateTimeOffset.UtcNow);
-        act.Should().Throw<InvalidOperationException>().WithMessage("*Cancelled*");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     // --- Item invariants ---
@@ -367,7 +371,7 @@ public class DocumentTests
     {
         var doc = DraftWithItem();
         var act = () => doc.ReplaceItems(Array.Empty<DocumentItem>());
-        act.Should().Throw<InvalidOperationException>().WithMessage("*at least one item*");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -392,7 +396,7 @@ public class DocumentTests
         doc.Confirm(AnyUser());
 
         var act = () => doc.AddItem(new DocumentItem(Guid.NewGuid(), 1, null, Guid.NewGuid(), null));
-        act.Should().Throw<InvalidOperationException>().WithMessage("*draft*");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -403,7 +407,7 @@ public class DocumentTests
         doc.Confirm(AnyUser());
 
         var act = () => doc.ChangeDate(DateTime.UtcNow.AddDays(1));
-        act.Should().Throw<InvalidOperationException>().WithMessage("*draft*");
+        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     // --- UserSnapshot ---

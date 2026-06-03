@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
+using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
@@ -19,6 +21,8 @@ public class DocumentIntegrationTests
     private readonly Mock<IStockService> _stockServiceMock = new();
     private readonly Mock<IDocumentNumberGenerator> _numberGeneratorMock = new();
     private readonly Mock<ISystemClock> _clockMock = new();
+    private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
+    private readonly Mock<IAuditLogService> _auditLogService = new();
 
     private readonly DocumentCommandService _service;
 
@@ -28,7 +32,9 @@ public class DocumentIntegrationTests
             _unitOfWorkMock.Object,
             _stockServiceMock.Object,
             _numberGeneratorMock.Object,
-            _clockMock.Object);
+            _clockMock.Object,
+            _logger.Object,
+            _auditLogService.Object);
     }
 
     [Fact]
@@ -277,7 +283,7 @@ public class DocumentIntegrationTests
             .Setup(x => x.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation> { reservation });
 
-        await _service.CancelDocumentAsync(doc.Id);
+        await _service.CancelDocumentAsync(doc.Id, UserService.GetUser());
 
         _stockServiceMock.Verify(x =>
             x.ReleaseReservationAsync(reservation.StockId, reservation.Id),
@@ -306,7 +312,7 @@ public class DocumentIntegrationTests
             .Setup(x => x.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation>());
 
-        await _service.CancelDocumentAsync(doc.Id);
+        await _service.CancelDocumentAsync(doc.Id, UserService.GetUser());
 
         _stockServiceMock.Verify(
             x => x.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>()),
