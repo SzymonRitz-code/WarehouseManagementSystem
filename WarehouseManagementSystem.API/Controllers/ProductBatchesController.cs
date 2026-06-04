@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -16,12 +18,21 @@ public class ProductBatchesController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IProductBatchQueryService _productBatchQueryService;
+    private readonly IAuditLogService _auditLogService;
+    private readonly ILogger<ProductBatchesController> _logger;
 
-    public ProductBatchesController(IUnitOfWork unitOfWork, IMapper mapper, IProductBatchQueryService productBatchQueryService)
+    public ProductBatchesController(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        IProductBatchQueryService productBatchQueryService,
+        IAuditLogService auditLogService,
+        ILogger<ProductBatchesController> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _productBatchQueryService = productBatchQueryService;
+        _auditLogService = auditLogService;
+        _logger = logger;
     }
 
 
@@ -91,7 +102,17 @@ public class ProductBatchesController : ControllerBase
         }
 
         _unitOfWork.ProductBatches.Add(batch);
+        var user = UserService.GetUser(HttpContext);
+        await _auditLogService.LogChangesAsync(
+            nameof(ProductBatch),
+            batch.Id,
+            "Create",
+            user.Id,
+            null,
+            AuditSnapshots.ProductBatch(batch),
+            HttpContext.Connection.RemoteIpAddress?.ToString());
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Product batch {BatchId} created by {UserId}", batch.Id, user.Id);
 
         var createdDto = _mapper.Map<ProductBatchDto>(batch);
         // Gdy mam sub-path trzeba dodać wszystkie zeminne w route(tutaj productId i Batch) 
@@ -113,6 +134,7 @@ public class ProductBatchesController : ControllerBase
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
         if (batch == null) return NotFound();
         if (_unitOfWork.ProductBatches.Any(p => p.Id == batchDto.Id) == false) { return BadRequest(batchDto); }
+        var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         batch.SetBatchNumber(batchDto.BatchNumber);
         batch.SetManufacturingDates(batchDto.ManufacturedDate,batchDto.ExpirationDate);
@@ -120,10 +142,21 @@ public class ProductBatchesController : ControllerBase
         try
         {
             _unitOfWork.ProductBatches.Update(batch);
+            var user = UserService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(ProductBatch),
+                batch.Id,
+                "Update",
+                user.Id,
+                oldBatch,
+                AuditSnapshots.ProductBatch(batch),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Product batch {BatchId} updated by {UserId}", batch.Id, user.Id);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Product batch {BatchId} update failed", batchId);
             throw;
         }
 
@@ -136,9 +169,20 @@ public class ProductBatchesController : ControllerBase
     {
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
         if (batch == null) return NotFound();
+        var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         _unitOfWork.ProductBatches.Delete(batch);
+        var user = UserService.GetUser(HttpContext);
+        await _auditLogService.LogChangesAsync(
+            nameof(ProductBatch),
+            batch.Id,
+            "Delete",
+            user.Id,
+            oldBatch,
+            null,
+            HttpContext.Connection.RemoteIpAddress?.ToString());
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Product batch {BatchId} deleted by {UserId}", batch.Id, user.Id);
 
         return NoContent();
     }

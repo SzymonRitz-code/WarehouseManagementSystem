@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 
@@ -16,12 +18,21 @@ public class ProductsController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IStockQueryService _stockQueryService;
+    private readonly IAuditLogService _auditLogService;
+    private readonly ILogger<ProductsController> _logger;
 
-    public ProductsController(IUnitOfWork unitOfWork, IMapper mapper, IStockQueryService stockQueryService)
+    public ProductsController(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        IStockQueryService stockQueryService,
+        IAuditLogService auditLogService,
+        ILogger<ProductsController> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _stockQueryService = stockQueryService;
+        _auditLogService = auditLogService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -60,8 +71,18 @@ public class ProductsController : ControllerBase
 
 
         _unitOfWork.Products.Add(product);
+        var user = UserService.GetUser(HttpContext);
+        await _auditLogService.LogChangesAsync(
+            nameof(Product),
+            product.Id,
+            "Create",
+            user.Id,
+            null,
+            AuditSnapshots.Product(product),
+            HttpContext.Connection.RemoteIpAddress?.ToString());
         await _unitOfWork.SaveChangesAsync();
 
+        _logger.LogInformation("Product {ProductId} created by {UserId}", product.Id, user.Id);
         var createdDto = _mapper.Map<ProductDto>(product);
         return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, createdDto);
     }
@@ -74,6 +95,7 @@ public class ProductsController : ControllerBase
 
         var product = await _unitOfWork.Products.FindAsync(productId);
         if (product == null) return NotFound();
+        var oldProduct = AuditSnapshots.Product(product);
 
         product.SetName(productDto.Name);
         product.SetSku(productDto.Sku);
@@ -95,10 +117,21 @@ public class ProductsController : ControllerBase
         try
         {
             _unitOfWork.Products.Update(product);
+            var user = UserService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(Product),
+                product.Id,
+                "Update",
+                user.Id,
+                oldProduct,
+                AuditSnapshots.Product(product),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Product {ProductId} updated by {UserId}", product.Id, user.Id);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Product {ProductId} update failed", productId);
             throw;
         }
 
@@ -111,9 +144,20 @@ public class ProductsController : ControllerBase
     {
         var product = await _unitOfWork.Products.FindAsync(productId);
         if (product == null) return NotFound();
+        var oldProduct = AuditSnapshots.Product(product);
 
         _unitOfWork.Products.Delete(product);
+        var user = UserService.GetUser(HttpContext);
+        await _auditLogService.LogChangesAsync(
+            nameof(Product),
+            product.Id,
+            "Delete",
+            user.Id,
+            oldProduct,
+            null,
+            HttpContext.Connection.RemoteIpAddress?.ToString());
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Product {ProductId} deleted by {UserId}", product.Id, user.Id);
 
         return NoContent();
     }

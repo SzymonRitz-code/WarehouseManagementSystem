@@ -153,7 +153,7 @@ public class DocumentsController : ControllerBase
         // Tworzymy dokument poprzez serwis domenowy
         var document = await _commandService.UpdateDocumentAsync(
             documentId: documentDto.Id,
-            UserService.GetUser(),
+            UserService.GetUser(HttpContext),
             type: documentDto.Type,
             sourceWarehouseId: documentDto.SourceWarehouseId,
             items: itemDrafts,
@@ -182,7 +182,7 @@ public class DocumentsController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         // Coś w stylu User.Identity.Name
-        await _commandService.ConfirmDocumentAsync(documentId, UserService.GetUser());
+        await _commandService.ConfirmDocumentAsync(documentId, UserService.GetUser(HttpContext));
         return NoContent();
     }
 
@@ -193,7 +193,7 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        await _commandService.CancelDocumentAsync(documentId, UserService.GetUser());
+        await _commandService.CancelDocumentAsync(documentId, UserService.GetUser(HttpContext));
         return NoContent();
     }
 

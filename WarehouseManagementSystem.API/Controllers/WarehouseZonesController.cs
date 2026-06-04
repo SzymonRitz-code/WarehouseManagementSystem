@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.AuditLogs;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
@@ -15,12 +17,20 @@ public class WarehouseZonesController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IAuditLogService _auditLogService;
+    private readonly ILogger<WarehouseZonesController> _logger;
 
 
-    public WarehouseZonesController(IUnitOfWork unitOfWork, IMapper mapper)
+    public WarehouseZonesController(
+        IUnitOfWork unitOfWork,
+        IMapper mapper,
+        IAuditLogService auditLogService,
+        ILogger<WarehouseZonesController> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _auditLogService = auditLogService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -48,6 +58,7 @@ public class WarehouseZonesController : ControllerBase
 
         var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
         if (zone == null) return NotFound();
+        var oldZone = AuditSnapshots.WarehouseZone(zone);
 
         //TODO Zastanowć się nad spujną logiką ustawiania asocjacji
         //TODO Obsłużyć błędy domenowe 
@@ -60,7 +71,17 @@ public class WarehouseZonesController : ControllerBase
         try
         {
             _unitOfWork.WarehouseZones.Update(zone);
+            var user = UserService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(WarehouseZone),
+                zone.Id,
+                "Update",
+                user.Id,
+                oldZone,
+                AuditSnapshots.WarehouseZone(zone),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Warehouse zone {WarehouseZoneId} updated by {UserId}", zone.Id, user.Id);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -82,7 +103,17 @@ public class WarehouseZonesController : ControllerBase
 
         var zone = new WarehouseZone(zoneDto.Code, zoneDto.Name, zoneDto.TemperatureType, zoneDto.IsPickingZone, zoneDto.WarehouseId);
         _unitOfWork.WarehouseZones.Add(zone);
+        var user = UserService.GetUser(HttpContext);
+        await _auditLogService.LogChangesAsync(
+            nameof(WarehouseZone),
+            zone.Id,
+            "Create",
+            user.Id,
+            null,
+            AuditSnapshots.WarehouseZone(zone),
+            HttpContext.Connection.RemoteIpAddress?.ToString());
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Warehouse zone {WarehouseZoneId} created by {UserId}", zone.Id, user.Id);
 
         return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, zoneDto);
     }
@@ -92,9 +123,20 @@ public class WarehouseZonesController : ControllerBase
     {
         var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
         if (zone == null) return NotFound();
+        var oldZone = AuditSnapshots.WarehouseZone(zone);
 
         _unitOfWork.WarehouseZones.Delete(zone);
+        var user = UserService.GetUser(HttpContext);
+        await _auditLogService.LogChangesAsync(
+            nameof(WarehouseZone),
+            zone.Id,
+            "Delete",
+            user.Id,
+            oldZone,
+            null,
+            HttpContext.Connection.RemoteIpAddress?.ToString());
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Warehouse zone {WarehouseZoneId} deleted by {UserId}", zone.Id, user.Id);
 
         return NoContent();
     }

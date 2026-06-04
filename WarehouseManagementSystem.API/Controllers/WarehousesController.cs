@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
@@ -17,14 +19,23 @@ public class WarehousesController : ControllerBase
     private readonly IStockQueryService _stockQueryService;
     private readonly WarehouseManagementSystemDbContext _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IAuditLogService _auditLogService;
+    private readonly ILogger<WarehousesController> _logger;
 
 
     //TODO zamienić DbContext na IUnitOfWork
-    public WarehousesController(IStockQueryService stockQueryService, WarehouseManagementSystemDbContext unitOfWork, IMapper mapper)
+    public WarehousesController(
+        IStockQueryService stockQueryService,
+        WarehouseManagementSystemDbContext unitOfWork,
+        IMapper mapper,
+        IAuditLogService auditLogService,
+        ILogger<WarehousesController> logger)
     {
         _stockQueryService = stockQueryService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _auditLogService = auditLogService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -81,9 +92,20 @@ public class WarehousesController : ControllerBase
         try
         {
             _unitOfWork.Warehouses.Add(warehouse);
+            var user = UserService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(Warehouse),
+                warehouse.Id,
+                "Create",
+                user.Id,
+                null,
+                AuditSnapshots.Warehouse(warehouse),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Warehouse {WarehouseId} created by {UserId}", warehouse.Id, user.Id);
         }
         catch (Exception ex) {
+            _logger.LogError(ex, "Warehouse create failed");
             throw;
         }
 
@@ -98,6 +120,7 @@ public class WarehousesController : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
         if (warehouse == null) return NotFound();
+        var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
 
         warehouse.SetCode(warehouseDto.Code);
         warehouse.SetName(warehouseDto.Name);
@@ -109,7 +132,17 @@ public class WarehousesController : ControllerBase
 
         try
         {
+            var user = UserService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(Warehouse),
+                warehouse.Id,
+                "Update",
+                user.Id,
+                oldWarehouse,
+                AuditSnapshots.Warehouse(warehouse),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
             await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Warehouse {WarehouseId} updated by {UserId}", warehouse.Id, user.Id);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -127,9 +160,20 @@ public class WarehousesController : ControllerBase
     {
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
         if (warehouse == null) return NotFound();
+        var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
 
         _unitOfWork.Warehouses.Remove(warehouse);
+        var user = UserService.GetUser(HttpContext);
+        await _auditLogService.LogChangesAsync(
+            nameof(Warehouse),
+            warehouse.Id,
+            "Delete",
+            user.Id,
+            oldWarehouse,
+            null,
+            HttpContext.Connection.RemoteIpAddress?.ToString());
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Warehouse {WarehouseId} deleted by {UserId}", warehouse.Id, user.Id);
 
         return NoContent();
     }

@@ -200,6 +200,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowWmsClient");
+app.UseSerilogRequestLogging();
 
 app.UseMiddleware<ExceptionMiddleware>();
 

@@ -49,7 +49,7 @@ public class DocumentCommandService : IDocumentCommandService
         if (items == null || !items.Any())
             throw new ArgumentException("Document must have at least one item.", nameof(items));
 
-        _logger.LogInformation("Creating document by {UserId}");
+        _logger.LogInformation("Creating document by {UserId}", createdBy.Id);
 
         var document = new Document(
             documentDate: documentDate,
@@ -74,14 +74,17 @@ public class DocumentCommandService : IDocumentCommandService
         }
 
         _unitOfWork.Documents.Add(document);
-        await _auditLogService.LogAsync( // TODO dokonczyć implementacje logowania zmian w obiekcie - zastanowić się jak ogarnąć Id dodawanego obiektu w tranzakcji
-        entityName: nameof(Document),
-        entityId: document.Id,
-        operation: "Create",
-        performedById: createdBy.Id,
-        ct: ct);
+        await _auditLogService.LogChangesAsync(
+            entityName: nameof(Document),
+            entityId: document.Id,
+            operation: "Create",
+            performedById: createdBy.Id,
+            oldSnapshot: null,
+            newSnapshot: AuditSnapshots.Document(document),
+            ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        _logger.LogInformation("Document {DocumentId} created by {UserId}", document.Id, createdBy.Id);
 
         return document;
     }
@@ -99,8 +102,9 @@ public class DocumentCommandService : IDocumentCommandService
         if (items == null || !items.Any())
             throw new ArgumentException("Document must have at least one item.", nameof(items));
 
-        var document = await _unitOfWork.Documents.FindAsync(documentId) ?? throw new InvalidOperationException("Document not found.");
-        _logger.LogInformation("Confirming document {DocumentId} by {UserId}", documentId, updatedBy.Id);
+        var document = await _unitOfWork.Documents.GetDocumentWithItems(documentId) ?? throw new InvalidOperationException("Document not found.");
+        var oldDocument = AuditSnapshots.Document(document);
+        _logger.LogInformation("Updating document {DocumentId} by {UserId}", documentId, updatedBy.Id);
 
         document.ChangeDate(documentDate);
         document.SetDocumentType(type);
@@ -119,14 +123,17 @@ public class DocumentCommandService : IDocumentCommandService
         document.ReplaceItems(itemsToReplace);
 
         _unitOfWork.Documents.Update(document); 
-        await _auditLogService.LogAsync( // TODO dokonczyć implementacje logowania zmian w obiekcie
+        await _auditLogService.LogChangesAsync(
                 entityName: nameof(Document),
                 entityId: documentId,
                 operation: "Update",
                 performedById: updatedBy.Id,
+                oldSnapshot: oldDocument,
+                newSnapshot: AuditSnapshots.Document(document),
                 ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        _logger.LogInformation("Document {DocumentId} updated by {UserId}", documentId, updatedBy.Id);
         return document;
     }
     [Obsolete("MVP flow. Not used in current MM document-driven process. Reserved for future workflow-based transfer execution.")]
@@ -135,7 +142,15 @@ public class DocumentCommandService : IDocumentCommandService
     {
         var document = await _unitOfWork.Documents.FindAsync(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
+        var oldDocument = AuditSnapshots.Document(document);
         document.StartTransfer(userId, _clock.UtcNow);
+        await _auditLogService.LogChangesAsync(
+            entityName: nameof(Document),
+            entityId: documentId,
+            operation: "StartTransfer",
+            performedById: userId,
+            oldSnapshot: oldDocument,
+            newSnapshot: AuditSnapshots.Document(document));
 
         await _unitOfWork.SaveChangesAsync();
     }
@@ -146,7 +161,7 @@ public class DocumentCommandService : IDocumentCommandService
 
         var document = await _unitOfWork.Documents.GetDocumentWithItems(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
-        var oldStatus = document.Status;
+        var oldDocument = AuditSnapshots.Document(document);
         switch (document.Type)
         {
             case DocumentType.PZ: // Przyjęcie towaru
@@ -204,15 +219,16 @@ public class DocumentCommandService : IDocumentCommandService
         document.Confirm(confirmedBy);
 
         _unitOfWork.Documents.Update(document);
-        await _auditLogService.LogAsync(
+        await _auditLogService.LogChangesAsync(
             entityName: nameof(Document),
             entityId: documentId,
             operation: "Confirm",
             performedById: confirmedBy.Id,
-            oldValues: new { Status = oldStatus },
-            newValues: new { Status = document.Status, Number = document.Number },
+            oldSnapshot: oldDocument,
+            newSnapshot: AuditSnapshots.Document(document),
             ct: ct);
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Document {DocumentId} confirmed by {UserId}", documentId, confirmedBy.Id);
     }
 
     public async Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default)
@@ -220,7 +236,7 @@ public class DocumentCommandService : IDocumentCommandService
         var document = await _unitOfWork.Documents.FindAsync(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
         _logger.LogInformation("Canceling document {DocumentId} by {UserId}", documentId, canceledBy.Id);
-        var oldStatus = document.Status;
+        var oldDocument = AuditSnapshots.Document(document);
         switch (document.Type)
         {
             case DocumentType.WZ: // Wydanie towaru – mogły być rezerwacje
@@ -249,15 +265,16 @@ public class DocumentCommandService : IDocumentCommandService
         document.Cancel();
 
         _unitOfWork.Documents.Update(document);
-        await _auditLogService.LogAsync(
+        await _auditLogService.LogChangesAsync(
             entityName: nameof(Document),
             entityId: documentId,
             operation: "Cancel",
             performedById: canceledBy.Id,
-            oldValues: new { Status = oldStatus },
-            newValues: new { Status = document.Status, Number = document.Number },
+            oldSnapshot: oldDocument,
+            newSnapshot: AuditSnapshots.Document(document),
             ct: ct);
         await _unitOfWork.SaveChangesAsync();
+        _logger.LogInformation("Document {DocumentId} canceled by {UserId}", documentId, canceledBy.Id);
     }
 
 
