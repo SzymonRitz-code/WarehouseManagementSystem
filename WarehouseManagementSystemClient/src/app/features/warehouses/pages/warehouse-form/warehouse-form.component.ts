@@ -46,12 +46,12 @@ export class WarehouseFormComponent implements OnInit {
 
     this.warehouseForm = this.fb.nonNullable.group({
       id: [this.id || null],
-      code: ['', Validators.required],
-      name: ['', Validators.required],
-      country: ['', Validators.required],
-      city: ['', Validators.required],
-      address: ['', Validators.required],
-      isActive: [true, Validators.required]
+      code: ['', [Validators.required, Validators.maxLength(30)]],
+      name: ['', [Validators.required, Validators.maxLength(200)]],
+      country: ['', [Validators.required, Validators.maxLength(100)]],
+      city: ['', [Validators.required, Validators.maxLength(100)]],
+      address: ['', [Validators.required, Validators.maxLength(200)]],
+      isActive: [true]
     });
     if (this.id) {
       this.warehouseService.getWarehouse(this.id).subscribe({

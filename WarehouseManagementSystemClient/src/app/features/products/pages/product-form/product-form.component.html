@@ -7,14 +7,14 @@
         <div>
           <app-label for="inputName">Name</app-label>
           <app-input-field id="inputName" type="text" name="productName" formControlName="name" [required]="true"
-            [maxlength]="30" hint="Enter product name"></app-input-field>
+            [maxlength]="200" hint="Enter product name"></app-input-field>
           <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('name')?.errors?.['server']">
             {{ productForm.get('name')?.errors?.['server'] }}
           </div>
         </div>
         <div>
           <app-label for="inputSKU">SKU</app-label>
-          <app-input-field id="inputSKU" name="sku" formControlName="sku" [required]="true"></app-input-field>
+          <app-input-field id="inputSKU" name="sku" formControlName="sku" [required]="true" [maxlength]="50"></app-input-field>
           <div class="text-red-500 text-sm mt-1" *ngIf="productForm.get('sku')?.errors?.['server']">
             {{ productForm.get('sku')?.errors?.['server'] }}
           </div>

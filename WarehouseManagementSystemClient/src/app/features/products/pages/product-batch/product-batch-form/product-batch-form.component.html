@@ -7,7 +7,7 @@
                 <div>
                     <app-label for="inputBatchNumber">Batch Number</app-label>
                     <app-input-field id="inputBatchNumber" type="text" name="batchNumber" formControlName="batchNumber"
-                        [required]="true" [maxlength]="30" hint="Enter batch number"></app-input-field>
+                        [required]="true" [maxlength]="50" hint="Enter batch number"></app-input-field>
                     <div class="text-red-500 text-sm mt-1" *ngIf="batchForm.get('batchNumber')?.errors?.['server']">
                         {{ batchForm.get('batchNumber')?.errors?.['server'] }}
                     </div>

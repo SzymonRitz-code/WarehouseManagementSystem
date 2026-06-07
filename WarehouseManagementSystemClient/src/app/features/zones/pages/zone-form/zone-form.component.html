@@ -15,7 +15,7 @@
                 <div>
                     <app-label for="inputName">Name</app-label>
                     <app-input-field id="inputName" name="name" formControlName="name"
-                        [required]="true"></app-input-field>
+                        [required]="true" [maxlength]="100"></app-input-field>
                     <div class="text-red-500 text-sm mt-1" *ngIf="zoneForm.get('name')?.errors?.['server']">
                         {{ zoneForm.get('name')?.errors?.['server'] }}
                     </div>
@@ -24,7 +24,7 @@
                     <app-label for="inputTemperatureType">Temperature Type</app-label>
                     <app-input-select id="inputTemperatureType" type="text" placeholder="Select Temperature Type"
                         name="temperatureType" [options]="temperatureTypeOptions" formControlName="temperatureType"
-                        [required]="true" [maxlength]="30" hint="Choose Temperature Type"></app-input-select>
+                        [required]="true" [maxlength]="20" hint="Choose Temperature Type"></app-input-select>
                     <div class="text-red-500 text-sm mt-1" *ngIf="zoneForm.get('temperatureType')?.errors?.['server']">
                         {{ zoneForm.get('temperatureType')?.errors?.['server'] }}
                     </div>

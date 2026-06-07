@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { LabelComponent } from '../../form/label/label.component';
 import { InputFieldComponent } from '../../form/input/input-field.component';
 import { RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '../../../ui/button/button.component';
 
 @Component({
@@ -28,8 +28,8 @@ export class SigninFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.signInForm = this.fb.group({
-      email: [''],
-      password: ['']
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+      password: ['', [Validators.required]]
     })
   }
 

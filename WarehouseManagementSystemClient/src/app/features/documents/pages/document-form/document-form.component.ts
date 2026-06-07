@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { LabelComponent } from "../../../../shared/components/form/label/label.component";
 import { FormActionsComponent } from "../../../../shared/components/form/form-actions/form-actions.component";
 import { InputSelectComponent } from '../../../../shared/components/form/input/input-select/input-select.component';
+import { InputFieldComponent } from "../../../../shared/components/form/input/input-field.component";
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { DatePickerComponent } from "../../../../shared/components/form/date-picker/date-picker.component";
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
@@ -25,6 +26,7 @@ import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.hel
     PageBreadcrumbComponent,
     ComponentCardComponent,
     InputSelectComponent,
+    InputFieldComponent,
     LabelComponent,
     FormActionsComponent,
     ReactiveFormsModule,
@@ -57,7 +59,7 @@ export class DocumentFormComponent implements OnInit {
     this.documentForm = this.fb.group({
       documentDate: [null, Validators.required],
       type: [null, Validators.required],
-      notes: [''],
+      notes: [null, [Validators.maxLength(1000)]],
       sourceWarehouseId: [null, Validators.required],
       targetWarehouseId: [null],
       items: this.fb.array([], [minFormArrayLength(1)])

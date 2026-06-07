@@ -54,10 +54,10 @@ export class ZoneFormComponent implements OnInit {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
     this.zoneForm = this.fb.group({
       id: [this.id || null],
-      code: ['', Validators.required],
-      name: ['', Validators.required],
-      temperatureType: ['', Validators.required],
-      isPickingZone: ['', Validators.required],
+      code: ['', [Validators.required, Validators.maxLength(30)]],
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      temperatureType: ['', [Validators.required, Validators.maxLength(20)]],
+      isPickingZone: [false],
       warehouseId: ['', Validators.required]
     });
     this.warehouseService.getWarehouses().subscribe({

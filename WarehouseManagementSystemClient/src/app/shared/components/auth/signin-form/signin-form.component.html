@@ -80,14 +80,15 @@
       <form [formGroup]="signInForm" (ngSubmit)="onSignIn()" class="space-y-6">
         <div>
           <app-label>Email <span class="text-error-500">*</span></app-label>
-          <app-input-field
-            type="email"
-            placeholder="info@gmail.com"
-            formControlName="email"
-            name="email"
-            class="form-input"
-            [required]="true"
-          />
+            <app-input-field
+              type="email"
+              placeholder="info@gmail.com"
+              formControlName="email"
+              name="email"
+              class="form-input"
+              [maxlength]="255"
+              [required]="true"
+            />
         </div>
 
         <div>

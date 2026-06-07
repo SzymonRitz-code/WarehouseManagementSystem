@@ -56,8 +56,8 @@ export class ProductBatchFormComponent implements OnInit {
       id: [this.batchId || null],
       batchNumber: ['', [Validators.required, Validators.maxLength(50)]],
       productId: ['', [Validators.required]],
-      expirationDate: [null, []],
-      manufacturedDate: [null, []]
+      expirationDate: [null],
+      manufacturedDate: [null]
     });
     if (this.batchId) {
       this.batchService.getBatch(this.productId, this.batchId).subscribe({

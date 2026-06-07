@@ -55,10 +55,10 @@ export class ProductFormComponent implements OnInit {
       sku: ['', [Validators.required, Validators.maxLength(50)]],
       description: [''],
       unit: ['', Validators.required],
-      requiresBatch: [true, Validators.required],
-      isActive: [true, Validators.required],
-      weight: [1, [Validators.required, Validators.min(1)]],
-      volume: [1, [Validators.required, Validators.min(1)]]
+      requiresBatch: [true],
+      isActive: [true],
+      weight: [1, [Validators.required, Validators.min(0)]],
+      volume: [1, [Validators.required, Validators.min(0)]]
     })
 
     if (this.id) {
