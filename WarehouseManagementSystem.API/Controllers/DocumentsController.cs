@@ -138,10 +138,10 @@ public class DocumentsController : ControllerBase
         if (documentId != documentDto.Id)
             return BadRequest("Route ID and body ID mismatch");
 
-        if (!ModelState.IsValid) return BadRequest(ModelState);
-
         if (documentDto.Items == null || !documentDto.Items.Any())
-            return BadRequest("Document must have at least one item.");
+            ModelState.AddModelError(nameof(documentDto.Items), "Document must have at least one item.");
+
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         // Mapujemy DTO → ValueObject (DocumentItemDraft)
         var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(

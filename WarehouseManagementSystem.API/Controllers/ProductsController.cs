@@ -94,7 +94,11 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, ProductDto productDto)
     {
         if (productId != productDto.Id) return BadRequest();
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku))
+            ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
+
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var product = await _unitOfWork.Products.FindAsync(productId);
         if (product == null) return NotFound();

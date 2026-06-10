@@ -127,11 +127,9 @@ public class ProductBatchesController : ControllerBase
     public async Task<IActionResult> UpdateProductBatch(Guid batchId, ProductBatchDto batchDto)
     {
         // można użyć wersję z kursu REST API. Wersja gdzie robię patch obiektu o pola które uległy zmiane => zabezpiecza przez nadpisaniem danych nie wypełnianych w formularzu
-        // TODO zastosować to dla pozostałych formularzy
-        // TODO extra update => poprawić walidację o middleWere i zwracane błedu można w tym uwzględnić błędy domenowe
         // Wybrałem wewrsję w której aktualizuję tylko edytowalne pola
         if (batchId != batchDto.Id) return BadRequest();
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
 
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
@@ -140,8 +138,8 @@ public class ProductBatchesController : ControllerBase
         var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         batch.SetBatchNumber(batchDto.BatchNumber);
-        batch.SetManufacturingDates(batchDto.ManufacturedDate,batchDto.ExpirationDate);
- 
+        batch.SetManufacturingDates(batchDto.ManufacturedDate, batchDto.ExpirationDate);
+
         try
         {
             _unitOfWork.ProductBatches.Update(batch);

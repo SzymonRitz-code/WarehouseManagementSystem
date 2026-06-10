@@ -120,7 +120,7 @@ public class WarehousesController : ControllerBase
     public async Task<IActionResult> PutWarehouse([FromRoute] Guid warehouseId, WarehouseDto warehouseDto)
     {
         if (warehouseId != warehouseDto.Id) return BadRequest();
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
         if (warehouse == null) return NotFound();
         var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
