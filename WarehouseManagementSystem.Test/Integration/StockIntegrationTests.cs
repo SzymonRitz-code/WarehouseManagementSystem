@@ -1,7 +1,9 @@
-﻿using System;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using Xunit;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
 {
@@ -10,6 +12,13 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         private readonly Guid _productId = Guid.NewGuid();
         private readonly Guid _warehouseId = Guid.NewGuid();
         private readonly Guid _zoneId = Guid.NewGuid();
+        private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
+
+        public StockIntegrationTests()
+        {
+            _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+                .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
+        }
 
         private Stock CreateStock(decimal initialQuantity = 100m)
         {
@@ -33,7 +42,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void AdjustTotal_ShouldIncreaseStock_WhenAboveReserved()
         {
             var stock = CreateStock(50m);
-            var reservation = stock.CreateReservation(20m, "R1", Guid.NewGuid());
+            var reservation = stock.CreateReservation(20m, "R1", _userServiceMock.Object.GetUser(default));
 
             stock.AdjustTotal(80m);
 
@@ -45,7 +54,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void AdjustTotal_ShouldThrow_WhenBelowReserved()
         {
             var stock = CreateStock(50m);
-            stock.CreateReservation(30m, "R1", Guid.NewGuid());
+            stock.CreateReservation(30m, "R1", _userServiceMock.Object.GetUser(default));
 
             Action act = () => stock.AdjustTotal(20m); // < reserved
             act.Should().Throw<InvalidOperationException>()
@@ -89,7 +98,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void DecreaseStock_ShouldThrow_WhenInsufficientAvailable()
         {
             var stock = CreateStock(50m);
-            stock.CreateReservation(30m, "R1", Guid.NewGuid()); // available = 20
+            stock.CreateReservation(30m, "R1", _userServiceMock.Object.GetUser(default)); // available = 20
 
             Action act = () => stock.Decrease(25m); // > available
             act.Should().Throw<InvalidOperationException>()
@@ -100,7 +109,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void CreateReservation_ShouldReserveCorrectQuantity()
         {
             var stock = CreateStock(100m);
-            var reservation = stock.CreateReservation(40m, "ORDER", Guid.NewGuid());
+            var reservation = stock.CreateReservation(40m, "ORDER", _userServiceMock.Object.GetUser(default));
 
             reservation.Quantity.Should().Be(40m);
             stock.QuantityReserved.Should().Be(40m);
@@ -111,7 +120,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void FulfillReservation_ShouldDecreaseTotalAndReserved()
         {
             var stock = CreateStock(100m);
-            var reservation = stock.CreateReservation(30m, "R1", Guid.NewGuid());
+            var reservation = stock.CreateReservation(30m, "R1", _userServiceMock.Object.GetUser(default));
 
             stock.FulfillReservation(reservation.Id);
 
@@ -124,7 +133,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void CancelReservation_ShouldReleaseReservedQuantity()
         {
             var stock = CreateStock(100m);
-            var reservation = stock.CreateReservation(30m, "R1", Guid.NewGuid());
+            var reservation = stock.CreateReservation(30m, "R1", _userServiceMock.Object.GetUser(default));
 
             stock.CancelReservation(reservation.Id);
 
@@ -136,7 +145,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void ExpireReservation_ShouldOnlyExpireActive()
         {
             var stock = CreateStock(50m);
-            var reservation = stock.CreateReservation(20m, "R1", Guid.NewGuid());
+            var reservation = stock.CreateReservation(20m, "R1", _userServiceMock.Object.GetUser(default));
 
             reservation.Release();
             stock.ExpireReservation(reservation.Id);
@@ -148,8 +157,8 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
         public void MultipleReservations_ShouldTrackReservedAndAvailableCorrectly()
         {
             var stock = CreateStock(100m);
-            var r1 = stock.CreateReservation(30m, "R1", Guid.NewGuid());
-            var r2 = stock.CreateReservation(20m, "R2", Guid.NewGuid());
+            var r1 = stock.CreateReservation(30m, "R1", _userServiceMock.Object.GetUser(default));
+            var r2 = stock.CreateReservation(20m, "R2", _userServiceMock.Object.GetUser(default));
 
             stock.QuantityReserved.Should().Be(50m);
             stock.Available.Should().Be(50m);

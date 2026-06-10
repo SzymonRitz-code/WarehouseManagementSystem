@@ -1,15 +1,24 @@
-﻿using System;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
-using Xunit;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Tests.Integration.WarehouseDomain;
 
 public class WarehouseIntegrationTests
 {
     private readonly Guid _productId = Guid.NewGuid();
+    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
+
+    public WarehouseIntegrationTests()
+    {
+        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
+    }
 
     private Warehouse CreateWarehouse()
     {
@@ -18,7 +27,7 @@ public class WarehouseIntegrationTests
             "Main Warehouse",
             "Poland",
             "Warsaw",
-            "ul. Example 1");
+            "ul. Example 1", _userServiceMock.Object.GetUser(default));
     }
 
     [Fact]

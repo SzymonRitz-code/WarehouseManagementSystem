@@ -1,9 +1,12 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Moq;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Services
@@ -12,11 +15,14 @@ namespace WarehouseManagementSystem.Tests.Services
     {
         private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
         private readonly Mock<ISystemClock> _clockMock = new();
+        private readonly Mock<IUserService> _userServiceMock = new();
         private readonly StockReservationService _service;
 
         public StockReservationServiceTests()
         {
             _service = new StockReservationService(_unitOfWorkMock.Object, _clockMock.Object);
+            _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+                .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
         }
 
         [Fact]
@@ -29,8 +35,8 @@ namespace WarehouseManagementSystem.Tests.Services
             var stock2 = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 5m);
 
             // rezerwacje w przyszłości (legalne w domenie)
-            var reservation1 = stock1.CreateReservation(5, "Test", Guid.NewGuid(), now.AddMinutes(5));
-            var reservation2 = stock2.CreateReservation(3, "Test", Guid.NewGuid(), now.AddMinutes(10));
+            var reservation1 = stock1.CreateReservation(5, "Test", _userServiceMock.Object.GetUser(default), now.AddMinutes(5));
+            var reservation2 = stock2.CreateReservation(3, "Test", _userServiceMock.Object.GetUser(default), now.AddMinutes(10));
 
             // przesuwamy czas do przodu
             var future = now.AddMinutes(20);
@@ -82,7 +88,7 @@ namespace WarehouseManagementSystem.Tests.Services
             var now = DateTimeOffset.UtcNow;
             _clockMock.Setup(c => c.UtcNow).Returns(now);
 
-            var reservation = new StockReservation(Guid.NewGuid(), 5, "Test", Guid.NewGuid(), now.AddDays(1));
+            var reservation = new StockReservation(Guid.NewGuid(), 5, "Test", _userServiceMock.Object.GetUser(default), now.AddDays(1));
 
             _unitOfWorkMock.Setup(u => u.Stocks.GetExpiredReservationsAsync(now))
                 .ReturnsAsync(new List<StockReservation> { reservation });

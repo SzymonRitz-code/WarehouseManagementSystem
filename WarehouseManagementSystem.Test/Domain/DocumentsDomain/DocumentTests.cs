@@ -1,6 +1,6 @@
-﻿using System.Reflection.Metadata;
-using FluentAssertions;
-using Microsoft.CodeAnalysis;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Moq;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Exceptions;
@@ -12,12 +12,17 @@ namespace WarehouseManagementSystem.Tests.Domain.DocumentsDomain;
 
 public class DocumentTests
 {
-    private static UserSnapshot AnyUser()
-    => new(Guid.NewGuid(), "jan@wms.pl", "Jan Kowalski");
+    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
 
-    private static Document DraftWithItem()
+    public DocumentTests()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, AnyUser(), Guid.NewGuid());
+        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
+    }
+
+    private Document DraftWithItem()
+    {
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default), Guid.NewGuid());
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 1, null, Guid.NewGuid(), null));
         return doc;
     }
@@ -27,7 +32,7 @@ public class DocumentTests
     {
         var documentDate = DateTime.UtcNow;
         var type = DocumentType.PZ;
-        var createdBy = UserService.GetUser();
+        var createdBy = _userServiceMock.Object.GetUser(default);
         var notes = "Some notes";
 
         var doc = new Document(documentDate, type, createdBy, null, null, notes);
@@ -49,7 +54,7 @@ public class DocumentTests
     [InlineData("   ")]
     public void SetNumber_Should_Throw_On_Empty(string invalidNumber)
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
         Action act = () => doc.SetNumber(invalidNumber);
         act.Should().Throw<ArgumentException>().WithMessage("Document number cannot be empty.");
     }
@@ -57,7 +62,7 @@ public class DocumentTests
     [Fact]
     public void SetNumber_Should_Throw_If_Too_Long()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
         var longNumber = new string('A', 51);
         Action act = () => doc.SetNumber(longNumber);
         act.Should().Throw<ArgumentException>().WithMessage("Document number cannot exceed 50 characters.");
@@ -66,7 +71,7 @@ public class DocumentTests
     [Fact]
     public void SetNotes_Should_Throw_If_Too_Long()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
         var longNotes = new string('A', 1001);
         Action act = () => doc.SetNotes(longNotes);
         act.Should().Throw<ArgumentException>().WithMessage("Notes cannot exceed 1000 characters.");
@@ -76,14 +81,14 @@ public class DocumentTests
     [Fact]
     public void ChangeDate_Should_Work_Only_In_Draft()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
         var newDate = DateTime.UtcNow.AddDays(1);
 
         doc.ChangeDate(newDate);
         doc.DocumentDate.Should().Be(newDate);
 
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 1));
-        doc.Confirm(UserService.GetUser());
+        doc.Confirm(_userServiceMock.Object.GetUser(default));
 
         Action act = () => doc.ChangeDate(DateTime.UtcNow.AddDays(2));
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
@@ -92,13 +97,13 @@ public class DocumentTests
     [Fact]
     public void AddItem_Should_Work_Only_In_Draft()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
         var item = new DocumentItem(Guid.NewGuid(), 5);
 
         doc.AddItem(item);
         doc.Items.Should().ContainSingle().Which.Should().Be(item);
 
-        doc.Confirm(UserService.GetUser());
+        doc.Confirm(_userServiceMock.Object.GetUser(default));
         Action act = () => doc.AddItem(new DocumentItem(Guid.NewGuid(), 1));
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
@@ -106,7 +111,7 @@ public class DocumentTests
     [Fact]
     public void RemoveItem_Should_Work_Only_In_Draft()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
         var item = new DocumentItem(Guid.NewGuid(), 5);
         doc.AddItem(item);
 
@@ -114,7 +119,7 @@ public class DocumentTests
         doc.Items.Should().BeEmpty();
 
         doc.AddItem(item);
-        doc.Confirm(UserService.GetUser());
+        doc.Confirm(_userServiceMock.Object.GetUser(default));
         Action act = () => doc.RemoveItem(item.Id);
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
@@ -123,10 +128,10 @@ public class DocumentTests
     [Fact]
     public void Confirm_Should_Work_Correctly()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 5));
 
-        var confirmedBy = UserService.GetUser();
+        var confirmedBy = _userServiceMock.Object.GetUser(default);
         doc.Confirm(confirmedBy);
 
         doc.Status.Should().Be(DocumentStatus.Confirmed);
@@ -137,8 +142,8 @@ public class DocumentTests
     [Fact]
     public void Confirm_Should_Throw_If_No_Items()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
-        Action act = () => doc.Confirm(UserService.GetUser());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
+        Action act = () => doc.Confirm(_userServiceMock.Object.GetUser(default));
         act.Should().Throw<CannotConfirmEmptyDocumentException>().WithMessage($"Document {doc.Id} cannot be confirmed without items.");
     }
 
@@ -146,22 +151,24 @@ public class DocumentTests
     [Fact]
     public void Cancel_Should_Work_From_Draft()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
-        doc.Cancel();
+        var user = _userServiceMock.Object.GetUser(default);
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, user);
+        doc.Cancel(user);
         doc.Status.Should().Be(DocumentStatus.Cancelled);
 
-        Action act = () => doc.Cancel();
+        Action act = () => doc.Cancel(user);
         act.Should().Throw<DocumentAlreadyCancelledException>().WithMessage($"Document {doc.Id} is already cancelled.");
     }
 
     [Fact]
     public void Cancel_Should_Throw_For_Confirmed()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var user = _userServiceMock.Object.GetUser(default);
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, user);
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 5));
-        doc.Confirm(UserService.GetUser());
+        doc.Confirm(_userServiceMock.Object.GetUser(default));
 
-        Action act = () => doc.Cancel();
+        Action act = () => doc.Cancel(user);
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
@@ -169,7 +176,8 @@ public class DocumentTests
     [Fact]
     public void Draft_Cannot_StartTransfer()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var user = _userServiceMock.Object.GetUser(default);
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, user);
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 5));
 
         var transferUser = Guid.NewGuid();
@@ -182,9 +190,10 @@ public class DocumentTests
     [Fact]
     public void Cancelled_Cannot_StartTransfer()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var user = _userServiceMock.Object.GetUser(default);
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, user);
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 5));
-        doc.Cancel();
+        doc.Cancel(user);
 
         var transferUser = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
@@ -196,9 +205,10 @@ public class DocumentTests
     [Fact]
     public void Confirmed_Can_StartTransfer()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, UserService.GetUser());
+        var user = _userServiceMock.Object.GetUser(default);
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, user);
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 5));
-        doc.Confirm(UserService.GetUser());
+        doc.Confirm(user);
 
         var transferUser = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
@@ -214,7 +224,7 @@ public class DocumentTests
     public void CompleteTransfer_ShouldSetStatusToConfirmed_WhenDocumentIsInTransfer()
     {
         // Arrange
-        var createdBy = UserService.GetUser();
+        var createdBy = _userServiceMock.Object.GetUser(default);
         var transferUser = Guid.NewGuid();
         var document = new Document(DateTime.Today, DocumentType.PZ, createdBy);
         var item = new DocumentItem(Guid.NewGuid(), 5, null, null, Guid.NewGuid());
@@ -224,7 +234,7 @@ public class DocumentTests
         document.Confirm(createdBy);
         document.StartTransfer(transferUser, DateTimeOffset.UtcNow);
 
-        var confirmedBy = UserService.GetUser();
+        var confirmedBy = _userServiceMock.Object.GetUser(default);
 
         // Act
         document.CompleteTransfer(confirmedBy);
@@ -239,12 +249,12 @@ public class DocumentTests
     public void CompleteTransfer_ShouldThrow_WhenDocumentIsNotInTransfer()
     {
         // Arrange
-        var createdBy = UserService.GetUser();
+        var createdBy = _userServiceMock.Object.GetUser(default);
         var document = new Document(DateTime.Today, DocumentType.PZ, createdBy);
         var item = new DocumentItem(Guid.NewGuid(), 5, null, null, Guid.NewGuid());
         document.AddItem(item);
 
-        var confirmedBy = UserService.GetUser();
+        var confirmedBy = _userServiceMock.Object.GetUser(default);
 
         // Act & Assert
         document.Invoking(d => d.CompleteTransfer(confirmedBy))
@@ -260,7 +270,7 @@ public class DocumentTests
     [Fact]
     public void NewDocument_HasNullNumber()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, AnyUser(), Guid.NewGuid());
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default), Guid.NewGuid());
         doc.Number.Should().BeNull();
     }
 
@@ -295,16 +305,17 @@ public class DocumentTests
     {
         var doc = DraftWithItem();
         doc.SetNumber("PZ/2024/001");
-        doc.Confirm(AnyUser());
+        doc.Confirm(_userServiceMock.Object.GetUser(default));
         doc.Status.Should().Be(DocumentStatus.Confirmed);
     }
 
     [Fact]
     public void Confirm_Throws_WhenNoItems()
     {
-        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, AnyUser(), Guid.NewGuid());
+        var user = _userServiceMock.Object.GetUser(default);
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, user, Guid.NewGuid());
         doc.SetNumber("PZ/2024/001");
-        var act = () => doc.Confirm(AnyUser());
+        var act = () => doc.Confirm(user);
         act.Should().Throw<CannotConfirmEmptyDocumentException>()
             .WithMessage($"Document {doc.Id} cannot be confirmed without items.");
     }
@@ -312,11 +323,12 @@ public class DocumentTests
     [Fact]
     public void Confirm_Throws_WhenAlreadyConfirmed()
     {
+        var user = _userServiceMock.Object.GetUser(default);
         var doc = DraftWithItem();
         doc.SetNumber("PZ/2024/001");
-        doc.Confirm(AnyUser());
+        doc.Confirm(user);
 
-        var act = () => doc.Confirm(AnyUser());
+        var act = () => doc.Confirm(user);
         act.Should().Throw<DocumentNotInDraftStateException>()
             .WithMessage($"Document {doc.Id} is not in Draft state.");
     }
@@ -324,19 +336,22 @@ public class DocumentTests
     [Fact]
     public void Cancel_Throws_WhenAlreadyCancelled()
     {
+        var user = _userServiceMock.Object.GetUser(default);
         var doc = DraftWithItem();
-        doc.Cancel();
-        var act = () => doc.Cancel();
+        doc.Cancel(user);
+        var act = () => doc.Cancel(user);
         act.Should().Throw<DocumentAlreadyCancelledException>().WithMessage($"Document {doc.Id} is already cancelled.");
     }
 
     [Fact]
     public void Cancel_Throws_WhenConfirmed()
     {
+        var confirmedby = _userServiceMock.Object.GetUser(default);
+        var cancelledby = _userServiceMock.Object.GetUser(default);
         var doc = DraftWithItem();
         doc.SetNumber("PZ/2024/001");
-        doc.Confirm(AnyUser());
-        var act = () => doc.Cancel();
+        doc.Confirm(confirmedby);
+        var act = () => doc.Cancel(cancelledby);
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
@@ -344,7 +359,7 @@ public class DocumentTests
     public void StartTransfer_Throws_WhenCancelled()
     {
         var doc = DraftWithItem();
-        doc.Cancel();
+        doc.Cancel(_userServiceMock.Object.GetUser(default));
         var act = () => doc.StartTransfer(Guid.NewGuid(), DateTimeOffset.UtcNow);
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
@@ -371,7 +386,7 @@ public class DocumentTests
     {
         var doc = DraftWithItem();
         var act = () => doc.ReplaceItems(Array.Empty<DocumentItem>());
-        act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
+        act.Should().Throw<InvalidOperationException>().WithMessage($"Document must have at least one item.");
     }
 
     [Fact]
@@ -393,7 +408,7 @@ public class DocumentTests
     {
         var doc = DraftWithItem();
         doc.SetNumber("PZ/2024/001");
-        doc.Confirm(AnyUser());
+        doc.Confirm(_userServiceMock.Object.GetUser(default));
 
         var act = () => doc.AddItem(new DocumentItem(Guid.NewGuid(), 1, null, Guid.NewGuid(), null));
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
@@ -404,7 +419,7 @@ public class DocumentTests
     {
         var doc = DraftWithItem();
         doc.SetNumber("PZ/2024/001");
-        doc.Confirm(AnyUser());
+        doc.Confirm(_userServiceMock.Object.GetUser(default));
 
         var act = () => doc.ChangeDate(DateTime.UtcNow.AddDays(1));
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");

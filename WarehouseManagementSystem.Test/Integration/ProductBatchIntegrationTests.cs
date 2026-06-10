@@ -1,15 +1,24 @@
-﻿using System;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using Xunit;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
 {
     public class ProductBatchIntegrationTests
     {
         private readonly Guid _productId = Guid.NewGuid();
+        private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
+
+        public ProductBatchIntegrationTests()
+        {
+            _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+                .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
+        }
 
         private Product CreateProduct()
         {
@@ -17,7 +26,9 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
                 sku: "PRD001",
                 name: "Test Product",
                 unit: UnitOfMeasure.Piece,
-                requiresBatch: true);
+                requiresBatch: true,
+                createdByUser: _userServiceMock.Object.GetUser(new DefaultHttpContext())
+                );
         }
 
         private ProductBatch CreateBatch(
@@ -30,6 +41,7 @@ namespace WarehouseManagementSystem.Tests.Integration.InventoryDomain
             return new ProductBatch(
                 _productId,
                 batchNumber,
+                _userServiceMock.Object.GetUser(new DefaultHttpContext()),
                 manufacturedDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
                 expirationDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6))
             );

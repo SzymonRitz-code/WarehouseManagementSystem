@@ -1,12 +1,24 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Tests.Domain.WarehouseDomain;
 
 public class WarehouseTests
 {
+    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
+
+    public WarehouseTests()
+    {
+        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
+    }
+
     [Fact]
     public void Constructor_ShouldInitializePropertiesCorrectly()
     {
@@ -15,7 +27,7 @@ public class WarehouseTests
             "Main Warehouse",
             "Poland",
             "Warsaw",
-            "ul. Przykładowa 1");
+            "ul. Przykładowa 1", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         warehouse.Id.Should().NotBeEmpty();
         warehouse.Code.Should().Be("WH01");
@@ -33,7 +45,7 @@ public class WarehouseTests
     [InlineData(" ")]
     public void SetCode_ShouldThrowException_WhenInvalidCode(string code)
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         Action act = () => warehouse.SetCode(code);
         act.Should().Throw<ArgumentException>().WithMessage("*cannot be empty*");
     }
@@ -44,7 +56,7 @@ public class WarehouseTests
     [InlineData(" ")]
     public void SetName_ShouldThrowException_WhenInvalidName(string name)
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         Action act = () => warehouse.SetName(name);
         act.Should().Throw<ArgumentException>().WithMessage("*cannot be empty*");
     }
@@ -55,7 +67,7 @@ public class WarehouseTests
     [InlineData("PL", "City", null)]
     public void SetLocation_ShouldThrowException_WhenInvalidLocation(string country, string city, string address)
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         Action act = () => warehouse.SetLocation(country, city, address);
         act.Should().Throw<ArgumentException>();
     }
@@ -63,7 +75,7 @@ public class WarehouseTests
     [Fact]
     public void Activate_ShouldSetIsActiveToTrue()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         warehouse.Deactivate(); // make inactive first
         warehouse.Activate();
         warehouse.IsActive.Should().BeTrue();
@@ -72,7 +84,7 @@ public class WarehouseTests
     [Fact]
     public void Deactivate_ShouldThrow_WhenZonesExist()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         warehouse.AddZone("Z1", "Zone 1", TemperatureType.Ambient, true);
 
         Action act = () => warehouse.Deactivate();
@@ -82,7 +94,7 @@ public class WarehouseTests
     [Fact]
     public void Deactivate_ShouldThrow_WhenStocksExist()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         warehouse.Stocks = new System.Collections.Generic.List<Stock>
         {
             new Stock(Guid.NewGuid(), warehouse.Id, Guid.NewGuid(), null, 10)
@@ -95,7 +107,7 @@ public class WarehouseTests
     [Fact]
     public void AddZone_ShouldAddZoneCorrectly()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         var zone = warehouse.AddZone("Z1", "Zone 1", TemperatureType.Ambient, true);
 
         zone.Should().NotBeNull();
@@ -106,7 +118,7 @@ public class WarehouseTests
     [Fact]
     public void AddZone_ShouldThrow_WhenDuplicateCode()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         warehouse.AddZone("Z1", "Zone 1", TemperatureType.Ambient, true);
 
         Action act = () => warehouse.AddZone("Z1", "Zone 2", TemperatureType.Cold, false);
@@ -116,7 +128,7 @@ public class WarehouseTests
     [Fact]
     public void RemoveZone_ShouldRemoveZoneCorrectly()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         var zone = warehouse.AddZone("Z1", "Zone 1", TemperatureType.Ambient, true);
 
         warehouse.RemoveZone(zone.Id);
@@ -126,7 +138,7 @@ public class WarehouseTests
     [Fact]
     public void RemoveZone_ShouldThrow_WhenZoneNotFound()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         Action act = () => warehouse.RemoveZone(Guid.NewGuid());
         act.Should().Throw<InvalidOperationException>().WithMessage("*not found*");
@@ -135,7 +147,7 @@ public class WarehouseTests
     [Fact]
     public void RemoveZone_ShouldThrow_WhenZoneContainsStock()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         var zone = warehouse.AddZone("Z1", "Zone 1", TemperatureType.Ambient, true);
 
         zone.Stocks.Add(new Stock(Guid.NewGuid(), warehouse.Id, zone.Id, null, 10));
@@ -147,7 +159,7 @@ public class WarehouseTests
     [Fact]
     public void GetZone_ShouldReturnCorrectZone()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         var zone = warehouse.AddZone("Z1", "Zone 1", TemperatureType.Ambient, true);
 
         var result = warehouse.GetZone(zone.Id);
@@ -157,7 +169,7 @@ public class WarehouseTests
     [Fact]
     public void GetZone_ShouldThrow_WhenNotFound()
     {
-        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address");
+        var warehouse = new Warehouse("WH01", "Name", "PL", "City", "Address", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         Action act = () => warehouse.GetZone(Guid.NewGuid());
         act.Should().Throw<InvalidOperationException>().WithMessage("*not found*");
     }

@@ -1,10 +1,12 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
@@ -23,6 +25,7 @@ public class DocumentIntegrationTests
     private readonly Mock<ISystemClock> _clockMock = new();
     private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
     private readonly Mock<IAuditLogService> _auditLogService = new();
+    private readonly Mock<IUserService> _userServiceMock = new();
 
     private readonly DocumentCommandService _service;
 
@@ -35,6 +38,8 @@ public class DocumentIntegrationTests
             _clockMock.Object,
             _logger.Object,
             _auditLogService.Object);
+        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
 
     [Fact]
@@ -42,7 +47,7 @@ public class DocumentIntegrationTests
     {
         Func<Task> act = () => _service.CreateDocumentAsync(
             DocumentType.PZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             Guid.NewGuid(),
             new List<DocumentItemDraft>(),
             DateTime.UtcNow);
@@ -75,7 +80,7 @@ public class DocumentIntegrationTests
         // Act
         var document = await _service.CreateDocumentAsync(
             DocumentType.PZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             Guid.NewGuid(),
             draftItems,
             DateTime.UtcNow);
@@ -84,7 +89,7 @@ public class DocumentIntegrationTests
         documentRepoMock.Verify(r => r.Add(document), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        document.Number.Should().Be("DOC-001");  // TODO przenieć sprawdzanie numeru dokumentu do innego testu. => do ConfirmDocument 
+        document.Number.Should().Be(null);
         document.Items.Should().HaveCount(1);
         document.Items.First().ProductId.Should().Be(draftItems.First().ProductId);
     }
@@ -96,7 +101,7 @@ public class DocumentIntegrationTests
         var doc = new Document(
             DateTime.UtcNow,
             DocumentType.PZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             Guid.NewGuid(),
             null,
             null);
@@ -109,8 +114,8 @@ public class DocumentIntegrationTests
         Func<Task> act = () => _service.StartTransferAsync(doc.Id, Guid.NewGuid());
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Only confirmed document can be transferred.");
+        await act.Should().ThrowAsync<DocumentNotInDraftStateException>()
+            .WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
     [Fact]
@@ -119,11 +124,11 @@ public class DocumentIntegrationTests
         var productId = Guid.NewGuid();
         var zoneId = Guid.NewGuid();
         // Arrange
-        var confirmedBy = UserService.GetUser();
+        var confirmedBy = _userServiceMock.Object.GetUser(default);
         var doc = new Document(
             DateTime.UtcNow,
             DocumentType.PZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             Guid.NewGuid(),
             null,
             null);
@@ -144,6 +149,54 @@ public class DocumentIntegrationTests
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+
+    [Fact]
+    public async Task ConfirmDocumentAsync_ShouldGenerateNumberAndSave()
+    {
+        var productId = Guid.NewGuid();
+        var warehouseId = Guid.NewGuid();
+        var zoneId = Guid.NewGuid();
+        var doc = new Document(
+            DateTime.UtcNow,
+            DocumentType.PZ,
+            _userServiceMock.Object.GetUser(default),
+            Guid.NewGuid(),
+            null,
+            null);
+        doc.AddItem(new DocumentItem(productId, 5, null, zoneId, null));
+        _unitOfWorkMock
+            .Setup(x => x.Documents.GetDocumentWithItems(doc.Id))
+            .ReturnsAsync(doc);
+        _numberGeneratorMock
+            .Setup(x => x.GenerateAsync(DocumentType.PZ, It.IsAny<Guid>(), It.IsAny<DateTimeOffset>()))
+            .ReturnsAsync("DOC-001");
+        await _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
+        doc.Number.Should().Be("DOC-001");
+        _unitOfWorkMock.Verify(x => x.Documents.Update(doc), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+    [Fact]
+    public async Task ConfirmDocumentAsync_ShouldThrowException_WhenDocumentIsEmpty()
+    {
+        var doc = new Document(
+            DateTime.UtcNow,
+            DocumentType.PZ,
+            _userServiceMock.Object.GetUser(default),
+            Guid.NewGuid(),
+            null,
+            null);
+        _unitOfWorkMock
+            .Setup(x => x.Documents.GetDocumentWithItems(doc.Id))
+            .ReturnsAsync(doc);
+        _numberGeneratorMock
+            .Setup(x => x.GenerateAsync(DocumentType.PZ, It.IsAny<Guid>(), It.IsAny<DateTimeOffset>()))
+            .ReturnsAsync("DOC-001");
+        Func<Task> act = () => _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
+        await act.Should()
+            .ThrowAsync<CannotConfirmEmptyDocumentException>()
+            .WithMessage($"Document {doc.Id} cannot be confirmed without items.");
+    }
+
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldIncreaseStock_ForPZ()
     {
@@ -154,7 +207,7 @@ public class DocumentIntegrationTests
         var doc = new Document(
             DateTime.UtcNow,
             DocumentType.PZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             warehouseId,
             null,
             null);
@@ -162,10 +215,13 @@ public class DocumentIntegrationTests
         doc.AddItem(new DocumentItem(productId, 5, null, zoneId, null));
 
         _unitOfWorkMock
-            .Setup(x => x.Documents.FindAsync(doc.Id))
+            .Setup(x => x.Documents.GetDocumentWithItems(doc.Id))
             .ReturnsAsync(doc);
+        _numberGeneratorMock
+            .Setup(x => x.GenerateAsync(DocumentType.PZ, It.IsAny<Guid>(), It.IsAny<DateTimeOffset>()))
+            .ReturnsAsync("DOC-001");
 
-        await _service.ConfirmDocumentAsync(doc.Id, UserService.GetUser());
+        await _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(x => x.IncreaseStockAsync(
             productId,
@@ -179,7 +235,7 @@ public class DocumentIntegrationTests
     }
 
     [Fact]
-     public async Task ConfirmDocumentAsync_ShouldDecreaseStock_ForWZ()
+    public async Task ConfirmDocumentAsync_ShouldDecreaseStock_ForWZ()
     {
         var productId = Guid.NewGuid();
         var warehouseId = Guid.NewGuid();
@@ -188,18 +244,19 @@ public class DocumentIntegrationTests
         var doc = new Document(
             DateTime.UtcNow,
             DocumentType.WZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             warehouseId,
             null,
             null);
 
         doc.AddItem(new DocumentItem(productId, 5, null, zoneId, null));
 
-        _unitOfWorkMock
-            .Setup(x => x.Documents.FindAsync(doc.Id))
-            .ReturnsAsync(doc);
+        _unitOfWorkMock.Setup(x => x.Documents.GetDocumentWithItems(doc.Id)).ReturnsAsync(doc);
+        _numberGeneratorMock
+            .Setup(x => x.GenerateAsync(DocumentType.WZ, It.IsAny<Guid>(), It.IsAny<DateTimeOffset>()))
+            .ReturnsAsync("DOC-001");
 
-        await _service.ConfirmDocumentAsync(doc.Id, UserService.GetUser());
+        await _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(x => x.DecreaseStockAsync(
             productId,
@@ -221,7 +278,7 @@ public class DocumentIntegrationTests
         var doc = new Document(
             DateTime.UtcNow,
             DocumentType.MM,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             sourceWarehouse,
             targetWarehouse,
             null);
@@ -229,10 +286,13 @@ public class DocumentIntegrationTests
         doc.AddItem(new DocumentItem(productId, 5, null, sourceZone, targetZone));
 
         _unitOfWorkMock
-            .Setup(x => x.Documents.FindAsync(doc.Id))
+            .Setup(x => x.Documents.GetDocumentWithItems(doc.Id))
             .ReturnsAsync(doc);
+        _numberGeneratorMock
+            .Setup(x => x.GenerateAsync(DocumentType.MM, It.IsAny<Guid>(), It.IsAny<DateTimeOffset>()))
+            .ReturnsAsync("DOC-001");
 
-        await _service.ConfirmDocumentAsync(doc.Id, UserService.GetUser());
+        await _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(x => x.MoveStockAsync(
             productId,
@@ -251,7 +311,7 @@ public class DocumentIntegrationTests
             .Setup(x => x.Documents.FindAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Document?)null);
 
-        Func<Task> act = () => _service.ConfirmDocumentAsync(Guid.NewGuid(), UserService.GetUser());
+        Func<Task> act = () => _service.ConfirmDocumentAsync(Guid.NewGuid(), _userServiceMock.Object.GetUser(default));
 
         await act.Should()
             .ThrowAsync<InvalidOperationException>()
@@ -264,7 +324,7 @@ public class DocumentIntegrationTests
         var doc = new Document(
             DateTime.UtcNow,
             DocumentType.WZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             Guid.NewGuid(),
             null,
             null);
@@ -273,7 +333,7 @@ public class DocumentIntegrationTests
             Guid.NewGuid(),
             5,
             "TEST",
-            Guid.NewGuid());
+            _userServiceMock.Object.GetUser(default));
 
         _unitOfWorkMock
             .Setup(x => x.Documents.FindAsync(doc.Id))
@@ -283,7 +343,7 @@ public class DocumentIntegrationTests
             .Setup(x => x.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation> { reservation });
 
-        await _service.CancelDocumentAsync(doc.Id, UserService.GetUser());
+        await _service.CancelDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(x =>
             x.ReleaseReservationAsync(reservation.StockId, reservation.Id),
@@ -299,7 +359,7 @@ public class DocumentIntegrationTests
         var doc = new Document(
             DateTime.UtcNow,
             DocumentType.WZ,
-            UserService.GetUser(),
+            _userServiceMock.Object.GetUser(default),
             Guid.NewGuid(),
             null,
             null);
@@ -312,7 +372,7 @@ public class DocumentIntegrationTests
             .Setup(x => x.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
             .ReturnsAsync(new List<StockReservation>());
 
-        await _service.CancelDocumentAsync(doc.Id, UserService.GetUser());
+        await _service.CancelDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(
             x => x.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>()),

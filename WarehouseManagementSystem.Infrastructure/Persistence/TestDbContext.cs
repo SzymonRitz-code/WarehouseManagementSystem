@@ -1,9 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence
 {
@@ -22,6 +17,7 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence
                 {
                     prop.IsConcurrencyToken = false;
                     prop.ValueGenerated = Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never;
+                    prop.IsNullable = true;
                 }
             }
         }

@@ -1,8 +1,6 @@
-﻿using System;
+﻿using FluentAssertions;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
-using Xunit;
-using FluentAssertions;
 
 namespace WarehouseManagementSystem.Tests.Domain.DocumentsDomain;
 

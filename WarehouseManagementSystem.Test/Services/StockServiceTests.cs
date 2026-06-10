@@ -1,9 +1,12 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Moq;
 using WarehouseManagementSystem.API.Services.Stocks;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
 using Xunit;
 
@@ -13,11 +16,14 @@ namespace WarehouseManagementSystem.Tests.Services
     {
         private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
         private readonly Mock<ISystemClock> _clockMock = new();
+        private readonly Mock<IUserService> _userServiceMock = new();
         private readonly StockService _service;
 
         public StockServiceTests()
         {
             _service = new StockService(_unitOfWorkMock.Object, _clockMock.Object);
+            _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+                .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
         }
 
         #region GetOrCreateAsync Tests
@@ -152,7 +158,7 @@ namespace WarehouseManagementSystem.Tests.Services
 
             _unitOfWorkMock.Setup(u => u.Stocks.FindAsync(stockId)).ReturnsAsync(stock);
 
-            var reservation = await _service.ReserveStockAsync(stockId, 10, "Test", Guid.NewGuid(), null);
+            var reservation = await _service.ReserveStockAsync(stockId, 10, "Test", _userServiceMock.Object.GetUser(default), null);
 
             reservation.Quantity.Should().Be(10);
             stock.QuantityReserved.Should().Be(10);
@@ -164,7 +170,7 @@ namespace WarehouseManagementSystem.Tests.Services
         {
             var stockId = Guid.NewGuid();
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 50m);
-            var reservation = stock.CreateReservation(10, "Test", Guid.NewGuid(), null);
+            var reservation = stock.CreateReservation(10, "Test", _userServiceMock.Object.GetUser(default), null);
 
             _unitOfWorkMock.Setup(u => u.Stocks.FindAsync(stockId)).ReturnsAsync(stock);
 
@@ -178,7 +184,7 @@ namespace WarehouseManagementSystem.Tests.Services
         public async Task CancelReservationAsync_ShouldCancelReservation()
         {
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 50m);
-            var reservation = stock.CreateReservation(10, "Test", Guid.NewGuid(), null);
+            var reservation = stock.CreateReservation(10, "Test", _userServiceMock.Object.GetUser(default), null);
 
             _unitOfWorkMock.Setup(u => u.Stocks.All()).ReturnsAsync(new List<Stock> { stock });
 
@@ -192,7 +198,7 @@ namespace WarehouseManagementSystem.Tests.Services
         public async Task ConfirmReservationAsync_ShouldConfirmReservation()
         {
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 50m);
-            var reservation = stock.CreateReservation(10, "Test", Guid.NewGuid(), null);
+            var reservation = stock.CreateReservation(10, "Test", _userServiceMock.Object.GetUser(default), null);
 
             _unitOfWorkMock.Setup(u => u.Stocks.All()).ReturnsAsync(new List<Stock> { stock });
 
@@ -215,8 +221,8 @@ namespace WarehouseManagementSystem.Tests.Services
             var stock2 = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 5m);
 
             // Tworzymy rezerwacje **przez stock**, aby trafiały do _reservations
-            var reservation1 = stock1.CreateReservation(5, "Test1", Guid.NewGuid(), now.AddMinutes(1));
-            var reservation2 = stock2.CreateReservation(3, "Test2", Guid.NewGuid(), now.AddMinutes(1));
+            var reservation1 = stock1.CreateReservation(5, "Test1", _userServiceMock.Object.GetUser(default), now.AddMinutes(1));
+            var reservation2 = stock2.CreateReservation(3, "Test2", _userServiceMock.Object.GetUser(default), now.AddMinutes(1));
 
             // Mock UnitOfWork, aby zwracał faktycznie istniejące rezerwacje
             _unitOfWorkMock.Setup(u => u.Stocks.GetExpiredReservationsAsync(now))

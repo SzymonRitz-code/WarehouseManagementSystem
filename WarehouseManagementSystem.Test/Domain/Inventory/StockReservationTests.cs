@@ -1,8 +1,10 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Moq;
-using System.Threading;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain;
@@ -12,6 +14,13 @@ public class StockReservationTests
     private readonly Guid _stockId = Guid.NewGuid();
     private readonly Guid _userId = Guid.NewGuid();
     private readonly Mock<ISystemClock> _clockMock = new();
+    private readonly Mock<IUserService> _userServiceMock = new();
+
+    public StockReservationTests()
+    {
+        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
+    }
 
     private StockReservation CreateReservation(
         decimal quantity = 10,
@@ -22,7 +31,7 @@ public class StockReservationTests
             _stockId,
             quantity,
             source,
-            _userId,
+            _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()),
             expires);
     }
 
@@ -35,7 +44,7 @@ public class StockReservationTests
         reservation.ReservationSource.Should().Be("ORDER");
         reservation.Status.Should().Be(ReservationStatus.Active);
         reservation.StockId.Should().Be(_stockId);
-        reservation.CreatedBy.Should().Be(_userId);
+        reservation.CreatedByUser.Should().Be(_userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
     }
 
     [Fact]
@@ -200,7 +209,7 @@ public class StockReservationTests
             _stockId,
             quantity: 10,
             reservationSource: "ORDER",
-            createdBy: _userId,
+            createdByUser: _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()),
             expiresAt: expiresAt); // expiration po CreatedAt
         var now = DateTimeOffset.UtcNow;
         // Act

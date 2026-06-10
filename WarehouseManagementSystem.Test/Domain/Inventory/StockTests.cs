@@ -1,7 +1,9 @@
-﻿using System;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using Xunit;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain;
 
@@ -10,6 +12,13 @@ public class StockTests
     private readonly Guid _productId = Guid.NewGuid();
     private readonly Guid _warehouseId = Guid.NewGuid();
     private readonly Guid _zoneId = Guid.NewGuid();
+    private readonly Mock<IUserService> _userServiceMock = new();
+
+    public StockTests()
+    {
+        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
+            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
+    }
 
     [Fact]
     public void Constructor_Should_Initialize_Stock_With_Correct_Values()
@@ -63,7 +72,7 @@ public class StockTests
     public void Decrease_Should_Throw_When_Insufficient_Available()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 5m);
-        stock.CreateReservation(3m, "test", Guid.NewGuid());
+        stock.CreateReservation(3m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         Action act = () => stock.Decrease(3m);
         act.Should().Throw<InvalidOperationException>().WithMessage("*Not enough available stock*");
@@ -73,7 +82,7 @@ public class StockTests
     public void CreateReservation_Should_Work_And_Reserve_Quantity()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 10m);
-        var reservation = stock.CreateReservation(4m, "test", Guid.NewGuid());
+        var reservation = stock.CreateReservation(4m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         reservation.Quantity.Should().Be(4m);
         stock.QuantityReserved.Should().Be(4m);
@@ -85,9 +94,9 @@ public class StockTests
     public void CreateReservation_Should_Throw_When_Exceeding_Available()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 5m);
-        stock.CreateReservation(5m, "r1", Guid.NewGuid());
+        stock.CreateReservation(5m, "r1", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
-        Action act = () => stock.CreateReservation(1m, "r2", Guid.NewGuid());
+        Action act = () => stock.CreateReservation(1m, "r2", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
         act.Should().Throw<InvalidOperationException>().WithMessage("*Not enough stock*");
     }
 
@@ -95,7 +104,7 @@ public class StockTests
     public void ReleaseReservation_Should_Decrease_Reserved_Quantity()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 10m);
-        var reservation = stock.CreateReservation(5m, "test", Guid.NewGuid());
+        var reservation = stock.CreateReservation(5m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         stock.ReleaseReservation(reservation.Id);
 
@@ -108,7 +117,7 @@ public class StockTests
     public void FulfillReservation_Should_Decrease_Total_And_Reserved()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 10m);
-        var reservation = stock.CreateReservation(6m, "test", Guid.NewGuid());
+        var reservation = stock.CreateReservation(6m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         stock.FulfillReservation(reservation.Id);
 
@@ -121,7 +130,7 @@ public class StockTests
     public void CancelReservation_Should_Decrease_Reserved_Quantity()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 10m);
-        var reservation = stock.CreateReservation(4m, "test", Guid.NewGuid());
+        var reservation = stock.CreateReservation(4m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         stock.CancelReservation(reservation.Id);
 
@@ -133,7 +142,7 @@ public class StockTests
     public void ExpireReservation_Should_Decrease_Reserved_Quantity()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 8m);
-        var reservation = stock.CreateReservation(3m, "test", Guid.NewGuid());
+        var reservation = stock.CreateReservation(3m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         stock.ExpireReservation(reservation.Id);
 
@@ -145,7 +154,7 @@ public class StockTests
     public void IsAvailable_Should_Return_Correctly()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 10m);
-        stock.CreateReservation(4m, "test", Guid.NewGuid());
+        stock.CreateReservation(4m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         stock.IsAvailable(6m).Should().BeTrue();
         stock.IsAvailable(5m).Should().BeTrue();
@@ -166,7 +175,7 @@ public class StockTests
     public void AdjustTotal_Should_Throw_When_Less_Than_Reserved()
     {
         var stock = new Stock(_productId, _warehouseId, _zoneId, null, 10m);
-        stock.CreateReservation(5m, "test", Guid.NewGuid());
+        stock.CreateReservation(5m, "test", _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         Action act = () => stock.AdjustTotal(4m);
         act.Should().Throw<InvalidOperationException>().WithMessage("*lower than reserved*");
