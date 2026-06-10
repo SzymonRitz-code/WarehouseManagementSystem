@@ -6,8 +6,8 @@ using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.User;
+using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
-using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
@@ -17,17 +17,15 @@ namespace WarehouseManagementSystem.API.Controllers;
 public class WarehousesController : ControllerBase
 {
     private readonly IStockQueryService _stockQueryService;
-    private readonly WarehouseManagementSystemDbContext _unitOfWork;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<WarehousesController> _logger;
     private readonly IUserService _userService;
 
-
-    //TODO zamienić DbContext na IUnitOfWork
     public WarehousesController(
         IStockQueryService stockQueryService,
-        WarehouseManagementSystemDbContext unitOfWork,
+        IUnitOfWork unitOfWork,
         IMapper mapper,
         IAuditLogService auditLogService,
         ILogger<WarehousesController> logger,
@@ -64,7 +62,7 @@ public class WarehousesController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WarehouseDto>>> GetWarehouses()
     {
-        var warehouses = await _unitOfWork.Warehouses.ToListAsync();
+        var warehouses = await _unitOfWork.Warehouses.AllAsync();
         return Ok(_mapper.Map<IEnumerable<WarehouseDto>>(warehouses));
     }
 
@@ -77,12 +75,11 @@ public class WarehousesController : ControllerBase
         return Ok(_mapper.Map<WarehouseDto>(warehouse));
     }
     [HttpPost]
-    public async Task<ActionResult<WarehouseDto>> PostWarehouse(CreateWarehouseDto warehouseDto)
+    public async Task<ActionResult<WarehouseDto>> CreateWarehouse(CreateWarehouseDto warehouseDto)
     {
         if (_unitOfWork.Warehouses.Any(w => w.Code == warehouseDto.Code))
-        {
             ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
-        }
+
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var warehouse = new Warehouse(
@@ -107,17 +104,18 @@ public class WarehousesController : ControllerBase
             await _unitOfWork.SaveChangesAsync();
             _logger.LogInformation("Warehouse {WarehouseId} created by {UserId}", warehouse.Id, user.Id);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Warehouse create failed");
             throw;
         }
 
-
-        return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, warehouseDto);
+        var createdDto = _mapper.Map<WarehouseDto>(warehouse);
+        return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, createdDto);
     }
 
     [HttpPut("{warehouseId}")]
-    public async Task<IActionResult> PutWarehouse([FromRoute] Guid warehouseId, WarehouseDto warehouseDto)
+    public async Task<IActionResult> UpdateWarehouse([FromRoute] Guid warehouseId, WarehouseDto warehouseDto)
     {
         if (warehouseId != warehouseDto.Id) return BadRequest();
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
@@ -165,7 +163,7 @@ public class WarehousesController : ControllerBase
         if (warehouse == null) return NotFound();
         var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
 
-        _unitOfWork.Warehouses.Remove(warehouse);
+        _unitOfWork.Warehouses.Delete(warehouse);
         var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(Warehouse),

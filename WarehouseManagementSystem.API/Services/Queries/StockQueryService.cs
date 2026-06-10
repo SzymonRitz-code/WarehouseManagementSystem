@@ -18,7 +18,8 @@ public class StockQueryService : IStockQueryService
     {
         return await _context.Stocks
             .AsNoTracking()
-            .Select(s => new StockDto{
+            .Select(s => new StockDto
+            {
                 Id = s.Id,
                 ProductId = s.ProductId,
                 ProductSku = s.Product.SKU,
@@ -32,7 +33,7 @@ public class StockQueryService : IStockQueryService
                 Unit = s.Product.Unit.ToString(),
                 LastUpdated = s.LastUpdated
             })
-            .ToListAsync();    
+            .ToListAsync();
     }
     //public async Task<List<StockMoveDto>> GetStockMoves()
     //{

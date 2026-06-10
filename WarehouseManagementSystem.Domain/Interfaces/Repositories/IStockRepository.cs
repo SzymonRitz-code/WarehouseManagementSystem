@@ -1,4 +1,4 @@
-﻿ using WarehouseManagementSystem.Domain.Interfaces.Repositories.Base;
+﻿using WarehouseManagementSystem.Domain.Interfaces.Repositories.Base;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 namespace WarehouseManagementSystem.Domain.Interfaces.Repositories;

@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
@@ -14,11 +14,11 @@ namespace WarehouseManagementSystem.API.Services.Queries
         {
             _context = context;
         }
-        public async Task<IEnumerable<ProductBatchListDto>> GetProductBatchList(Expression<Func<ProductBatch,bool>>? predicate = null, CancellationToken ct = default)
+        public async Task<IEnumerable<ProductBatchListDto>> GetProductBatchList(Expression<Func<ProductBatch, bool>>? predicate = null, CancellationToken ct = default)
         {
             var query = _context.ProductBatches.AsNoTracking();
-            
-            if(predicate != null)
+
+            if (predicate != null)
             {
                 query = query.Where(predicate);
             }

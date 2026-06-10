@@ -1,6 +1,5 @@
 ﻿using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Services;
-using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Infrastructure.Services;
 

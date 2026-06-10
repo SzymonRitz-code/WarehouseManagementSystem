@@ -1,5 +1,4 @@
-﻿using System.Reflection.Metadata;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
@@ -17,7 +16,7 @@ public class DocumentCommandService : IDocumentCommandService
     private readonly IStockService _stockService;
     private readonly IDocumentNumberGenerator _numberGenerator;
     private readonly ISystemClock _clock;
-    private readonly ILogger<DocumentCommandService> _logger; // TODO Dokońdczyć implemenmtację lgowania
+    private readonly ILogger<DocumentCommandService> _logger;
     private readonly IAuditLogService _auditLogService;
 
     public DocumentCommandService(
@@ -122,7 +121,7 @@ public class DocumentCommandService : IDocumentCommandService
 
         document.ReplaceItems(itemsToReplace);
 
-        _unitOfWork.Documents.Update(document); 
+        _unitOfWork.Documents.Update(document);
         await _auditLogService.LogChangesAsync(
                 entityName: nameof(Document),
                 entityId: documentId,
@@ -213,7 +212,7 @@ public class DocumentCommandService : IDocumentCommandService
         var documentNumber = await _numberGenerator.GenerateAsync(
             document.Type,
             document.SourceWarehouseId,
-            document.DocumentDate); //TODO dodać testy sprawdzające czy numer jest poprawnie wygenerowany po zatwierdzeniu dokumentu
+            document.DocumentDate);
 
         document.SetNumber(documentNumber);
         document.Confirm(confirmedBy);
@@ -232,7 +231,7 @@ public class DocumentCommandService : IDocumentCommandService
     }
 
     public async Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default)
-    { // TODO Dodać do encji kolumny związane z akcją Cancel
+    {
         var document = await _unitOfWork.Documents.FindAsync(documentId)
                        ?? throw new InvalidOperationException("Document not found.");
         _logger.LogInformation("Canceling document {DocumentId} by {UserId}", documentId, canceledBy.Id);

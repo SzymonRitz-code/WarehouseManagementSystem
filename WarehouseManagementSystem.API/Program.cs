@@ -11,6 +11,7 @@ using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.Stocks;
+using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Infrastructure.Persistence;
@@ -71,24 +72,21 @@ builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
 });
 
 // Services
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IDocumentCommandService, DocumentCommandService>();
 builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
-builder.Services.AddScoped<IGoodsIssueService, GoodsIssueService>();
-builder.Services.AddScoped<IGoodsReceiptService, GoodsReceiptService>();
-builder.Services.AddScoped<IStockTransferService, StockTransferService>();
+builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockQueryService, StockQueryService>();
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 builder.Services.AddScoped<IProductBatchQueryService, ProductBatchQueryService>();
-
-builder.Services.AddScoped<IStockService, StockService>();
-
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+
 
 builder.Services.AddTransient<IDocumentNumberGenerator, DocumentNumberGenerator>();
 builder.Services.AddHostedService<ReservationExpirationJob>();
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
+builder.Services.AddSingleton<IUserService, UserService>();
 
 
 builder.Services.AddAutoMapper(cfg =>
@@ -170,9 +168,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) =>
              {
-                Console.WriteLine($"=== CERT VALIDATION: {cert?.Subject}, errors: {errors}");
-                return true;
-            }
+                 Console.WriteLine($"=== CERT VALIDATION: {cert?.Subject}, errors: {errors}");
+                 return true;
+             }
         };
         o.Events = new JwtBearerEvents
         {

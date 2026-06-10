@@ -21,7 +21,6 @@ public class WarehouseZonesController : ControllerBase
     private readonly ILogger<WarehouseZonesController> _logger;
     private readonly IUserService _userService;
 
-
     public WarehouseZonesController(
         IUnitOfWork unitOfWork,
         IMapper mapper,
@@ -51,20 +50,17 @@ public class WarehouseZonesController : ControllerBase
 
         return Ok(_mapper.Map<WarehouseZoneDto>(zone));
     }
-    
-    //TODO - ustandaryzować nazwnictwo metod w kontrolerze 
+
     [HttpPut("{warehouseZoneId}")]
-    public async Task<IActionResult> PutWarehouseZone(Guid warehouseZoneId, WarehouseZoneDto zoneDto)
-     {
+    public async Task<IActionResult> UpdateWarehouseZone(Guid warehouseZoneId, WarehouseZoneDto zoneDto)
+    {
         if (warehouseZoneId != zoneDto.Id) return BadRequest();
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
         if (zone == null) return NotFound();
         var oldZone = AuditSnapshots.WarehouseZone(zone);
 
-        //TODO Zastanowć się nad spujną logiką ustawiania asocjacji
-        //TODO Obsłużyć błędy domenowe 
         zone.SetCode(zoneDto.Code);
         zone.SetName(zoneDto.Name);
         zone.SetTemperatureType(zoneDto.TemperatureType);
@@ -96,7 +92,7 @@ public class WarehouseZonesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CreateWarehouseZoneDto>> PostWarehouseZone(CreateWarehouseZoneDto zoneDto)
+    public async Task<ActionResult<CreateWarehouseZoneDto>> CreateWarehouseZone(CreateWarehouseZoneDto zoneDto)
     {
         if (_unitOfWork.WarehouseZones.Any(w => w.Code == zoneDto.Code))
         {
@@ -118,7 +114,9 @@ public class WarehouseZonesController : ControllerBase
         await _unitOfWork.SaveChangesAsync();
         _logger.LogInformation("Warehouse zone {WarehouseZoneId} created by {UserId}", zone.Id, user.Id);
 
-        return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, zoneDto);
+
+        var createdDto = _mapper.Map<WarehouseZoneDto>(zone);
+        return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, createdDto);
     }
 
     [HttpDelete("{warehouseZoneId}")]
