@@ -2,15 +2,18 @@
 
 namespace WarehouseManagementSystem.API.Services.User
 {
-    public class UserService
+    public interface IUserService
     {
-        public static UserSnapshot GetUser()
-        {
-            return new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"),"Testomir.Testowski@gmail.com", "Testomir");
-        }
+        UserSnapshot GetUser(HttpContext context);
+    }
+    public class UserService : IUserService
+    {
+        //public UserSnapshot GetUser()
+        //{
+        //    return new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir");
+        //}
 
-        // TODO - Dokończyć implementację użytkownika - Przetestować czy po zalogowaniu użytkownik jest w sub
-        public static UserSnapshot GetUser(HttpContext context)
+        public UserSnapshot GetUser(HttpContext context)
         {
             var sub = context.User.FindFirst("sub")?.Value
                 ?? throw new UnauthorizedAccessException("User identity not found in token.");

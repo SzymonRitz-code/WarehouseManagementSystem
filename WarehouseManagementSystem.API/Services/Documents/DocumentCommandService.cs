@@ -262,7 +262,7 @@ public class DocumentCommandService : IDocumentCommandService
         }
 
         // Zmiana statusu dokumentu na anulowany
-        document.Cancel();
+        document.Cancel(canceledBy);
 
         _unitOfWork.Documents.Update(document);
         await _auditLogService.LogChangesAsync(

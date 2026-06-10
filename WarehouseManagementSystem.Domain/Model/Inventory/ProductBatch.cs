@@ -1,4 +1,5 @@
 ﻿using WarehouseManagementSystem.Domain.Model.CatalogDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -13,6 +14,7 @@ public class ProductBatch
     public DateOnly? ManufacturedDate { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
+    public UserSnapshot CreatedByUser { get; private set; }
 
     public Guid ProductId { get; private set; }
 
@@ -24,6 +26,7 @@ public class ProductBatch
     public ProductBatch(
         Guid productId,
         string batchNumber,
+        UserSnapshot createdByUser,
         DateOnly? manufacturedDate = null,
         DateOnly? expirationDate = null)
     {
@@ -34,6 +37,7 @@ public class ProductBatch
         SetManufacturingDates(manufacturedDate, expirationDate);
 
         CreatedAt = DateTimeOffset.UtcNow;
+        CreatedByUser = createdByUser;
     }
 
     // ========================

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 namespace WarehouseManagementSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(WarehouseManagementSystemDbContext))]
-    partial class WarehouseManagementSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260609094209_CancelledUserUpdate")]
+    partial class CancelledUserUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -383,15 +386,19 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("WarehouseManagementSystem.Domain.Model.WarehouseDomain.Warehouse", b =>
@@ -497,8 +504,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByEmail");
 
                             b1.Property<Guid>("Id")
@@ -507,8 +513,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByName");
 
                             b1.HasKey("ProductId");
@@ -542,8 +547,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CancelledByEmail");
 
                             b1.Property<Guid>("Id")
@@ -552,8 +556,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CancelledByName");
 
                             b1.HasKey("DocumentId");
@@ -571,8 +574,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("ConfirmedByEmail");
 
                             b1.Property<Guid>("Id")
@@ -581,8 +583,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("ConfirmedByName");
 
                             b1.HasKey("DocumentId");
@@ -600,8 +601,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByEmail");
 
                             b1.Property<Guid>("Id")
@@ -610,8 +610,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByName");
 
                             b1.HasKey("DocumentId");
@@ -689,8 +688,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByEmail");
 
                             b1.Property<Guid>("Id")
@@ -699,8 +697,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByName");
 
                             b1.HasKey("ProductBatchId");
@@ -766,8 +763,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByEmail");
 
                             b1.Property<Guid>("Id")
@@ -776,8 +772,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByName");
 
                             b1.HasKey("StockReservationId");
@@ -803,8 +798,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByEmail");
 
                             b1.Property<Guid>("Id")
@@ -813,8 +807,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByName");
 
                             b1.HasKey("WarehouseId");
@@ -844,8 +837,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Email")
                                 .IsRequired()
-                                .HasMaxLength(256)
-                                .HasColumnType("nvarchar(256)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByEmail");
 
                             b1.Property<Guid>("Id")
@@ -854,8 +846,7 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
 
                             b1.Property<string>("Name")
                                 .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("nvarchar(50)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("CreatedByName");
 
                             b1.HasKey("WarehouseZoneId");

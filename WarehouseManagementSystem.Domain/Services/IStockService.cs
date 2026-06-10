@@ -1,4 +1,5 @@
 ﻿using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Services;
 
@@ -14,7 +15,7 @@ public interface IStockService
         Guid stockId,
         decimal quantity,
         string reservationSource,
-        Guid createdBy,
+        UserSnapshot createdBy,
         DateTimeOffset? expiresAt = null);
 
     Task ReleaseReservationAsync(Guid stockId, Guid reservationId);

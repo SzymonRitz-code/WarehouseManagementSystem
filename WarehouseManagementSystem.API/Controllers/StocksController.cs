@@ -22,6 +22,7 @@ public class StocksController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<StocksController> _logger;
+    private readonly IUserService _userService;
 
     public StocksController(
         IStockService stockService,
@@ -29,7 +30,7 @@ public class StocksController : ControllerBase
         IMapper mapper,
         IUnitOfWork unitOfWork,
         IAuditLogService auditLogService,
-        ILogger<StocksController> logger)
+        ILogger<StocksController> logger, IUserService userService)
     {
         _stockService = stockService;
         _stockQuery = stockQuery;
@@ -37,6 +38,7 @@ public class StocksController : ControllerBase
         _unitOfWork = unitOfWork;
         _auditLogService = auditLogService;
         _logger = logger;
+        _userService = userService;
     }
     [HttpGet()]
     public async Task<ActionResult<StockDto>> GetStocks()
@@ -62,7 +64,7 @@ public class StocksController : ControllerBase
 
         try
         {
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             var oldStock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsNoTrackingAsync(
                 dto.ProductId, dto.WarehouseId, dto.WarehouseZoneId, dto.ProductBatchId);
 
@@ -97,7 +99,7 @@ public class StocksController : ControllerBase
 
         try
         {
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             var oldStock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsNoTrackingAsync(
                 dto.ProductId, dto.WarehouseId, dto.WarehouseZoneId, dto.ProductBatchId);
 
@@ -132,7 +134,7 @@ public class StocksController : ControllerBase
 
         try
         {
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             var oldSourceStock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsNoTrackingAsync(
                 dto.ProductId, dto.SourceWarehouseId, dto.SourceZoneId, dto.ProductBatchId);
             var oldTargetStock = await _unitOfWork.Stocks.GetByProductAndWarehouseAsNoTrackingAsync(
@@ -192,7 +194,7 @@ public class StocksController : ControllerBase
             var oldStock = await _unitOfWork.Stocks.FindAsync(dto.StockId);
             var oldStockSnapshot = oldStock is null ? null : AuditSnapshots.Stock(oldStock);
             var reservation = await _stockService.ReserveStockAsync(
-                dto.StockId, dto.Quantity, dto.ReservationSource, dto.CreatedBy, dto.ExpiresAt);
+                dto.StockId, dto.Quantity, dto.ReservationSource, _userService.GetUser(HttpContext), dto.ExpiresAt);
             var newStock = await _unitOfWork.Stocks.FindAsync(dto.StockId);
 
             await _auditLogService.LogChangesAsync(
@@ -229,7 +231,7 @@ public class StocksController : ControllerBase
 
         try
         {
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             var oldStock = await _unitOfWork.Stocks.FindAsync(dto.StockId);
             var oldStockSnapshot = oldStock is null ? null : AuditSnapshots.Stock(oldStock);
             var oldReservation = (await _unitOfWork.Stocks.FindReservationsByStockIdAsync(dto.StockId))

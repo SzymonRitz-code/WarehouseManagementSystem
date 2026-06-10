@@ -17,7 +17,7 @@ public class Document
     public Document(
         DateTime documentDate,
         DocumentType type,
-        ValueObjects.UserSnapshot createdByUser,
+        UserSnapshot createdByUser,
         Guid? sourceWarehouseId = null,
         Guid? targetWarehouseId = null,
         string? notes = null)
@@ -44,9 +44,11 @@ public class Document
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? ConfirmedAt { get; private set; }
     public DateTimeOffset? TransferStartedAt { get; private set; }
+    public DateTimeOffset? CancelledAt { get; set; }
 
     public UserSnapshot CreatedByUser { get; private set; }
     public UserSnapshot? ConfirmedByUser { get; private set; }
+    public UserSnapshot? CancelledByUser { get; private set; }
 
     public Guid? TransferStartedById { get; private set; }
     public string? TransferStartedByName { get; private set; }
@@ -119,10 +121,10 @@ public class Document
     public void StartTransfer(Guid userId, DateTimeOffset now)
     {
         if (Status == DocumentStatus.Cancelled)
-            throw new InvalidOperationException("Cancelled document cannot be transferred.");
+            throw new DocumentNotInDraftStateException(Id);
 
         if (Status != DocumentStatus.Confirmed)
-            throw new InvalidOperationException("Only confirmed document can be transferred.");
+            throw new DocumentNotInDraftStateException(Id);
 
         Status = DocumentStatus.Transfer;
         TransferStartedAt = now;
@@ -152,7 +154,7 @@ public class Document
         ConfirmedAt = DateTimeOffset.UtcNow;
     }
 
-    public void Cancel()
+    public void Cancel(UserSnapshot cancelledByUser)
     {
         if (Status == DocumentStatus.Cancelled)
             throw new DocumentAlreadyCancelledException(Id);
@@ -161,6 +163,8 @@ public class Document
             throw new DocumentNotInDraftStateException(Id);
 
         Status = DocumentStatus.Cancelled;
+        CancelledAt = DateTimeOffset.UtcNow;
+        CancelledByUser = cancelledByUser;
     }
 
     private void EnsureDraft()

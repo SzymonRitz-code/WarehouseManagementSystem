@@ -1,5 +1,6 @@
 ﻿using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -112,7 +113,7 @@ public class Stock
     public StockReservation CreateReservation(
         decimal quantity,
         string source,
-        Guid createdBy,
+        UserSnapshot createdBy,
         DateTimeOffset? expiresAt = null)
     {
         if (quantity <= 0)

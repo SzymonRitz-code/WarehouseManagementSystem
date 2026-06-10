@@ -18,12 +18,14 @@ public class DocumentsController : ControllerBase
     private readonly IDocumentCommandService _commandService;
     private readonly IDocumentQueryService _queryService;
     private readonly IMapper _mapper;
+    private readonly IUserService _userService;
 
-    public DocumentsController(IDocumentCommandService commandService, IDocumentQueryService queryService, IMapper mapper)
+    public DocumentsController(IDocumentCommandService commandService, IDocumentQueryService queryService, IMapper mapper, IUserService userService)
     {
         _commandService = commandService;
         _queryService = queryService;
         _mapper = mapper;
+        _userService = userService;
     }
     [HttpGet("test")]
     [AllowAnonymous]
@@ -111,7 +113,7 @@ public class DocumentsController : ControllerBase
         {
             document = await _commandService.CreateDocumentAsync(
                 type: documentDto.Type,
-                createdBy: UserService.GetUser(HttpContext), // TODO dodać do pozostałych klas CreatedBy i ewentualnie modifiedBy 
+                createdBy: _userService.GetUser(HttpContext),
                 sourceWarehouseId: documentDto.SourceWarehouseId,
                 items: itemDrafts,
                 documentDate: documentDto.DocumentDate,
@@ -153,7 +155,7 @@ public class DocumentsController : ControllerBase
         // Tworzymy dokument poprzez serwis domenowy
         var document = await _commandService.UpdateDocumentAsync(
             documentId: documentDto.Id,
-            UserService.GetUser(HttpContext),
+            _userService.GetUser(HttpContext),
             type: documentDto.Type,
             sourceWarehouseId: documentDto.SourceWarehouseId,
             items: itemDrafts,
@@ -182,7 +184,7 @@ public class DocumentsController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
         // Coś w stylu User.Identity.Name
-        await _commandService.ConfirmDocumentAsync(documentId, UserService.GetUser(HttpContext));
+        await _commandService.ConfirmDocumentAsync(documentId, _userService.GetUser(HttpContext));
         return NoContent();
     }
 
@@ -193,7 +195,7 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
-        await _commandService.CancelDocumentAsync(documentId, UserService.GetUser(HttpContext));
+        await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext));
         return NoContent();
     }
 

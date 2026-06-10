@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 namespace WarehouseManagementSystem.Infrastructure.Migrations
 {
     [DbContext(typeof(WarehouseManagementSystemDbContext))]
-    partial class WarehouseManagementSystemDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610122426_UserImprovements")]
+    partial class UserImprovements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

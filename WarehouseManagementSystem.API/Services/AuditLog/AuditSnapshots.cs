@@ -74,7 +74,7 @@ public static class AuditSnapshots
         reservation.Quantity,
         reservation.Status,
         reservation.ReservationSource,
-        reservation.CreatedBy,
+        reservation.CreatedByUser,
         reservation.CreatedAt,
         reservation.ExpiresAt
     };

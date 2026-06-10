@@ -1,4 +1,5 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.InventoryDomain;
 public class StockReservation
@@ -16,7 +17,7 @@ public class StockReservation
     public DateTimeOffset? ExpiresAt { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 
-    public Guid CreatedBy { get; private set; }
+    public UserSnapshot CreatedByUser { get; private set; }
 
     public Guid StockId { get; private set; }
     public Stock Stock { get; private set; }
@@ -27,7 +28,7 @@ public class StockReservation
         Guid stockId,
         decimal quantity,
         string reservationSource,
-        Guid createdBy,
+        UserSnapshot createdByUser,
         DateTimeOffset? expiresAt = null)
     {
         if (quantity <= 0)
@@ -35,12 +36,13 @@ public class StockReservation
 
         Id = Guid.NewGuid();
         StockId = stockId;
-        CreatedBy = createdBy;
 
         SetReservationSource(reservationSource);
 
         _quantity = quantity;
+
         CreatedAt = DateTimeOffset.UtcNow;
+        CreatedByUser = createdByUser;
 
         SetExpiration(expiresAt);
 

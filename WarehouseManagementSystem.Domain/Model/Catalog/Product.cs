@@ -1,4 +1,5 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.CatalogDomain;
 
@@ -11,6 +12,7 @@ public class Product
         string name,
         UnitOfMeasure unit,
         bool requiresBatch,
+        UserSnapshot createdByUser,
         decimal? weight = null,
         decimal? volume = null,
         string? description = null)
@@ -26,6 +28,7 @@ public class Product
         RequiresBatch = requiresBatch;
         IsActive = true;
         CreatedAt = DateTimeOffset.UtcNow;
+        CreatedByUser = createdByUser;
     }
 
     public Guid Id { get; private set; }
@@ -38,6 +41,7 @@ public class Product
     public decimal? Weight { get; private set; }
     public decimal? Volume { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    public UserSnapshot CreatedByUser { get; private set; }
 
     // ===== setters =====
 

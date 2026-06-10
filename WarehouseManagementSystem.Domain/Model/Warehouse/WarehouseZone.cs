@@ -1,5 +1,6 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
@@ -12,7 +13,8 @@ public class WarehouseZone
         string name,
         TemperatureType temperatureType,
         bool isPickingZone,
-        Guid warehouseId)
+        Guid warehouseId,
+        UserSnapshot createdByUser)
     {
         Id = Guid.NewGuid();
         SetCode(code);
@@ -22,6 +24,7 @@ public class WarehouseZone
         IsPickingZone = isPickingZone;
         WarehouseId = warehouseId;
         CreatedAt = DateTimeOffset.UtcNow;
+        CreatedByUser = createdByUser;
     }
 
     public Guid Id { get; private set; }
@@ -30,6 +33,7 @@ public class WarehouseZone
     public TemperatureType TemperatureType { get; private set; }
     public bool IsPickingZone { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    public UserSnapshot CreatedByUser { get; private set; }
 
     public Guid WarehouseId { get; private set; }
     public Warehouse Warehouse { get; private set; }

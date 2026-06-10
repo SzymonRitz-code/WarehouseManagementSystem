@@ -10,7 +10,14 @@ using System.Text.Json;
 
 namespace IdentityServer;
 
-public class TestUsers
+public interface IFakeUserService
+{
+    List<TestUser> getUsers();
+    bool ValidateCredentials(string username, string password);
+    TestUser? FindByUsername(string username);
+}
+
+public class FakeUserService : IFakeUserService
 {
     public static List<TestUser> Users
     {
@@ -62,4 +69,27 @@ public class TestUsers
             };
         }
     }
+
+
+    public List<TestUser> getUsers()
+    {
+        return Users;
+    }
+    public bool ValidateCredentials(string username, string password)
+    {
+        var user = FindByUsername(username);
+
+        if (user != null)
+        {
+            if (string.IsNullOrWhiteSpace(user.Password) && string.IsNullOrWhiteSpace(password))
+            {
+                return true;
+            }
+
+            return Equals(user.Password, password);
+        }
+
+        return false;
+    }
+    public TestUser? FindByUsername(string username) => Users.FirstOrDefault(x => x.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
 }

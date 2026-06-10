@@ -19,8 +19,10 @@ internal static class HostingExtensions
 
             // Umożliwia rządania na HTTP w dev 
             //options.EmitStaticAudienceClaim = true; 
-        })
-            .AddTestUsers(TestUsers.Users);
+        });
+
+        // External User Service
+        isBuilder.Services.AddScoped<IFakeUserService, FakeUserService>();
 
         // in-memory, code config
         isBuilder.AddInMemoryIdentityResources(Config.IdentityResources);

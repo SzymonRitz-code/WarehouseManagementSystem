@@ -19,18 +19,21 @@ public class WarehouseZonesController : ControllerBase
     private readonly IMapper _mapper;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<WarehouseZonesController> _logger;
+    private readonly IUserService _userService;
 
 
     public WarehouseZonesController(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IAuditLogService auditLogService,
-        ILogger<WarehouseZonesController> logger)
+        ILogger<WarehouseZonesController> logger,
+        IUserService userService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _auditLogService = auditLogService;
         _logger = logger;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -71,7 +74,7 @@ public class WarehouseZonesController : ControllerBase
         try
         {
             _unitOfWork.WarehouseZones.Update(zone);
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             await _auditLogService.LogChangesAsync(
                 nameof(WarehouseZone),
                 zone.Id,
@@ -101,9 +104,9 @@ public class WarehouseZonesController : ControllerBase
         }
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        var zone = new WarehouseZone(zoneDto.Code, zoneDto.Name, zoneDto.TemperatureType, zoneDto.IsPickingZone, zoneDto.WarehouseId);
+        var zone = new WarehouseZone(zoneDto.Code, zoneDto.Name, zoneDto.TemperatureType, zoneDto.IsPickingZone, zoneDto.WarehouseId, _userService.GetUser(HttpContext));
         _unitOfWork.WarehouseZones.Add(zone);
-        var user = UserService.GetUser(HttpContext);
+        var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(WarehouseZone),
             zone.Id,
@@ -126,7 +129,7 @@ public class WarehouseZonesController : ControllerBase
         var oldZone = AuditSnapshots.WarehouseZone(zone);
 
         _unitOfWork.WarehouseZones.Delete(zone);
-        var user = UserService.GetUser(HttpContext);
+        var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(WarehouseZone),
             zone.Id,

@@ -20,19 +20,21 @@ public class ProductBatchesController : ControllerBase
     private readonly IProductBatchQueryService _productBatchQueryService;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<ProductBatchesController> _logger;
+    private readonly IUserService _userService;
 
     public ProductBatchesController(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IProductBatchQueryService productBatchQueryService,
         IAuditLogService auditLogService,
-        ILogger<ProductBatchesController> logger)
+        ILogger<ProductBatchesController> logger, IUserService userService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _productBatchQueryService = productBatchQueryService;
         _auditLogService = auditLogService;
         _logger = logger;
+        _userService = userService;
     }
 
 
@@ -92,6 +94,7 @@ public class ProductBatchesController : ControllerBase
             batch = new ProductBatch(
                 batchDto.ProductId,
                 batchDto.BatchNumber,
+                _userService.GetUser(HttpContext),
                 batchDto.ManufacturedDate,
                 batchDto.ExpirationDate);
 
@@ -102,7 +105,7 @@ public class ProductBatchesController : ControllerBase
         }
 
         _unitOfWork.ProductBatches.Add(batch);
-        var user = UserService.GetUser(HttpContext);
+        var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(ProductBatch),
             batch.Id,
@@ -142,7 +145,7 @@ public class ProductBatchesController : ControllerBase
         try
         {
             _unitOfWork.ProductBatches.Update(batch);
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             await _auditLogService.LogChangesAsync(
                 nameof(ProductBatch),
                 batch.Id,
@@ -172,7 +175,7 @@ public class ProductBatchesController : ControllerBase
         var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         _unitOfWork.ProductBatches.Delete(batch);
-        var user = UserService.GetUser(HttpContext);
+        var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(ProductBatch),
             batch.Id,

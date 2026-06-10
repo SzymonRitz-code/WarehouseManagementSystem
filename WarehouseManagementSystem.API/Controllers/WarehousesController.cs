@@ -21,6 +21,7 @@ public class WarehousesController : ControllerBase
     private readonly IMapper _mapper;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<WarehousesController> _logger;
+    private readonly IUserService _userService;
 
 
     //TODO zamienić DbContext na IUnitOfWork
@@ -29,13 +30,15 @@ public class WarehousesController : ControllerBase
         WarehouseManagementSystemDbContext unitOfWork,
         IMapper mapper,
         IAuditLogService auditLogService,
-        ILogger<WarehousesController> logger)
+        ILogger<WarehousesController> logger,
+        IUserService userService)
     {
         _stockQueryService = stockQueryService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _auditLogService = auditLogService;
         _logger = logger;
+        _userService = userService;
     }
 
     /// <summary>
@@ -87,12 +90,12 @@ public class WarehousesController : ControllerBase
             warehouseDto.Name,
             warehouseDto.Country,
             warehouseDto.City,
-            warehouseDto.Address);
+            warehouseDto.Address, _userService.GetUser(HttpContext));
 
         try
         {
             _unitOfWork.Warehouses.Add(warehouse);
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             await _auditLogService.LogChangesAsync(
                 nameof(Warehouse),
                 warehouse.Id,
@@ -132,7 +135,7 @@ public class WarehousesController : ControllerBase
 
         try
         {
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             await _auditLogService.LogChangesAsync(
                 nameof(Warehouse),
                 warehouse.Id,
@@ -163,7 +166,7 @@ public class WarehousesController : ControllerBase
         var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
 
         _unitOfWork.Warehouses.Remove(warehouse);
-        var user = UserService.GetUser(HttpContext);
+        var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(Warehouse),
             warehouse.Id,

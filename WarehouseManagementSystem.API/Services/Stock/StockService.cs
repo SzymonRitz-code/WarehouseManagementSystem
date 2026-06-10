@@ -1,6 +1,7 @@
 ﻿using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
+using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.API.Services.Stocks;
@@ -103,7 +104,7 @@ public class StockService : IStockService
         Guid stockId,
         decimal quantity,
         string reservationSource,
-        Guid createdBy,
+        UserSnapshot createdBy,
         DateTimeOffset? expiresAt = null)
     {
         if (quantity <= 0)

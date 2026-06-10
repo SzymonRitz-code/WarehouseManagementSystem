@@ -1,6 +1,7 @@
 ﻿using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
@@ -15,7 +16,8 @@ public class Warehouse
         string name,
         string country,
         string city,
-        string address)
+        string address,
+        UserSnapshot createdByUser)
     {
         Id = Guid.NewGuid();
         SetCode(code);
@@ -24,6 +26,7 @@ public class Warehouse
 
         IsActive = true;
         CreatedAt = DateTimeOffset.UtcNow;
+        CreatedByUser = createdByUser;
     }
 
     public Guid Id { get; private set; }
@@ -34,6 +37,7 @@ public class Warehouse
     public string Address { get; private set; }
     public bool IsActive { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
+    public UserSnapshot CreatedByUser { get; private set; }
 
     public IReadOnlyCollection<WarehouseZone> Zones => _zones.AsReadOnly();
 
@@ -114,7 +118,8 @@ public class Warehouse
             name,
             temperatureType,
             isPickingZone,
-            Id);
+            Id, 
+            CreatedByUser);
 
         _zones.Add(zone);
         return zone;

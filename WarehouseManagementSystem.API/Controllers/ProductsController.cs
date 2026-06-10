@@ -20,19 +20,21 @@ public class ProductsController : ControllerBase
     private readonly IStockQueryService _stockQueryService;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<ProductsController> _logger;
+    private readonly IUserService _userService;
 
     public ProductsController(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IStockQueryService stockQueryService,
         IAuditLogService auditLogService,
-        ILogger<ProductsController> logger)
+        ILogger<ProductsController> logger, IUserService userService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _stockQueryService = stockQueryService;
         _auditLogService = auditLogService;
         _logger = logger;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -65,13 +67,14 @@ public class ProductsController : ControllerBase
             productDto.Name,
             productDto.Unit,
             productDto.RequiresBatch ?? false,
+            _userService.GetUser(HttpContext),
             productDto.Weight,
             productDto.Volume,
             productDto.Description);
 
 
         _unitOfWork.Products.Add(product);
-        var user = UserService.GetUser(HttpContext);
+        var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(Product),
             product.Id,
@@ -117,7 +120,7 @@ public class ProductsController : ControllerBase
         try
         {
             _unitOfWork.Products.Update(product);
-            var user = UserService.GetUser(HttpContext);
+            var user = _userService.GetUser(HttpContext);
             await _auditLogService.LogChangesAsync(
                 nameof(Product),
                 product.Id,
@@ -147,7 +150,7 @@ public class ProductsController : ControllerBase
         var oldProduct = AuditSnapshots.Product(product);
 
         _unitOfWork.Products.Delete(product);
-        var user = UserService.GetUser(HttpContext);
+        var user = _userService.GetUser(HttpContext);
         await _auditLogService.LogChangesAsync(
             nameof(Product),
             product.Id,
