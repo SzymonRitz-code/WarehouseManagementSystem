@@ -30,7 +30,7 @@ import { ProductService } from '../../../products/services/product-service';
 export class DocumentDetailComponent implements OnInit {
 
   id!: string;
-  document!: Document;
+  document!: Document | undefined;
 
   constructor(
     private documentService: DocumentService,

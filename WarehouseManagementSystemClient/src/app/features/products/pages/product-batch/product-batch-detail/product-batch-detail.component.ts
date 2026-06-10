@@ -16,7 +16,7 @@ import { ProductService } from '../../../services/product-service';
   templateUrl: './product-batch-detail.component.html'
 })
 export class ProductBatchDetailComponent implements OnInit {
-  batch!: Batch;
+  batch!: Batch | undefined;
   productId!: string;
   batchId!: string;
   constructor(
@@ -33,7 +33,7 @@ export class ProductBatchDetailComponent implements OnInit {
       next: (batch) => {
         this.batch = batch;
         this.productService.getProduct(this.productId).subscribe({
-          next: (product) => this.batch.productName = product.name,
+          next: (product) => this.batch!.productName = product.name,
           error: (err) => console.error("Error fetching product details", err)
         });
       },
