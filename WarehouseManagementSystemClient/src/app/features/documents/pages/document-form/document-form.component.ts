@@ -26,7 +26,6 @@ import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.hel
     PageBreadcrumbComponent,
     ComponentCardComponent,
     InputSelectComponent,
-    InputFieldComponent,
     LabelComponent,
     FormActionsComponent,
     ReactiveFormsModule,
@@ -89,18 +88,18 @@ export class DocumentFormComponent implements OnInit {
               }));
             });
           }
-        })
+        }).unsubscribe();
     }
     this.warehouseService.getWarehouses().subscribe({
       next: (responce) => {
         this.sourceOptions = responce.map(w => ({ value: w.id, label: w.name }));
       }
-    })
+    }).unsubscribe();
     this.warehouseService.getWarehouses().subscribe({
       next: (responce) => {
         this.targetOptions = responce.map(w => ({ value: w.id, label: w.name }));
       }
-    })
+    }).unsubscribe();
     this.documentTyoeOptions = Object.values(DocumentType).map(d => ({ value: d, label: d }))
   }
   get documentItemsFormArray(): FormArray {
@@ -123,7 +122,7 @@ export class DocumentFormComponent implements OnInit {
         console.error(err);
         setServerErrors(err, this.documentForm);
       }
-    });
+    }).unsubscribe();
 
   }
   onBack() {

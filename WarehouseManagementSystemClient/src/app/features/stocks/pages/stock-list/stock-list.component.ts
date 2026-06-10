@@ -15,11 +15,11 @@ import { CommonModule } from '@angular/common';
 })
 export class StockListComponent implements OnInit {
 
-  stocks: Observable<Stock[]> = new Observable<Stock[]>();
+  stocks$: Observable<Stock[]> = new Observable<Stock[]>();
   constructor(private stockService: StockService) { }
 
   ngOnInit(): void {
-    this.stocks = this.stockService.getStocks();
+    this.stocks$ = this.stockService.getStocks();
   }
 
   columns = [

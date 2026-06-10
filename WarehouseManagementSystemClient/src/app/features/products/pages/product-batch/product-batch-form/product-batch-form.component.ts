@@ -50,7 +50,7 @@ export class ProductBatchFormComponent implements OnInit {
     this.batchId = this.activatedRoute.snapshot.paramMap.get('batchId')!;
     this.productService.getProducts().subscribe({
       next: (products) => { this.productOptions = products.filter(p => p.id === this.productId).map(p => ({ value: p.id, label: p.name })) }
-    });
+    }).unsubscribe();
 
     this.batchForm = this.fb.group({
       id: [this.batchId || null],
@@ -73,7 +73,7 @@ export class ProductBatchFormComponent implements OnInit {
             createdAt: (this.batch as Batch).createdAt // TODO: Check if other forms also fill createdAt
           });
         }
-      });
+      }).unsubscribe();
     }
   }
   onBack() {
@@ -94,6 +94,6 @@ export class ProductBatchFormComponent implements OnInit {
       error: (err) => {
         setServerErrors(err, this.batchForm);
       }
-    });
+    }).unsubscribe();
   }
 }

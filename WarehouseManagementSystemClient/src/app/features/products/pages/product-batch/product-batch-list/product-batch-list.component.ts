@@ -29,7 +29,7 @@ import { TextAreaComponent } from "../../../../../shared/components/form/input/t
 export class ProductBatchListComponent implements OnInit {
   id!: string;
   batches$!: Observable<Batch[]>;
-  product!: Product;
+  product!: Product | undefined;
   productId!: string;
 
   columns = [
@@ -60,7 +60,7 @@ export class ProductBatchListComponent implements OnInit {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
     this.productService.getProduct(this.id).subscribe({
       next: (product) => this.product = product
-    });
+    }).unsubscribe();
     this.batches$ = this.productBatchService.getBatches(this.id);
   }
   onBatchAction($event: { row: Batch; action: string; }) {

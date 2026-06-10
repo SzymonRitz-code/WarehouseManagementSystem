@@ -64,7 +64,7 @@ export class ZoneFormComponent implements OnInit {
       next: (responce) => {
         this.options = responce.map(w => ({ value: w.id, label: w.name }));
       }
-    })
+    }).unsubscribe();
 
     if (this.id) {
       this.zoneService.getZone(this.id).subscribe({
@@ -86,7 +86,7 @@ export class ZoneFormComponent implements OnInit {
                 createdAt: (this.zone as Zone).createdAt
               })
             }
-          });
+          }).unsubscribe();
         }
       });
 
@@ -96,7 +96,7 @@ export class ZoneFormComponent implements OnInit {
       next: (result) => {
         this.warehouseOptions = result.map(w => ({ value: w.id, label: w.name }))
       }
-    });
+    }).unsubscribe();
     this.temperatureTypeOptions = Object.values(TemperatureType).map(t => ({ value: t, label: t }))
   }
 
@@ -118,7 +118,7 @@ export class ZoneFormComponent implements OnInit {
         console.error(err);
         setServerErrors(err, this.zoneForm);
       }
-    })
+    }).unsubscribe();
 
   }
 

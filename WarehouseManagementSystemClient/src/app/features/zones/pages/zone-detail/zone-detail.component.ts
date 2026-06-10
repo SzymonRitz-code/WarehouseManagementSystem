@@ -22,7 +22,7 @@ import { ZoneService } from '../../services/zone-service';
 export class ZoneDetailComponent implements OnInit {
 
   id!: string;
-  zone!: Zone
+  zone!: Zone | undefined;
 
   constructor(private zoneService: ZoneService, private warehouseService: WarehouseService, private activatedRoute: ActivatedRoute, private router: Router) { }
   ngOnInit(): void {
@@ -33,11 +33,11 @@ export class ZoneDetailComponent implements OnInit {
         console.log(this.zone)
         this.warehouseService.getWarehouse(this.zone.warehouseId).subscribe({
           next: (responce) => {
-            this.zone.warehouseName = responce?.name
+            this.zone!.warehouseName = responce.name
           }
-        });
+        }).unsubscribe();
       }
-    })
+    }).unsubscribe();
 
   }
   onBack() {

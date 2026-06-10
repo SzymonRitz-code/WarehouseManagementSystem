@@ -78,7 +78,7 @@ export class DocumentPendingListComponent implements OnInit {
       error: (err) => {
         console.error('Error cancelling document:', err);
       }
-    });
+    }).unsubscribe();
   }
   onConfirm(row: Document) {
     this.documentService.confirmDocument(row).subscribe({
@@ -89,7 +89,7 @@ export class DocumentPendingListComponent implements OnInit {
       error: (err) => {
         console.error('Error confirming document:', err);
       }
-    });
+    }).unsubscribe();
   }
   onDetails(row: Document) {
     this.router.navigateByUrl(`/documents/detail/${row.id}`)
