@@ -32,17 +32,17 @@ export class DocumentItemsComponent implements OnInit {
       next: (resopnce) => {
         this.productOptions = resopnce.map(p => ({ value: p.id, label: p.name }))
       }
-    })
+    }).unsubscribe();
     this.zoneService.getZones().subscribe({
       next: (zones) => {
         this.sourceZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
       }
-    });
+    }).unsubscribe();
     this.zoneService.getZones().subscribe({
       next: (zones) => {
         this.targetZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
       }
-    });
+    }).unsubscribe();
   }
 
   /** Otwiera modal do dodania nowej pozycji */

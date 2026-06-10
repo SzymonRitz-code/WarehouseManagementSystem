@@ -38,7 +38,7 @@ export class ProductBatchDetailComponent implements OnInit {
         });
       },
       error: (err) => console.error("Error fetching batch details", err)
-    });
+    }).unsubscribe();
 
   }
 

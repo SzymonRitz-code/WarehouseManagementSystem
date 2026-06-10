@@ -79,7 +79,7 @@ export class ProductFormComponent implements OnInit {
           });
         },
         error: (err) => { console.error(err) }
-      })
+      }).unsubscribe();
 
     }
     this.unitOptions = Object.values(UnitOfMeasure).map(d => ({ value: d, label: d }))
@@ -104,7 +104,7 @@ export class ProductFormComponent implements OnInit {
         console.error(err);
         setServerErrors(err, this.productForm);
       }
-    });
+    }).unsubscribe();
   }
   onBack() {
     this.router.navigateByUrl('/products');

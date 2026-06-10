@@ -52,32 +52,32 @@ export class DocumentDetailComponent implements OnInit {
           next: (responce) => {
             this.document!.sourceWarehouseName = responce?.name
           }
-        });
+        }).unsubscribe();
         this.warhouseService.getWarehouse(this.document.targetWarehouseId!).subscribe({
           next: (responce) => {
             this.document!.targetWarehouseName = responce?.name
           }
-        });
+        }).unsubscribe();
         this.document.items.forEach(item => {
           this.productService.getProduct(item.productId).subscribe({
             next:
               (res) => { item.productName = res.name; }
-          });
+          }).unsubscribe();
 
           this.zoneService.getZone(item.sourceZoneId).subscribe({
             next: (responce) => {
               item.sourceZoneName = responce.name;
             }
-          });
+          }).unsubscribe();
           this.zoneService.getZone(item.targetZoneId).subscribe({
             next: (responce) => {
               item.targetZoneName = responce.name;
             }
-          })
+          }).unsubscribe();
 
         });
       }
-    });
+    }).unsubscribe();
   }
 
   onEdit() {
