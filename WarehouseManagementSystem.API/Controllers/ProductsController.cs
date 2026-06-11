@@ -93,7 +93,7 @@ public class ProductsController : ControllerBase
     [HttpPut("{productId}")]
     public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, ProductDto productDto)
     {
-        if (productId != productDto.Id) return BadRequest();
+        if (productId != productDto.Id) return BadRequest("Route ID and body ID mismatch.");
 
         if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku))
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");

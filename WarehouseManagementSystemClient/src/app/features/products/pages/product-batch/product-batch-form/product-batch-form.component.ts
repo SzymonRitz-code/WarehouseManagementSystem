@@ -14,6 +14,7 @@ import { setServerErrors } from '../../../../../core/helpsers/vaildation-helper.
 import { InputSelectComponent } from '../../../../../shared/components/form/input/input-select/input-select.component';
 import { CommonModule } from '@angular/common';
 import { InputFieldComponent } from '../../../../../shared/components/form/input/input-field.component';
+import { ValidationSummaryComponent } from '../../../../../shared/components/form/validation-summary/validation-summary.component';
 
 @Component({
   selector: 'app-product-batch-form',
@@ -28,7 +29,8 @@ import { InputFieldComponent } from '../../../../../shared/components/form/input
     ComponentCardComponent,
     InputSelectComponent,
     InputFieldComponent,
-    FormActionsComponent],
+    FormActionsComponent,
+    ValidationSummaryComponent],
   templateUrl: './product-batch-form.component.html'
 })
 export class ProductBatchFormComponent implements OnInit {

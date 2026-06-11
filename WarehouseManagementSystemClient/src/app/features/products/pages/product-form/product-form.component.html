@@ -1,9 +1,10 @@
 <div>
   <app-page-breadcrumb pageTitle="Product Form" />
 
-  <app-component-card title="Product">
-    <form [formGroup]="productForm" (ngSubmit)="productForm.valid && onSave()">
-      <div class="space-y-6">
+    <app-component-card title="Product">
+      <form [formGroup]="productForm" (ngSubmit)="productForm.valid && onSave()">
+      <app-validation-summary [form]="productForm" />
+        <div class="space-y-6">
         <div>
           <app-label for="inputName">Name</app-label>
           <app-input-field id="inputName" type="text" name="productName" formControlName="name" [required]="true"

@@ -24,10 +24,7 @@ namespace WarehouseManagementSystem.API.Extensions.Middleware
             var (statusCode, title) = ex switch
             {
                 DocumentNotFoundException => (404, "Document not found"),
-                DocumentNotInDraftStateException => (422, "Invalid document state"),
-                CannotConfirmEmptyDocumentException => (422, "Cannot confirm empty document"),
-                InsufficientStockException => (422, "Insufficient stock"),
-                DocumentAlreadyCancelledException => (422, "Document already cancelled"),
+                DomainException => (422, "Business rule violated"),
                 ArgumentException => (400, "Invalid input"),
                 _ => (500, "Internal server error")
             };
@@ -42,6 +39,11 @@ namespace WarehouseManagementSystem.API.Extensions.Middleware
                 Detail = ex.Message,
                 Instance = context.Request.Path
             };
+
+            if (ex is DomainException domainException)
+            {
+                problem.Extensions["errorCode"] = domainException.ErrorCode;
+            }
 
             await context.Response.WriteAsJsonAsync(problem);
         }

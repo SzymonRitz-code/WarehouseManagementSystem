@@ -3,6 +3,7 @@
 
     <app-component-card title="Warehouse">
         <form [formGroup]="warehouseForm" (ngSubmit)="warehouseForm.valid && onSave()">
+            <app-validation-summary [form]="warehouseForm" />
             <div class="space-y-6">
                 <div>
                     <app-label for="inputCode">Code</app-label>

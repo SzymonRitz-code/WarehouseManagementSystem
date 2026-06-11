@@ -16,6 +16,7 @@ import { InputSelectComponent } from "../../../../shared/components/form/input/i
 import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { TemperatureType } from '../../../../core/enums/temperatureType';
+import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
 
 @Component({
   selector: 'app-zone-form',
@@ -29,7 +30,8 @@ import { TemperatureType } from '../../../../core/enums/temperatureType';
     CommonModule,
     ReactiveFormsModule,
     InputSelectComponent,
-    CheckboxComponent
+    CheckboxComponent,
+    ValidationSummaryComponent
   ],
   templateUrl: './zone-form.component.html'
 })

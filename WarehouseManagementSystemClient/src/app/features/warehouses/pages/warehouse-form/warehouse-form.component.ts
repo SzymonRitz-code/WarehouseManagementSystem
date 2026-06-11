@@ -12,6 +12,7 @@ import { WarehouseService } from '../../services/warehouse-service';
 import { ActivatedRoute, isActive, Router } from '@angular/router';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
+import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
 
 @Component({
   selector: 'app-warehouse-form',
@@ -24,7 +25,8 @@ import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.hel
     FormActionsComponent,
     CommonModule,
     ReactiveFormsModule,
-    CheckboxComponent
+    CheckboxComponent,
+    ValidationSummaryComponent
   ],
   templateUrl: './warehouse-form.component.html'
 })

@@ -3,6 +3,7 @@
 
     <app-component-card title="Zone">
         <form [formGroup]="zoneForm" (ngSubmit)="zoneForm.valid && onSave()">
+            <app-validation-summary [form]="zoneForm" />
             <div class="space-y-6">
                 <div>
                     <app-label for="inputZoneCode">Code</app-label>

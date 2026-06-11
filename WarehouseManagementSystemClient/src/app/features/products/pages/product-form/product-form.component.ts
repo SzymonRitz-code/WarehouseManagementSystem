@@ -15,6 +15,7 @@ import { UnitOfMeasure } from '../../../../core/enums/unitOfMeasure';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { TextAreaComponent } from '../../../../shared/components/form/input/text-area.component';
 import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
+import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
 
 @Component({
   selector: 'app-product-form',
@@ -29,7 +30,8 @@ import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.hel
     CommonModule,
     InputSelectComponent,
     CheckboxComponent,
-    TextAreaComponent
+    TextAreaComponent,
+    ValidationSummaryComponent
   ],
   templateUrl: './product-form.component.html'
 })

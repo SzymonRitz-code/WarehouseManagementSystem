@@ -3,6 +3,7 @@
 
     <app-component-card title="Batch">
         <form [formGroup]="batchForm" (ngSubmit)="batchForm.valid && onSave()">
+            <app-validation-summary [form]="batchForm" />
             <div class="space-y-6">
                 <div>
                     <app-label for="inputBatchNumber">Batch Number</app-label>

@@ -3,6 +3,7 @@
 
     <app-component-card title="Document">
         <form [formGroup]="documentForm" (ngSubmit)="documentForm.valid && onSave()">
+            <app-validation-summary [form]="documentForm" />
             <div class="space-y-6">
                 <div>
                     <app-label for="inputDocumentDate">Document Date</app-label>

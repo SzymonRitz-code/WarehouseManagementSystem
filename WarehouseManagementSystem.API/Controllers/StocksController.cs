@@ -88,7 +88,7 @@ public class StocksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Stock increase failed for product {ProductId}", dto.ProductId);
-            return Conflict(ex.Message);
+            throw;
         }
     }
 
@@ -123,7 +123,7 @@ public class StocksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Stock decrease failed for product {ProductId}", dto.ProductId);
-            return BadRequest(ex.Message);
+            throw;
         }
     }
 
@@ -180,7 +180,7 @@ public class StocksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Stock move failed for product {ProductId}", dto.ProductId);
-            return BadRequest(ex.Message);
+            throw;
         }
     }
 
@@ -220,7 +220,7 @@ public class StocksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Stock reservation failed for stock {StockId}", dto.StockId);
-            return BadRequest(ex.Message);
+            throw;
         }
     }
 
@@ -265,7 +265,7 @@ public class StocksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Reservation release failed for reservation {ReservationId}", dto.ReservationId);
-            return BadRequest(ex.Message);
+            throw;
         }
     }
 }

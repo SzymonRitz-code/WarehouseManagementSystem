@@ -128,13 +128,13 @@ public class ProductBatchesController : ControllerBase
     {
         // można użyć wersję z kursu REST API. Wersja gdzie robię patch obiektu o pola które uległy zmiane => zabezpiecza przez nadpisaniem danych nie wypełnianych w formularzu
         // Wybrałem wewrsję w której aktualizuję tylko edytowalne pola
-        if (batchId != batchDto.Id) return BadRequest();
+        if (batchId != batchDto.Id) return BadRequest("Route ID and body ID mismatch.");
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
 
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
         if (batch == null) return NotFound();
-        if (_unitOfWork.ProductBatches.Any(p => p.Id == batchDto.Id) == false) { return BadRequest(batchDto); }
+        if (_unitOfWork.ProductBatches.Any(p => p.Id == batchDto.Id) == false) return BadRequest("Product batch was not found.");
         var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         batch.SetBatchNumber(batchDto.BatchNumber);

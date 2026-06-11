@@ -136,7 +136,9 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] UpdateDocumentDto documentDto)
     {
         if (documentId != documentDto.Id)
-            return BadRequest("Route ID and body ID mismatch");
+        {
+            return BadRequest("Route ID and body ID mismatch.");
+        }
 
         if (documentDto.Items == null || !documentDto.Items.Any())
             ModelState.AddModelError(nameof(documentDto.Items), "Document must have at least one item.");
@@ -172,7 +174,7 @@ public class DocumentsController : ControllerBase
     [Obsolete("MVP flow. Not used in current MM document-driven process. Reserved for future workflow-based transfer execution.")]
     public async Task<IActionResult> TransferDocument(Guid documentId, [FromQuery] Guid transferStartedById)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         await _commandService.StartTransferAsync(documentId, transferStartedById);
         return NoContent();
     }
@@ -182,7 +184,7 @@ public class DocumentsController : ControllerBase
     [HttpPut("{documentId}/confirm")]
     public async Task<IActionResult> ConfirmDocument(Guid documentId)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         // Coś w stylu User.Identity.Name
         await _commandService.ConfirmDocumentAsync(documentId, _userService.GetUser(HttpContext));
         return NoContent();
@@ -194,7 +196,7 @@ public class DocumentsController : ControllerBase
     [HttpPut("{documentId}/cancel")]
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
         await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext));
         return NoContent();
     }

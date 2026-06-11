@@ -1,21 +1,26 @@
-﻿ namespace WarehouseManagementSystem.Domain.Exceptions;
+namespace WarehouseManagementSystem.Domain.Exceptions;
+
+public abstract class DomainException(string errorCode, string message) : Exception(message)
+{
+    public string ErrorCode { get; } = errorCode;
+}
 
 // DocumentNotFoundException.cs
 public class DocumentNotFoundException(Guid documentId)
-    : Exception($"Document {documentId} was not found.");
+    : DomainException("DOCUMENT_NOT_FOUND", $"Document {documentId} was not found.");
 
 // DocumentNotInDraftStateException.cs
 public class DocumentNotInDraftStateException(Guid documentId)
-    : Exception($"Document {documentId} is not in Draft state.");
+    : DomainException("DOCUMENT_NOT_IN_DRAFT_STATE", $"Document {documentId} is not in Draft state.");
 
 // CannotConfirmEmptyDocumentException.cs
 public class CannotConfirmEmptyDocumentException(Guid documentId)
-    : Exception($"Document {documentId} cannot be confirmed without items.");
+    : DomainException("CANNOT_CONFIRM_EMPTY_DOCUMENT", $"Document {documentId} cannot be confirmed without items.");
 
 // InsufficientStockException.cs
 public class InsufficientStockException(Guid productId, decimal requested, decimal available)
-    : Exception($"Insufficient stock for product {productId}. Requested: {requested}, Available: {available}.");
+    : DomainException("INSUFFICIENT_STOCK", $"Insufficient stock for product {productId}. Requested: {requested}, Available: {available}.");
 
 // DocumentAlreadyCancelledException.cs
 public class DocumentAlreadyCancelledException(Guid documentId)
-    : Exception($"Document {documentId} is already cancelled.");
+    : DomainException("DOCUMENT_ALREADY_CANCELLED", $"Document {documentId} is already cancelled.");

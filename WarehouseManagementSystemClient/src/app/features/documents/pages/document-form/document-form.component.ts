@@ -18,6 +18,7 @@ import { TextAreaComponent } from "../../../../shared/components/form/input/text
 import { DocumentItemsComponent } from "../document-items/document-items-list/document-items.component";
 import { minFormArrayLength } from '../../../../core/guards/vaildators';
 import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
+import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
 
 @Component({
   selector: 'app-document-form',
@@ -32,7 +33,8 @@ import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.hel
     CommonModule,
     DatePickerComponent,
     TextAreaComponent,
-    DocumentItemsComponent
+    DocumentItemsComponent,
+    ValidationSummaryComponent
   ],
   templateUrl: './document-form.component.html'
 })
