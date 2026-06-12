@@ -71,7 +71,7 @@ export class WarehouseFormComponent implements OnInit {
           })
         },
         error: (err) => { console.error(err) }
-      }).unsubscribe();
+      })
     }
 
   }
@@ -93,7 +93,7 @@ export class WarehouseFormComponent implements OnInit {
         console.error(err);
         setServerErrors(err, this.warehouseForm);
       }
-    }).unsubscribe();  
+    }) 
 
   }
   onBack() {

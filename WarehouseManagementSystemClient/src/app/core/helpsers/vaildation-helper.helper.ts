@@ -28,6 +28,7 @@ export function setServerErrors(error: any, form: FormGroup): ServerValidationRe
   }
 
   if (status === 422 || errorCode) {
+    console.warn('Validation error from server:', { status, errorCode, title, validationErrors });
     summary.push(errorCode ? `${title} (${errorCode})` : title);
   } else if (summary.length === 0 && !validationErrors) {
     summary.push(title);

@@ -42,6 +42,7 @@ public class DocumentQueryService : IDocumentQueryService
             into g
             select new DocumentListDto
             {
+                Id = g.Key.Id,
                 DocumentNumber = g.Key.Number,
                 Type = g.Key.Type,
                 Status = g.Key.Status,

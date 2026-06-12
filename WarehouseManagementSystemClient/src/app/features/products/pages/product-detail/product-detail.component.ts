@@ -26,7 +26,7 @@ export class ProductDetailComponent implements OnInit {
       next: (res) => {
         this.product = res;
       }
-    }).unsubscribe();
+    });
   }
   onBack() {
     this.router.navigateByUrl('/products');

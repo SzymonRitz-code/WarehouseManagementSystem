@@ -88,7 +88,7 @@ export class ZoneFormComponent implements OnInit {
                 createdAt: (this.zone as Zone).createdAt
               })
             }
-          }).unsubscribe();
+          })
         }
       });
 
@@ -98,7 +98,7 @@ export class ZoneFormComponent implements OnInit {
       next: (result) => {
         this.warehouseOptions = result.map(w => ({ value: w.id, label: w.name }))
       }
-    }).unsubscribe();
+    })
     this.temperatureTypeOptions = Object.values(TemperatureType).map(t => ({ value: t, label: t }))
   }
 
@@ -120,7 +120,7 @@ export class ZoneFormComponent implements OnInit {
         console.error(err);
         setServerErrors(err, this.zoneForm);
       }
-    }).unsubscribe();
+    })
 
   }
 

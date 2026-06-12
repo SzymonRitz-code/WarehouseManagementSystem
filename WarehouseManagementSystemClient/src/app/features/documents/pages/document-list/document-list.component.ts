@@ -49,7 +49,7 @@ export class DocumentListComponent implements OnInit {
   }
   onDocumentAction(event: { row: Document; action: string }) {
     const { row, action } = event;
-
+    console.log(`Action "${action}" triggered for document:`, row);
     switch (action) {
       case 'edit':
         this.onEdit(row);
@@ -57,7 +57,7 @@ export class DocumentListComponent implements OnInit {
 
       case 'details':
         this.onDetails(row);
-        break; 
+        break;
     }
   }
   onCancel(row: Document) {

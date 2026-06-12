@@ -44,7 +44,7 @@ export class DocumentFormComponent implements OnInit {
   documentForm!: FormGroup;
   sourceOptions!: any[];
   targetOptions!: any[];
-  documentTyoeOptions!: any[];
+  documentTypeOptions!: any[];
   documentItemFormArray!: FormArray;
 
   constructor(
@@ -52,11 +52,14 @@ export class DocumentFormComponent implements OnInit {
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private documentService: DocumentService,
-    private warehouseService: WarehouseService) { }
+    private warehouseService: WarehouseService) { 
+    }
 
 
   ngOnInit(): void {
+    console.log('Initializing DocumentFormComponent...');
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
+    console.log('Document ID from route:', this.id);
     this.documentForm = this.fb.group({
       documentDate: [null, Validators.required],
       type: [null, Validators.required],
@@ -79,7 +82,6 @@ export class DocumentFormComponent implements OnInit {
               targetWarehouseId: this.document.targetWarehouseId,
             })
             this.documentItemFormArray = this.documentForm.get('items') as FormArray;
-            console.log('Document items:', this.document.items);
             this.document.items.forEach(item => {
               this.documentItemFormArray.push(this.fb.group({
                 id: [item.id],
@@ -89,20 +91,31 @@ export class DocumentFormComponent implements OnInit {
                 targetZoneId: [item.targetZoneId],
               }));
             });
+          },
+          error: (err) => {
+            console.error('Error fetching document:', err);
           }
-        }).unsubscribe();
+        });
     }
+    console.log('Fetching warehouses for source options...');
     this.warehouseService.getWarehouses().subscribe({
       next: (responce) => {
         this.sourceOptions = responce.map(w => ({ value: w.id, label: w.name }));
+      },
+      error: (err) => {
+        console.error('Error fetching warehouses:', err);
       }
-    }).unsubscribe();
+    });
+    console.log('Fetching warehouses for target options...');
     this.warehouseService.getWarehouses().subscribe({
       next: (responce) => {
         this.targetOptions = responce.map(w => ({ value: w.id, label: w.name }));
+      },
+      error: (err) => {
+        console.error('Error fetching warehouses:', err);
       }
-    }).unsubscribe();
-    this.documentTyoeOptions = Object.values(DocumentType).map(d => ({ value: d, label: d }))
+    });
+    this.documentTypeOptions = Object.values(DocumentType).map(d => ({ value: d, label: d }))
   }
   get documentItemsFormArray(): FormArray {
     return this.documentForm.get('items') as FormArray;
@@ -124,7 +137,7 @@ export class DocumentFormComponent implements OnInit {
         console.error(err);
         setServerErrors(err, this.documentForm);
       }
-    }).unsubscribe();
+    })
 
   }
   onBack() {

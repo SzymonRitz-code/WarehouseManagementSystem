@@ -35,9 +35,9 @@ export class ZoneDetailComponent implements OnInit {
           next: (responce) => {
             this.zone!.warehouseName = responce.name
           }
-        }).unsubscribe();
+        })
       }
-    }).unsubscribe();
+    })
 
   }
   onBack() {

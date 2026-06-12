@@ -68,7 +68,7 @@
                         <td class="px-4 py-2">
                             <div class="flex">
                                 <ng-container *ngFor="let action of rowActions">
-                                    <button *ngIf="!action.visible || action.visible(row)"
+                                    <button type="button" *ngIf="!action.visible || action.visible(row)"
                                         (click)="emitRowAction(row, action.action)"
                                         class="mr-2 px-2 py-1 text-xs rounded-lg border hover:bg-brand-400 rounded ">
                                         {{ action.label }}

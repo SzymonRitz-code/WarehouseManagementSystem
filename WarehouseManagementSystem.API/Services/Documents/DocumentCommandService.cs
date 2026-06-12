@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Services;
@@ -168,8 +169,8 @@ public class DocumentCommandService : IDocumentCommandService
                 {
                     await _stockService.IncreaseStockAsync(
                         productId: item.ProductId,
-                        warehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
-                        warehouseZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
+                        warehouseId: document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
+                        warehouseZoneId: item.SourceZoneId ?? throw new MissingSourceZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
                         batchId: item.ProductBatchId
                     );
@@ -181,8 +182,8 @@ public class DocumentCommandService : IDocumentCommandService
                 {
                     await _stockService.DecreaseStockAsync(
                         productId: item.ProductId,
-                        warehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
-                        warehouseZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
+                        warehouseId: document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
+                        warehouseZoneId: item.SourceZoneId ?? throw new MissingSourceZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
                         batchId: item.ProductBatchId
                     );
@@ -191,16 +192,16 @@ public class DocumentCommandService : IDocumentCommandService
 
             case DocumentType.MM: // Przesunięcie magazynowe
                 if (document.TargetWarehouseId == null)
-                    throw new InvalidOperationException("Target warehouse is required for MM.");
+                    throw new MissingTargetWarehouseForMmDocumentException(document.Id);
 
                 foreach (var item in document.Items)
                 {
                     await _stockService.MoveStockAsync(
                         productId: item.ProductId,
-                        sourceWarehouseId: document.SourceWarehouseId ?? throw new InvalidOperationException("Source warehouse is required."),
-                        sourceZoneId: item.SourceZoneId ?? throw new InvalidOperationException("Source zone is required."),
+                        sourceWarehouseId: document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
+                        sourceZoneId: item.SourceZoneId ?? throw new MissingSourceZoneForDocumentException(document.Id),
                         targetWarehouseId: document.TargetWarehouseId.Value,
-                        targetZoneId: item.TargetZoneId ?? throw new InvalidOperationException("Target zone is required."),
+                        targetZoneId: item.TargetZoneId ?? throw new MissingTargetZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
                         batchId: item.ProductBatchId
                     );

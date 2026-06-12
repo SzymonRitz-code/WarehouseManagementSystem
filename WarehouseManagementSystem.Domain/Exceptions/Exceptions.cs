@@ -24,3 +24,15 @@ public class InsufficientStockException(Guid productId, decimal requested, decim
 // DocumentAlreadyCancelledException.cs
 public class DocumentAlreadyCancelledException(Guid documentId)
     : DomainException("DOCUMENT_ALREADY_CANCELLED", $"Document {documentId} is already cancelled.");
+
+public class MissingTargetWarehouseForMmDocumentException(Guid documentId)
+    : DomainException("TARGET_WAREHOUSE_REQUIRED_FOR_MM", $"Document {documentId} requires a target warehouse for MM confirmation.");
+
+public class MissingSourceWarehouseForDocumentException(Guid documentId)
+    : DomainException("SOURCE_WAREHOUSE_REQUIRED", $"Document {documentId} requires a source warehouse.");
+
+public class MissingSourceZoneForDocumentException(Guid documentId)
+    : DomainException("SOURCE_ZONE_REQUIRED", $"Document {documentId} requires a source zone.");
+
+public class MissingTargetZoneForDocumentException(Guid documentId)
+    : DomainException("TARGET_ZONE_REQUIRED", $"Document {documentId} requires a target zone.");

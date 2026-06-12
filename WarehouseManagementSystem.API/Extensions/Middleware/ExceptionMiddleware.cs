@@ -23,10 +23,10 @@ namespace WarehouseManagementSystem.API.Extensions.Middleware
         {
             var (statusCode, title) = ex switch
             {
-                DocumentNotFoundException => (404, "Document not found"),
-                DomainException => (422, "Business rule violated"),
-                ArgumentException => (400, "Invalid input"),
-                _ => (500, "Internal server error")
+                DocumentNotFoundException => (404, ex.Message),
+                DomainException => (422, ex.Message),
+                ArgumentException => (400, ex.Message),
+                _ => (500, ex.Message)
             };
 
             context.Response.StatusCode = statusCode;

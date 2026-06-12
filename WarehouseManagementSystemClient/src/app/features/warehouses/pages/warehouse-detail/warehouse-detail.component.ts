@@ -25,7 +25,7 @@ export class WarehouseDetailComponent implements OnInit {
       next: (responce: Warehouse) => {
         this.warehouse = responce
       }
-    }).unsubscribe();
+    })
   }
   onEdit() {
     this.router.navigateByUrl(`/warehouses/form/${(this.warehouse as Warehouse).id}`)
