@@ -1,12 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WarehouseManagementSystem.API.DTO;
 
-public class ProductBatchDto
+public class UpdateProductBatchDto
 {
     public Guid Id { get; set; }
+
+    [Required, StringLength(50)]
     public string BatchNumber { get; set; } = string.Empty;
-    public Guid ProductId { get; set; }
+
     public DateOnly? ExpirationDate { get; set; }
+
     public DateOnly? ManufacturedDate { get; set; }
-    public string? ProductName { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
 }

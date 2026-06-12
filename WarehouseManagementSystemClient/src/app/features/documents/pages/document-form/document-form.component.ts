@@ -82,7 +82,7 @@ export class DocumentFormComponent implements OnInit {
               targetWarehouseId: this.document.targetWarehouseId,
             })
             this.documentItemFormArray = this.documentForm.get('items') as FormArray;
-            this.document.items.forEach(item => {
+            (this.document as Document).items.forEach(item => {
               this.documentItemFormArray.push(this.fb.group({
                 id: [item.id],
                 productId: [item.productId, Validators.required],
@@ -122,11 +122,11 @@ export class DocumentFormComponent implements OnInit {
   }
 
   onSave() {
-    this.document = this.documentForm.value;
+    const document = this.documentForm.getRawValue();
 
     const responce$ = this.id
-      ? this.documentService.updateDocument(this.document as Document)
-      : this.documentService.addDocument(this.document as CreateDocument);
+      ? this.documentService.updateDocument(this.id, document as CreateDocument)
+      : this.documentService.addDocument(document as CreateDocument);
 
     responce$.subscribe({
       next: (responce) => {

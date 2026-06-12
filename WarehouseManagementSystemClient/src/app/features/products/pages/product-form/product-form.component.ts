@@ -74,10 +74,9 @@ export class ProductFormComponent implements OnInit {
             description: this.product.description,
             unit: this.product.unit,
             requiresBatch: this.product.requiresBatch,
-            isActive: this.product.isActive,
+            isActive: (this.product as Product).isActive,
             weight: this.product.weight,
-            volume: this.product.volume,
-            createdAt: (this.product as Product).createdAt // TODO: Check if other forms also fill createdAt
+            volume: this.product.volume
           });
         },
         error: (err) => { console.error(err) }
@@ -90,10 +89,27 @@ export class ProductFormComponent implements OnInit {
   onSave() {
     if (this.productForm.invalid) return;
 
-    const product = this.productForm.getRawValue();
+    const formValue = this.productForm.getRawValue();
     const request$ = this.id
-      ? this.productService.updateProduct(product)
-      : this.productService.addProduct(product);
+      ? this.productService.updateProduct(this.id, {
+        name: formValue.name,
+        sku: formValue.sku,
+        description: formValue.description,
+        unit: formValue.unit,
+        requiresBatch: formValue.requiresBatch,
+        isActive: formValue.isActive,
+        weight: formValue.weight,
+        volume: formValue.volume
+      })
+      : this.productService.addProduct({
+        name: formValue.name,
+        sku: formValue.sku,
+        description: formValue.description,
+        unit: formValue.unit,
+        requiresBatch: formValue.requiresBatch,
+        weight: formValue.weight,
+        volume: formValue.volume
+      });
 
     request$.subscribe({
       next: (response: Product) => {

@@ -66,8 +66,7 @@ export class WarehouseFormComponent implements OnInit {
             country: this.warehouse.country,
             city: this.warehouse.city,
             address: this.warehouse.address,
-            isActive: (this.warehouse as Warehouse).isActive,
-            createdAt: (this.warehouse as Warehouse).createdAt
+            isActive: (this.warehouse as Warehouse).isActive
           })
         },
         error: (err) => { console.error(err) }
@@ -79,10 +78,23 @@ export class WarehouseFormComponent implements OnInit {
   onSave() {
     if (this.warehouseForm.invalid) return;
 
-    const warehouse = this.warehouseForm.getRawValue()
+    const formValue = this.warehouseForm.getRawValue()
     const request$ = this.id
-      ? this.warehouseService.updateWarehouse(warehouse)
-      : this.warehouseService.addWarehouse(warehouse);
+      ? this.warehouseService.updateWarehouse(this.id, {
+        code: formValue.code,
+        name: formValue.name,
+        country: formValue.country,
+        city: formValue.city,
+        address: formValue.address,
+        isActive: formValue.isActive
+      })
+      : this.warehouseService.addWarehouse({
+        code: formValue.code,
+        name: formValue.name,
+        country: formValue.country,
+        city: formValue.city,
+        address: formValue.address
+      });
 
     request$.subscribe({
       next: (responce: Warehouse) => {

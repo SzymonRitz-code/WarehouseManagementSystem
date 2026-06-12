@@ -2,9 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public class WarehouseDto
+public class UpdateWarehouseDto
 {
-    [Required]
     public Guid Id { get; set; }
 
     [Required, StringLength(30)]
@@ -24,7 +23,4 @@ public class WarehouseDto
 
     [Required]
     public bool IsActive { get; set; }
-
-    [Required]
-    public DateTimeOffset CreatedAt { get; set; }
 }

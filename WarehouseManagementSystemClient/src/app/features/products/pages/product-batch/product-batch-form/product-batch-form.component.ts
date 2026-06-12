@@ -71,8 +71,7 @@ export class ProductBatchFormComponent implements OnInit {
             batchNumber: this.batch.batchNumber,
             productId: this.batch.productId,
             expirationDate: this.batch.expirationDate,
-            manufacturedDate: this.batch.manufacturedDate,
-            createdAt: (this.batch as Batch).createdAt // TODO: Check if other forms also fill createdAt
+            manufacturedDate: this.batch.manufacturedDate
           });
         }
       });
@@ -83,7 +82,20 @@ export class ProductBatchFormComponent implements OnInit {
   }
 
   onSave() {
-    const batch: Batch | CreateBatch = this.batchForm.getRawValue();
+    const formValue = this.batchForm.getRawValue();
+    const batch: Batch | CreateBatch = this.batchId
+      ? {
+        id: this.batchId,
+        batchNumber: formValue.batchNumber,
+        expirationDate: formValue.expirationDate,
+        manufacturedDate: formValue.manufacturedDate
+      } as Batch
+      : {
+        batchNumber: formValue.batchNumber,
+        productId: formValue.productId,
+        expirationDate: formValue.expirationDate,
+        manufacturedDate: formValue.manufacturedDate
+      };
     const request$ = this.batchId
       ? this.batchService.updateBatch(this.productId, this.batchId, batch)
       : this.batchService.createBatch(this.productId, batch);

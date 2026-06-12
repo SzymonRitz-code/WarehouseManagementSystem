@@ -19,8 +19,5 @@ namespace WarehouseManagementSystem.API.DTO
 
         [property: Required, StringLength(200)]
         public string Address {get; set;}
-
-        [property: Required]
-        public bool IsActive {get; set;}
     }
 }

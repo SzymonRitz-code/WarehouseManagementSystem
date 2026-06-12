@@ -14,10 +14,8 @@ namespace WarehouseManagementSystem.API.DTO
         [Required]
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public UnitOfMeasure Unit { get; set; }
-        [property: Required]
-        public bool? RequiresBatch { get; set; }
-        [property: Required]
-        public bool? IsActive { get; set; }
+        [Required]
+        public bool RequiresBatch { get; set; }
         [Range(0, double.MaxValue)]
         public decimal? Weight { get; set; }
         [Range(0, double.MaxValue)]

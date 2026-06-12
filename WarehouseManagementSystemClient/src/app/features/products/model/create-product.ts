@@ -6,7 +6,6 @@ export interface CreateProduct {
     description: string;
     unit: UnitOfMeasure;
     requiresBatch: boolean;
-    isActive: boolean;
     weight: number;
     volume: number;
 } 

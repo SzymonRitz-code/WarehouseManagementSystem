@@ -115,9 +115,10 @@ public class WarehousesController : ControllerBase
     }
 
     [HttpPut("{warehouseId}")]
-    public async Task<IActionResult> UpdateWarehouse([FromRoute] Guid warehouseId, WarehouseDto warehouseDto)
+    public async Task<IActionResult> UpdateWarehouse([FromRoute] Guid warehouseId, UpdateWarehouseDto warehouseDto)
     {
         if (warehouseId != warehouseDto.Id) return BadRequest("Route ID and body ID mismatch.");
+
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
         if (warehouse == null) return NotFound();

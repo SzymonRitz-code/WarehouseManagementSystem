@@ -66,7 +66,7 @@ public class ProductsController : ControllerBase
             productDto.Sku,
             productDto.Name,
             productDto.Unit,
-            productDto.RequiresBatch ?? false,
+            productDto.RequiresBatch,
             _userService.GetUser(HttpContext),
             productDto.Weight,
             productDto.Volume,
@@ -91,11 +91,11 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{productId}")]
-    public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, ProductDto productDto)
+    public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, UpdateProductDto productDto)
     {
         if (productId != productDto.Id) return BadRequest("Route ID and body ID mismatch.");
 
-        if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku))
+        if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku && p.Id != productId))
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
 
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
@@ -108,11 +108,11 @@ public class ProductsController : ControllerBase
         product.SetSku(productDto.Sku);
         product.SetUnit(productDto.Unit);
 
-        if (productDto.RequiresBatch ?? false)
+        if (productDto.RequiresBatch)
             product.RequireBatchTracking();
         else product.DisableBatchTracking();
 
-        if (productDto.IsActive ?? false)
+        if (productDto.IsActive)
             product.Activate();
         else product.Deactivate();
 

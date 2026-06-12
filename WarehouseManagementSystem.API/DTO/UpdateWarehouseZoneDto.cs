@@ -4,9 +4,8 @@ using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public class WarehouseZoneDto
+public class UpdateWarehouseZoneDto
 {
-    [Required]
     public Guid Id { get; set; }
 
     [Required, StringLength(30)]
@@ -24,10 +23,4 @@ public class WarehouseZoneDto
 
     [Required]
     public Guid WarehouseId { get; set; }
-
-    [Required]
-    public DateTimeOffset CreatedAt { get; set; }
-
-    [StringLength(200)]
-    public string? WarehouseName { get; set; }
 }

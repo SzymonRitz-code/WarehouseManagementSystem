@@ -5,6 +5,8 @@ export interface DocumentItem {
     documentNumber?: string,
     productId: string,
     productName?: string,
+    productBatchId?: string,
+    productBatchNumber?: string,
     sourceZoneId: string,
     sourceZoneCode?: string,
     sourceZoneName?: string,

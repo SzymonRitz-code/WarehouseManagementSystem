@@ -84,8 +84,7 @@ export class ZoneFormComponent implements OnInit {
                 temperatureType: this.zone.temperatureType,
                 isPickingZone: this.zone.isPickingZone,
                 warehouseName: warehouse.name,
-                warehouseId: this.zone.warehouseId,
-                createdAt: (this.zone as Zone).createdAt
+                warehouseId: this.zone.warehouseId
               })
             }
           })
@@ -105,11 +104,22 @@ export class ZoneFormComponent implements OnInit {
   onSave() {
     if (this.zoneForm.invalid) return;
 
-    const zone = this.zoneForm.getRawValue();
-
+    const formValue = this.zoneForm.getRawValue();
     const request$ = this.id
-      ? this.zoneService.updateZone(zone)
-      : this.zoneService.addZone(zone);
+      ? this.zoneService.updateZone(this.id, {
+        code: formValue.code,
+        name: formValue.name,
+        temperatureType: formValue.temperatureType,
+        isPickingZone: formValue.isPickingZone,
+        warehouseId: formValue.warehouseId
+      })
+      : this.zoneService.addZone({
+        code: formValue.code,
+        name: formValue.name,
+        temperatureType: formValue.temperatureType,
+        isPickingZone: formValue.isPickingZone,
+        warehouseId: formValue.warehouseId
+      });
 
     request$.subscribe({
       next: (responce: Zone) => {

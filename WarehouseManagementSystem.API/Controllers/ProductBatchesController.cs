@@ -124,17 +124,18 @@ public class ProductBatchesController : ControllerBase
     }
 
     [HttpPut("/api/products/{productId:guid}/batches/{batchId:guid}")]
-    public async Task<IActionResult> UpdateProductBatch(Guid batchId, ProductBatchDto batchDto)
+    public async Task<IActionResult> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto)
     {
         // można użyć wersję z kursu REST API. Wersja gdzie robię patch obiektu o pola które uległy zmiane => zabezpiecza przez nadpisaniem danych nie wypełnianych w formularzu
         // Wybrałem wewrsję w której aktualizuję tylko edytowalne pola
         if (batchId != batchDto.Id) return BadRequest("Route ID and body ID mismatch.");
+
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
 
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
         if (batch == null) return NotFound();
-        if (_unitOfWork.ProductBatches.Any(p => p.Id == batchDto.Id) == false) return BadRequest("Product batch was not found.");
+        if (batch.ProductId != productId) return BadRequest("Product batch does not belong to the route product.");
         var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         batch.SetBatchNumber(batchDto.BatchNumber);

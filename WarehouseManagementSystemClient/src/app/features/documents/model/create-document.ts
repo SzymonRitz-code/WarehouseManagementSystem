@@ -1,14 +1,17 @@
-import { DocumentStatus } from "../../../core/enums/documentStatus";
-import { DocumentItem } from "./document-item";
 import { DocumentType } from "../../../core/enums/documentType";
 export interface CreateDocument {
-    number: string;
     documentDate: Date;
     type: DocumentType;
     notes?: string;
-    sourceWarehouseId?: string;
-    sourceWarehouseName?: string;
+    sourceWarehouseId: string;
     targetWarehouseId?: string;
-    targetWarehouseName?: string;
-    items: DocumentItem[];
+    items: CreateDocumentItem[];
+}
+
+export interface CreateDocumentItem {
+    productId: string;
+    quantity: number;
+    productBatchId?: string;
+    sourceZoneId?: string;
+    targetZoneId?: string;
 }

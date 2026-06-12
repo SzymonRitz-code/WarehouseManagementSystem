@@ -4,5 +4,4 @@ export interface CreateBatch {
     productId: string;
     expirationDate: Date | null;
     manufacturedDate: Date | null;
-    quantity: number;
 }

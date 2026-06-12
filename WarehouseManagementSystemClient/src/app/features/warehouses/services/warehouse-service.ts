@@ -26,8 +26,8 @@ export class WarehouseService {
     return this.http.post<Warehouse>(`${this.apiUrl}/warehouses`, warehouse);
   }
 
-  updateWarehouse(warehouse: Warehouse) {
-    return this.http.put<Warehouse>(`${this.apiUrl}/warehouses/${warehouse.id}`, warehouse);
+  updateWarehouse(id: string, warehouse: Partial<Warehouse>) {
+    return this.http.put<Warehouse>(`${this.apiUrl}/warehouses/${id}`, { ...warehouse, id });
   }
 
 }

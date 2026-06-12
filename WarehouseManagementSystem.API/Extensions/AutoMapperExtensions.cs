@@ -18,9 +18,7 @@
             cfg.AddProductMappings();
             cfg.AddProductBatchMappings();
             cfg.AddDocumentMappings();
-            cfg.AddCreateDocumentMappings();
             cfg.AddDocumentItemMappings();
-            cfg.AddCreateDocumentItemMappings();
             cfg.AddWarehouseMappings();
             cfg.AddWarehouseZoneMappings();
  
@@ -30,8 +28,7 @@
         {
             cfg.CreateMap<AuditLog, AuditLogDto>()
                 .ForMember(dto => dto.PerformedByName, opt => opt.MapFrom(a => a.PerformedBy.Name))
-                .ForMember(dto => dto.PerformedByEmail, opt => opt.MapFrom(a => a.PerformedBy.Email))
-                .ReverseMap();
+                .ForMember(dto => dto.PerformedByEmail, opt => opt.MapFrom(a => a.PerformedBy.Email));
         }
 
         public static void AddStockMappings(this IMapperConfigurationExpression cfg)
@@ -40,25 +37,24 @@
                 .ForMember(dto => dto.ProductBatchNumber, opt => opt.MapFrom(s => s.ProductBatch != null ? s.ProductBatch.BatchNumber : null))
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(s => s.Product.Name))
                 .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(s => s.Warehouse.Name))
-                .ForMember(dto => dto.ZoneName, opt => opt.MapFrom(s => s.WarehouseZone.Name))
-                .ReverseMap();
+                .ForMember(dto => dto.ZoneName, opt => opt.MapFrom(s => s.WarehouseZone.Name));
         }
 
         public static void AddStockReservationMappings(this IMapperConfigurationExpression cfg)
         {
-            cfg.CreateMap<StockReservation, StockReservationDto>().ReverseMap();
+            cfg.CreateMap<StockReservation, StockReservationDto>();
         }
 
         public static void AddProductMappings(this IMapperConfigurationExpression cfg)
         {
-            cfg.CreateMap<Product, ProductDto>().ReverseMap();
+            cfg.CreateMap<Product, ProductDto>()
+                .ForMember(dto => dto.Sku, opt => opt.MapFrom(p => p.SKU));
         }
 
         public static void AddProductBatchMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<ProductBatch, ProductBatchDto>()
-                .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name))
-                .ReverseMap();
+                .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name));
             cfg.CreateMap<ProductBatch, ProductBatchListDto>()
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name))
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name));
@@ -74,8 +70,7 @@
                 .ForMember(dto => dto.CreatedByName, opt => opt.MapFrom(d => d.CreatedByUser != null ? d.CreatedByUser.Name : null))
                 .ForMember(dto => dto.ConfirmedById, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? (Guid?)d.ConfirmedByUser.Id : null))
                 .ForMember(dto => dto.ConfirmedByEmail, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Email : null))
-                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null))
-                .ReverseMap();
+                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null));
         }
 
         public static void AddDocumentItemMappings(this IMapperConfigurationExpression cfg)
@@ -84,36 +79,19 @@
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(di => di.Product.Name))
                 .ForMember(dto => dto.ProductBatchNumber, opt => opt.MapFrom(di => di.ProductBatch != null ? di.ProductBatch.BatchNumber : null))
                 .ForMember(dto => dto.SourceZoneName, opt => opt.MapFrom(di => di.SourceZone != null ? di.SourceZone.Name : null))
-                .ForMember(dto => dto.TargetZoneName, opt => opt.MapFrom(di => di.TargetZone != null ? di.TargetZone.Name : null))
-                .ReverseMap();
-        }
-        public static void AddCreateDocumentItemMappings(this IMapperConfigurationExpression cfg)
-        {
-            cfg.CreateMap<DocumentItem, CreateDocumentItemDto>().ReverseMap();
+                .ForMember(dto => dto.TargetZoneName, opt => opt.MapFrom(di => di.TargetZone != null ? di.TargetZone.Name : null));
         }
 
         public static void AddWarehouseMappings(this IMapperConfigurationExpression cfg)
         {
-            cfg.CreateMap<Warehouse, WarehouseDto>().ReverseMap();
+            cfg.CreateMap<Warehouse, WarehouseDto>();
         }
 
         public static void AddWarehouseZoneMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<WarehouseZone, WarehouseZoneDto>()
-                .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(wz => wz.Warehouse.Name))
-                .ReverseMap();
+                .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(wz => wz.Warehouse.Name));
         }
 
-        public static void AddCreateDocumentMappings(this IMapperConfigurationExpression cfg)
-        {
-            cfg.CreateMap<CreateDocumentDto, Document>()
-                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
-                .ForMember(dest => dest.SourceWarehouseId, opt => opt.MapFrom(src => src.SourceWarehouseId))
-                .ForMember(dest => dest.TargetWarehouseId, opt => opt.MapFrom(src => src.TargetWarehouseId))
-                .ForMember(dest => dest.DocumentDate, opt => opt.MapFrom(src => src.DocumentDate))
-                .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Notes))
-                // pozycje dokumentu mapujemy ręcznie w serwisie, nie przez AutoMapper
-                .ForMember(dest => dest.Items, opt => opt.Ignore());
-        }
     }
 }

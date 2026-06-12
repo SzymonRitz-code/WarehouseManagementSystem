@@ -4,7 +4,7 @@ using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
 
-public class ProductDto
+public class UpdateProductDto
 {
     public Guid Id { get; set; }
 
@@ -31,7 +31,4 @@ public class ProductDto
 
     [Range(0, double.MaxValue)]
     public decimal? Volume { get; set; }
-
-    [Required]
-    public DateTimeOffset CreatedAt { get; set; }
 }

@@ -27,8 +27,8 @@ export class DocumentService {
     addDocument(document: CreateDocument): Observable<Document> {
         return this.http.post<Document>(`${this.apiUrl}/documents`, document);
     }
-    updateDocument(document: Document): Observable<Document> {
-        return this.http.put<Document>(`${this.apiUrl}/documents/${document.id}`, document);
+    updateDocument(id: string, document: CreateDocument): Observable<Document> {
+        return this.http.put<Document>(`${this.apiUrl}/documents/${id}`, { ...document, id });
     }
     confirmDocument(document: Document): Observable<Document> {
         console.log(`Confirming document ${document.id} with status ${document.status}`);

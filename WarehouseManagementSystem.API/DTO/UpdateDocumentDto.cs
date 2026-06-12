@@ -22,5 +22,5 @@ public class UpdateDocumentDto
     public string? Notes { get; set; }
 
     [Required, MinLength(1, ErrorMessage = "Document must have at least one item.")]
-    public virtual List<DocumentItemDto> Items { get; set; } = [];
+    public virtual List<DocumentItemCommandDto> Items { get; set; } = [];
 }
