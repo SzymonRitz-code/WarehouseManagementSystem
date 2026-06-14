@@ -17,6 +17,7 @@ namespace WarehouseManagementSystem.API.Controllers;
 public class WarehousesController : ControllerBase
 {
     private readonly IStockQueryService _stockQueryService;
+    private readonly IWarehouseQueryService _warehouseQueryService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IAuditLogService _auditLogService;
@@ -25,6 +26,7 @@ public class WarehousesController : ControllerBase
 
     public WarehousesController(
         IStockQueryService stockQueryService,
+        IWarehouseQueryService warehouseQueryService,
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IAuditLogService auditLogService,
@@ -32,6 +34,7 @@ public class WarehousesController : ControllerBase
         IUserService userService)
     {
         _stockQueryService = stockQueryService;
+        _warehouseQueryService = warehouseQueryService;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _auditLogService = auditLogService;
@@ -60,22 +63,22 @@ public class WarehousesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WarehouseDto>>> GetWarehouses()
+    public async Task<ActionResult<IEnumerable<WarehouseListDto>>> GetWarehouses(CancellationToken ct)
     {
-        var warehouses = await _unitOfWork.Warehouses.AllAsync();
-        return Ok(_mapper.Map<IEnumerable<WarehouseDto>>(warehouses));
+        var warehouses = await _warehouseQueryService.GetWarehousesAsync(ct);
+        return Ok(warehouses);
     }
 
     [HttpGet("{warehouseId}")]
-    public async Task<ActionResult<WarehouseDto>> GetWarehouse(Guid warehouseId)
+    public async Task<ActionResult<WarehouseDetailsDto>> GetWarehouse(Guid warehouseId, CancellationToken ct)
     {
-        var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
+        var warehouse = await _warehouseQueryService.GetWarehouseAsync(warehouseId, ct);
         if (warehouse == null) return NotFound();
 
-        return Ok(_mapper.Map<WarehouseDto>(warehouse));
+        return Ok(warehouse);
     }
     [HttpPost]
-    public async Task<ActionResult<WarehouseDto>> CreateWarehouse(CreateWarehouseDto warehouseDto)
+    public async Task<ActionResult<WarehouseDetailsDto>> CreateWarehouse(CreateWarehouseDto warehouseDto)
     {
         if (_unitOfWork.Warehouses.Any(w => w.Code == warehouseDto.Code))
             ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
@@ -110,7 +113,7 @@ public class WarehousesController : ControllerBase
             throw;
         }
 
-        var createdDto = _mapper.Map<WarehouseDto>(warehouse);
+        var createdDto = _mapper.Map<WarehouseDetailsDto>(warehouse);
         return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, createdDto);
     }
 

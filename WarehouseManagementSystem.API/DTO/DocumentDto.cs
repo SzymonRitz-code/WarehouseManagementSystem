@@ -13,6 +13,7 @@ public class DocumentDto
     public string? Notes { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ConfirmedAt { get; set; }
+    public DateTimeOffset? TransferStartedAt { get; set; }
 
     public Guid SourceWarehouseId { get; set; }
     public string? SourceWarehouseName { get; set; }
@@ -20,11 +21,14 @@ public class DocumentDto
     public string? TargetWarehouseName { get; set; }
 
     public Guid CreatedById { get; set; }
-    public string CreatedByName { get; set; }
-    public string CreatedByEmail { get; set; }
+    public string? CreatedByName { get; set; }
+    public string? CreatedByEmail { get; set; }
     public Guid? ConfirmedById { get; set; }
     public string? ConfirmedByName { get; set; }
     public string? ConfirmedByEmail { get; set; }
+    public Guid? TransferStartedById { get; set; }
+    public string? TransferStartedByName { get; set; }
+    public string? TransferStartedByEmail { get; set; }
 
     public List<DocumentItemDto> Items { get; set; } = [];
 }

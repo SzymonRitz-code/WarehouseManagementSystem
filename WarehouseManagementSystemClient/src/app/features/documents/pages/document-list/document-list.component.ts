@@ -4,7 +4,7 @@ import { PageBreadcrumbComponent } from "../../../../shared/components/common/pa
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { ActivatedRoute, Router } from '@angular/router';
-import { Document } from '../../model/document';
+import { DocumentList } from '../../model/document';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
@@ -16,7 +16,7 @@ import { CommonModule } from '@angular/common';
 })
 export class DocumentListComponent implements OnInit {
 
-  documents$!: Observable<Document[]>;
+  documents$!: Observable<DocumentList[]>;
 
   columns = [
     { key: 'documentNumber', label: 'Document Number', sortable: true },        // numer nadany w systemie
@@ -47,7 +47,7 @@ export class DocumentListComponent implements OnInit {
   goToForm() {
     this.router.navigateByUrl('/documents/form')
   }
-  onDocumentAction(event: { row: Document; action: string }) {
+  onDocumentAction(event: { row: DocumentList; action: string }) {
     const { row, action } = event;
     console.log(`Action "${action}" triggered for document:`, row);
     switch (action) {
@@ -60,7 +60,7 @@ export class DocumentListComponent implements OnInit {
         break;
     }
   }
-  onCancel(row: Document) {
+  onCancel(row: DocumentList) {
     this.documentService.cancelDocument(row).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
@@ -72,7 +72,7 @@ export class DocumentListComponent implements OnInit {
       }
     });
   }
-  onConfirm(row: Document) {
+  onConfirm(row: DocumentList) {
     this.documentService.confirmDocument(row).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
@@ -84,10 +84,10 @@ export class DocumentListComponent implements OnInit {
       }
     });
   }
-  onDetails(row: Document) {
+  onDetails(row: DocumentList) {
     this.router.navigateByUrl(`/documents/detail/${row.id}`)
   }
-  onEdit(document: Document) {
+  onEdit(document: DocumentList) {
     console.log(`Edit: ${document.id}`)
     this.router.navigateByUrl(`/documents/form/${document.id}`)
   }

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { Router } from '@angular/router';
-import { Product } from '../../model/product';
+import { ProductList } from '../../model/product';
 import { ProductService } from '../../services/product-service';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { Observable } from 'rxjs';
@@ -17,7 +17,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ProductListComponent implements OnInit {
 
-  products$!: Observable<Product[]>;
+  products$!: Observable<ProductList[]>;
   columns = [
     { key: 'sku', label: 'SKU', sortable: true },
     { key: 'name', label: 'Name', sortable: true },
@@ -30,7 +30,7 @@ export class ProductListComponent implements OnInit {
   productActions = [
     { label: 'Edit', action: 'edit' },
     { label: 'Details', action: 'details' },
-    { label: 'Batches', action: 'manageBatches', visible: (row: Product) => row.requiresBatch === true },
+    { label: 'Batches', action: 'manageBatches', visible: (row: ProductList) => row.requiresBatch === true },
   ];
 
   constructor(private router: Router, private productService: ProductService) { }
@@ -43,7 +43,7 @@ export class ProductListComponent implements OnInit {
   goToForm() {
     this.router.navigate(['/products/form']);
   }
-  onProductAction(event: { row: Product; action: string }) {
+  onProductAction(event: { row: ProductList; action: string }) {
     const { row, action } = event;
 
     switch (action) {
@@ -61,13 +61,13 @@ export class ProductListComponent implements OnInit {
         break;
     }
   }
-  onDetails(row: Product) {
+  onDetails(row: ProductList) {
     this.router.navigateByUrl(`/products/detail/${row.id}`)
   }
-  onEdit(row: Product) {
+  onEdit(row: ProductList) {
     this.router.navigateByUrl(`/products/form/${row.id}`)
   }
-  onManageBatches(row: Product) {
+  onManageBatches(row: ProductList) {
     this.router.navigateByUrl(`/products/${row.id}/batches`)
   }
 }

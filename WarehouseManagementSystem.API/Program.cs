@@ -75,6 +75,8 @@ builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IDocumentCommandService, DocumentCommandService>();
 builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
+builder.Services.AddScoped<IProductQueryService, ProductQueryService>();
+builder.Services.AddScoped<IWarehouseQueryService, WarehouseQueryService>();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IStockQueryService, StockQueryService>();
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();

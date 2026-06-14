@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
+using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
@@ -17,6 +18,7 @@ public class WarehouseZonesController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IWarehouseQueryService _warehouseQueryService;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<WarehouseZonesController> _logger;
     private readonly IUserService _userService;
@@ -24,31 +26,33 @@ public class WarehouseZonesController : ControllerBase
     public WarehouseZonesController(
         IUnitOfWork unitOfWork,
         IMapper mapper,
+        IWarehouseQueryService warehouseQueryService,
         IAuditLogService auditLogService,
         ILogger<WarehouseZonesController> logger,
         IUserService userService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _warehouseQueryService = warehouseQueryService;
         _auditLogService = auditLogService;
         _logger = logger;
         _userService = userService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<WarehouseZoneDto>>> GetWarehouseZones()
+    public async Task<ActionResult<IEnumerable<WarehouseZoneListDto>>> GetWarehouseZones(CancellationToken ct)
     {
-        var zones = await _unitOfWork.WarehouseZones.AllAsync();
-        return Ok(_mapper.Map<IEnumerable<WarehouseZoneDto>>(zones));
+        var zones = await _warehouseQueryService.GetWarehouseZonesAsync(ct);
+        return Ok(zones);
     }
 
     [HttpGet("{warehouseZoneId}")]
-    public async Task<ActionResult<WarehouseZoneDto>> GetWarehouseZone(Guid warehouseZoneId)
+    public async Task<ActionResult<WarehouseZoneDetailsDto>> GetWarehouseZone(Guid warehouseZoneId, CancellationToken ct)
     {
-        var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
+        var zone = await _warehouseQueryService.GetWarehouseZoneAsync(warehouseZoneId, ct);
         if (zone == null) return NotFound();
 
-        return Ok(_mapper.Map<WarehouseZoneDto>(zone));
+        return Ok(zone);
     }
 
     [HttpPut("{warehouseZoneId}")]
@@ -93,7 +97,7 @@ public class WarehouseZonesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CreateWarehouseZoneDto>> CreateWarehouseZone(CreateWarehouseZoneDto zoneDto)
+    public async Task<ActionResult<WarehouseZoneDetailsDto>> CreateWarehouseZone(CreateWarehouseZoneDto zoneDto)
     {
         if (_unitOfWork.WarehouseZones.Any(w => w.Code == zoneDto.Code))
         {
@@ -116,7 +120,7 @@ public class WarehouseZonesController : ControllerBase
         _logger.LogInformation("Warehouse zone {WarehouseZoneId} created by {UserId}", zone.Id, user.Id);
 
 
-        var createdDto = _mapper.Map<WarehouseZoneDto>(zone);
+        var createdDto = _mapper.Map<WarehouseZoneDetailsDto>(zone);
         return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, createdDto);
     }
 

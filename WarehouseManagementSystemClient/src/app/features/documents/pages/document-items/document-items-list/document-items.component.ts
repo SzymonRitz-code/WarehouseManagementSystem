@@ -89,6 +89,7 @@ export class DocumentItemsComponent implements OnInit {
       id: [crypto.randomUUID()],
       productId: [null, Validators.required],
       quantity: [1, [Validators.required, Validators.min(1)]],
+      productBatchId: [null],
       sourceZoneId: [null, Validators.required],
       targetZoneId: [null],
     });

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Warehouse } from '../model/warehouse';
+import { WarehouseList } from '../model/warehouse';
 import { CreateWarehouse } from '../model/create-warehouse';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
@@ -18,8 +19,8 @@ export class WarehouseService {
     return this.http.get<Warehouse>(`${environment.apiUrl}/warehouses/${id}`);
   }
 
-  getWarehouses(): Observable<Warehouse[]> {
-    return this.http.get<Warehouse[]>(`${this.apiUrl}/warehouses`);
+  getWarehouses(): Observable<WarehouseList[]> {
+    return this.http.get<WarehouseList[]>(`${this.apiUrl}/warehouses`);
   }
 
   addWarehouse(warehouse: CreateWarehouse) {

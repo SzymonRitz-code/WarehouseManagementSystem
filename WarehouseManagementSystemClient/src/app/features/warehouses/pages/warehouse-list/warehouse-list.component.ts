@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { WarehouseService } from '../../services/warehouse-service';
-import { Warehouse } from '../../model/warehouse';
+import { WarehouseList } from '../../model/warehouse';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { CommonModule } from '@angular/common';
@@ -16,7 +16,7 @@ import { Observable } from 'rxjs';
 })
 export class WarehouseListComponent implements OnInit { 
 
-  warehouses$!: Observable<Warehouse[]>;
+  warehouses$!: Observable<WarehouseList[]>;
 
   constructor(private warehouseService: WarehouseService, private router: Router) { }
 
@@ -26,13 +26,13 @@ export class WarehouseListComponent implements OnInit {
 
   columns = [
     { key: 'code', label: 'Code', sortable: true },
-    { key: 'WarehouseName', label: 'Warehouse Name', sortable: true },
+    { key: 'name', label: 'Warehouse Name', sortable: true },
     { key: 'country', label: 'Country', sortable: true },
     { key: 'address', label: 'Address', sortable: true },
     { key: 'zonesCount', label: 'Zones Count', sortable: true },
     { key: 'totalStock', label: 'Total Stock', sortable: true },
     { key: 'totalQty', label: 'Total Qty', sortable: true },
-    { key: 'Status', label: 'Status', sortable: true },
+    { key: 'isActive', label: 'Is Active', sortable: true, type: 'boolean' },
     { key: 'createdAt', label: 'CreatedAt', sortable: true, type: 'date' }
   ];
 
@@ -43,7 +43,7 @@ export class WarehouseListComponent implements OnInit {
   goToForm() {
     this.router.navigate(['/warehouses/form']);
   }
-  onWarehouseAction(event: { row: Warehouse; action: string }) {
+  onWarehouseAction(event: { row: WarehouseList; action: string }) {
     const { row, action } = event;
 
     switch (action) {
@@ -56,10 +56,10 @@ export class WarehouseListComponent implements OnInit {
         break;
     }
   }
-  onDetails(warehouse: Warehouse) {
+  onDetails(warehouse: WarehouseList) {
     this.router.navigateByUrl(`/warehouses/detail/${warehouse.id}`)
   }
-  onEdit(warehouse: Warehouse) {
+  onEdit(warehouse: WarehouseList) {
     this.router.navigateByUrl(`/warehouses/form/${warehouse.id}`)
   }
 }

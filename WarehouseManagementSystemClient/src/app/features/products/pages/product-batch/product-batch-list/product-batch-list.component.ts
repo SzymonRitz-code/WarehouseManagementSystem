@@ -2,7 +2,7 @@ import { Component, OnInit} from '@angular/core';
 import { PageBreadcrumbComponent } from "../../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../../shared/components/table/table.component";
-import { Batch } from '../../../model/product-batch';
+import { BatchList } from '../../../model/product-batch';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ProductBatchService } from '../../../services/product-batch-service';
@@ -28,7 +28,7 @@ import { TextAreaComponent } from "../../../../../shared/components/form/input/t
 })
 export class ProductBatchListComponent implements OnInit {
   id!: string;
-  batches$!: Observable<Batch[]>;
+  batches$!: Observable<BatchList[]>;
   product!: Product | undefined;
   productId!: string;
 
@@ -63,7 +63,7 @@ export class ProductBatchListComponent implements OnInit {
     }).unsubscribe();
     this.batches$ = this.productBatchService.getBatches(this.id);
   }
-  onBatchAction($event: { row: Batch; action: string; }) {
+  onBatchAction($event: { row: BatchList; action: string; }) {
     const { row, action } = $event;
     switch (action) {
       case 'edit': this.onEdit(row); break;
@@ -74,10 +74,10 @@ export class ProductBatchListComponent implements OnInit {
   goToForm() {
     this.router.navigateByUrl(`/products/${this.id}/batches/form`);
   }
-  onDetails(row: Batch) {
+  onDetails(row: BatchList) {
     this.router.navigateByUrl(`/products/${this.id}/batches/detail/${row.id}`);
   }
-  onEdit(row: Batch) {
+  onEdit(row: BatchList) {
     this.router.navigateByUrl(`/products/${this.id}/batches/form/${row.id}`);
   }
 

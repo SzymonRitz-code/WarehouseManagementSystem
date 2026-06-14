@@ -8,5 +8,4 @@ public class ProductBatchDto
     public DateOnly? ExpirationDate { get; set; }
     public DateOnly? ManufacturedDate { get; set; }
     public string? ProductName { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
 }

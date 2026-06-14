@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { TemperatureType } from '../../../core/enums/temperatureType';
 import { Zone } from '../model/zone';
+import { ZoneList } from '../model/zone';
 import { CreateZone } from '../model/create-zone';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
@@ -25,7 +26,7 @@ export class ZoneService {
   getZone(warehouseZoneId: string): Observable<Zone> {
     return this.http.get<Zone>(`${this.apiUrl}/zones/${warehouseZoneId}`);
   }
-  getZones(): Observable<Zone[]> {
-    return this.http.get<Zone[]>(`${this.apiUrl}/zones`);
+  getZones(): Observable<ZoneList[]> {
+    return this.http.get<ZoneList[]>(`${this.apiUrl}/zones`);
   }
 }

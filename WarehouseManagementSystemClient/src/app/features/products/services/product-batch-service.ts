@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Batch } from '../model/product-batch';
+import { Batch, BatchList } from '../model/product-batch';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
@@ -14,8 +14,8 @@ export class ProductBatchService {
 
   constructor(private http: HttpClient) { }
 
-  getBatches(productId: string): Observable<Batch[]> {
-    return this.http.get<Batch[]>(`${this.apiUrl}/products/${productId}/batches`);
+  getBatches(productId: string): Observable<BatchList[]> {
+    return this.http.get<BatchList[]>(`${this.apiUrl}/products/${productId}/batches`);
   }
   getBatch(productId: string, batchId: string): Observable<Batch> {
     return this.http.get<Batch>(`${this.apiUrl}/products/${productId}/batches/${batchId}`);

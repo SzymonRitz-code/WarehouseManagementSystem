@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { ZoneService } from '../../services/zone-service';
-import { Zone } from '../../model/zone';
+import { ZoneList } from '../../model/zone';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -16,7 +16,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ZoneListComponent implements OnInit {
 
-  zones$!: Observable<Zone[]>;
+  zones$!: Observable<ZoneList[]>;
 
   columns = [
     { key: 'code', label: 'Code', sortable: true },
@@ -45,7 +45,7 @@ export class ZoneListComponent implements OnInit {
     this.router.navigate(['/zones/form']);
   }
 
-  onZoneAction(event: { row: Zone; action: string }) {
+  onZoneAction(event: { row: ZoneList; action: string }) {
     const { row, action } = event;
     console.log(`Action "${action}" triggered for zone:`, row);
     switch (action) {
@@ -58,10 +58,10 @@ export class ZoneListComponent implements OnInit {
         break;
     }
   }
-  onDetails(zone: Zone) {
+  onDetails(zone: ZoneList) {
     this.router.navigateByUrl(`/zones/detail/${zone.id}`)
   }
-  onEdit(zone: Zone) {
+  onEdit(zone: ZoneList) {
     this.router.navigateByUrl(`/zones/form/${zone.id}`)
   }
 }

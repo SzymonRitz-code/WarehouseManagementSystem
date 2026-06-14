@@ -14,11 +14,11 @@ export class AuditLogListComponent {
   auditLogs!: AuditLog[];
   columns = [
     { key: 'id', label: 'ID' },
-    { key: 'entityType', label: 'Entity' },          // Stock, Document, Reservation
+    { key: 'entityName', label: 'Entity' },
     { key: 'entityId', label: 'Entity ID' },
-    { key: 'action', label: 'Action' },              // Created, Updated, Deleted, Reserved, Confirmed
-    { key: 'changedBy', label: 'User' },
-    { key: 'timestamp', label: 'Date' },
-    { key: 'details', label: 'Details' },            // opcjonalne
+    { key: 'operation', label: 'Operation' },
+    { key: 'performedByName', label: 'User' },
+    { key: 'performedAt', label: 'Date', type: 'date' },
+    { key: 'ipAddress', label: 'IP Address' },
   ];
 }

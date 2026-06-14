@@ -13,14 +13,14 @@
         public static void AddWmsMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.AddAuditLogMappings();
+            cfg.AddProductMappings();
+            cfg.AddWarehouseMappings();
+            cfg.AddWarehouseZoneMappings();
             cfg.AddStockMappings();
             cfg.AddStockReservationMappings();
-            cfg.AddProductMappings();
             cfg.AddProductBatchMappings();
             cfg.AddDocumentMappings();
             cfg.AddDocumentItemMappings();
-            cfg.AddWarehouseMappings();
-            cfg.AddWarehouseZoneMappings();
  
         }
 
@@ -47,16 +47,24 @@
 
         public static void AddProductMappings(this IMapperConfigurationExpression cfg)
         {
-            cfg.CreateMap<Product, ProductDto>()
+            cfg.CreateMap<Product, ProductDetailsDto>()
                 .ForMember(dto => dto.Sku, opt => opt.MapFrom(p => p.SKU));
+        }
+
+        public static void AddWarehouseMappings(this IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<Warehouse, WarehouseDetailsDto>();
+        }
+
+        public static void AddWarehouseZoneMappings(this IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<WarehouseZone, WarehouseZoneDetailsDto>()
+                .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(z => z.Warehouse != null ? z.Warehouse.Name : null));
         }
 
         public static void AddProductBatchMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<ProductBatch, ProductBatchDto>()
-                .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name));
-            cfg.CreateMap<ProductBatch, ProductBatchListDto>()
-                .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name))
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name));
         }
 
@@ -70,7 +78,10 @@
                 .ForMember(dto => dto.CreatedByName, opt => opt.MapFrom(d => d.CreatedByUser != null ? d.CreatedByUser.Name : null))
                 .ForMember(dto => dto.ConfirmedById, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? (Guid?)d.ConfirmedByUser.Id : null))
                 .ForMember(dto => dto.ConfirmedByEmail, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Email : null))
-                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null));
+                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null))
+                .ForMember(dto => dto.TransferStartedById, opt => opt.MapFrom(d => d.TransferStartedById))
+                .ForMember(dto => dto.TransferStartedByName, opt => opt.MapFrom(d => d.TransferStartedByName))
+                .ForMember(dto => dto.TransferStartedByEmail, opt => opt.MapFrom(d => d.TransferStartedByEmail));
         }
 
         public static void AddDocumentItemMappings(this IMapperConfigurationExpression cfg)
@@ -80,17 +91,6 @@
                 .ForMember(dto => dto.ProductBatchNumber, opt => opt.MapFrom(di => di.ProductBatch != null ? di.ProductBatch.BatchNumber : null))
                 .ForMember(dto => dto.SourceZoneName, opt => opt.MapFrom(di => di.SourceZone != null ? di.SourceZone.Name : null))
                 .ForMember(dto => dto.TargetZoneName, opt => opt.MapFrom(di => di.TargetZone != null ? di.TargetZone.Name : null));
-        }
-
-        public static void AddWarehouseMappings(this IMapperConfigurationExpression cfg)
-        {
-            cfg.CreateMap<Warehouse, WarehouseDto>();
-        }
-
-        public static void AddWarehouseZoneMappings(this IMapperConfigurationExpression cfg)
-        {
-            cfg.CreateMap<WarehouseZone, WarehouseZoneDto>()
-                .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(wz => wz.Warehouse.Name));
         }
 
     }

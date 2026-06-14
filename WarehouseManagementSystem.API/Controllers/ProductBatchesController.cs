@@ -48,10 +48,11 @@ public class ProductBatchesController : ControllerBase
     [HttpGet("/api/products/{productId:guid}/batches/{batchId:guid}")]
     public async Task<ActionResult<ProductBatchDto>> GetBatchByProduct([FromRoute] Guid productId, [FromRoute] Guid batchId, CancellationToken ct)
     {
-        var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
+        var batch = await _productBatchQueryService.GetProductBatchDetails(batchId, ct);
         if (batch == null) return NotFound();
+        if (batch.ProductId != productId) return NotFound();
 
-        return Ok(_mapper.Map<ProductBatchDto>(batch));
+        return Ok(batch);
     }
 
     // ===========================
@@ -124,7 +125,7 @@ public class ProductBatchesController : ControllerBase
     }
 
     [HttpPut("/api/products/{productId:guid}/batches/{batchId:guid}")]
-    public async Task<IActionResult> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto)
+    public async Task<ActionResult<ProductBatchDto>> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto)
     {
         // można użyć wersję z kursu REST API. Wersja gdzie robię patch obiektu o pola które uległy zmiane => zabezpiecza przez nadpisaniem danych nie wypełnianych w formularzu
         // Wybrałem wewrsję w której aktualizuję tylko edytowalne pola
@@ -163,7 +164,8 @@ public class ProductBatchesController : ControllerBase
         }
 
         // zwracam OK zamiast NoContent żeby móc korzystać z Id obiektu który edytuję
-        return Ok(batch);
+        var updatedBatch = await _productBatchQueryService.GetProductBatchDetails(batchId);
+        return Ok(updatedBatch);
     }
 
     [HttpDelete("{batchId}")]

@@ -7,8 +7,9 @@ export interface Stock {
     productBatchNumber?: string;
     warehouseId: string;
     warehouseName: string;
-    warehouseZoneId: string;
-    warehouseZoneName: string;
+    zoneId: string;
+    zoneName: string;
+    unit: string;
     quantityTotal: number;
     quantityReserved: number;
     quantityAvailable: number;

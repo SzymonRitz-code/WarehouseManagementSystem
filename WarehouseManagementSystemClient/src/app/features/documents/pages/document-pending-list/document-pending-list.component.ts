@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { DocumentType } from '../../../../core/enums/documentType';
-import { Document } from '../../model/document';
+import { DocumentList } from '../../model/document';
 import { DocumentService } from '../../services/document-service';
 import { ComponentCardComponent } from '../../../../shared/components/common/component-card/component-card.component';
 import { ModalComponent } from '../../../../shared/components/common/modal/modal.component';
@@ -17,8 +17,8 @@ import { TableComponent } from '../../../../shared/components/table/table.compon
   templateUrl: './document-pending-list.component.html'
 })
 export class DocumentPendingListComponent implements OnInit {
-  documents$!: Observable<Document[]>;
-  selectedDocument: Document | null = null;
+  documents$!: Observable<DocumentList[]>;
+  selectedDocument: DocumentList | null = null;
   actionMode: 'confirm' | 'cancel' | null = null;
   isActionPending = false;
   actionError: string | null = null;
@@ -38,12 +38,12 @@ export class DocumentPendingListComponent implements OnInit {
   ];
 
   documentActions = [
-    { label: 'Edit', action: 'edit', visible: (row: Document) => row.status === 'Draft' },
-    { label: 'Confirm', action: 'confirm', visible: (row: Document) => row.status === 'Draft' },
+    { label: 'Edit', action: 'edit', visible: (row: DocumentList) => row.status === 'Draft' },
+    { label: 'Confirm', action: 'confirm', visible: (row: DocumentList) => row.status === 'Draft' },
     {
       label: 'Cancel',
       action: 'cancel',
-      visible: (row: Document) => row.status === 'Draft' || (row.status === 'Confirmed' && row.type === DocumentType.MM)
+      visible: (row: DocumentList) => row.status === 'Draft' || (row.status === 'Confirmed' && row.type === DocumentType.MM)
     }
   ];
 
@@ -57,7 +57,7 @@ export class DocumentPendingListComponent implements OnInit {
     this.router.navigateByUrl('/documents/form');
   }
 
-  onDocumentAction(event: { row: Document; action: string }) {
+  onDocumentAction(event: { row: DocumentList; action: string }) {
     const { row, action } = event;
     console.log(`Action "${action}" triggered for document:`, row);
 
@@ -74,7 +74,7 @@ export class DocumentPendingListComponent implements OnInit {
     }
   }
 
-  openActionModal(row: Document, action: 'confirm' | 'cancel') {
+  openActionModal(row: DocumentList, action: 'confirm' | 'cancel') {
     this.selectedDocument = row;
     this.actionMode = action;
     this.actionError = null;
@@ -111,11 +111,11 @@ export class DocumentPendingListComponent implements OnInit {
     });
   }
 
-  onDetails(row: Document) {
+  onDetails(row: DocumentList) {
     this.router.navigateByUrl(`/documents/detail/${row.id}`);
   }
 
-  onEdit(document: Document) {
+  onEdit(document: DocumentList) {
     this.router.navigateByUrl(`/documents/form/${document.id}`);
   }
 

@@ -1,9 +1,13 @@
 export interface AuditLog {
     id: string;
-    entityType: string;
+    entityName: string;
     entityId: string;
-    action: string;
-    changedBy: string;
-    timestamp: string;
-    details: string;
+    operation: string;
+    oldValues?: string;
+    newValues?: string;
+    performedAt: Date;
+    ipAddress?: string;
+    performedById: string;
+    performedByName: string;
+    performedByEmail: string;
 }

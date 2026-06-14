@@ -87,6 +87,7 @@ export class DocumentFormComponent implements OnInit {
                 id: [item.id],
                 productId: [item.productId, Validators.required],
                 quantity: [item.quantity, [Validators.required, Validators.min(1)]],
+                productBatchId: [item.productBatchId],
                 sourceZoneId: [item.sourceZoneId, Validators.required],
                 targetZoneId: [item.targetZoneId],
               }));
@@ -123,10 +124,20 @@ export class DocumentFormComponent implements OnInit {
 
   onSave() {
     const document = this.documentForm.getRawValue();
+    const payload: CreateDocument = {
+      ...document,
+      items: document.items.map((item: any) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        sourceZoneId: item.sourceZoneId,
+        targetZoneId: item.targetZoneId,
+        productBatchId: item.productBatchId
+      }))
+    };
 
     const responce$ = this.id
-      ? this.documentService.updateDocument(this.id, document as CreateDocument)
-      : this.documentService.addDocument(document as CreateDocument);
+      ? this.documentService.updateDocument(this.id, payload)
+      : this.documentService.addDocument(payload);
 
     responce$.subscribe({
       next: (responce) => {

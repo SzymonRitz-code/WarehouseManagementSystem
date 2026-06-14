@@ -17,6 +17,7 @@ public class ProductsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IProductQueryService _productQueryService;
     private readonly IStockQueryService _stockQueryService;
     private readonly IAuditLogService _auditLogService;
     private readonly ILogger<ProductsController> _logger;
@@ -25,12 +26,14 @@ public class ProductsController : ControllerBase
     public ProductsController(
         IUnitOfWork unitOfWork,
         IMapper mapper,
+        IProductQueryService productQueryService,
         IStockQueryService stockQueryService,
         IAuditLogService auditLogService,
         ILogger<ProductsController> logger, IUserService userService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _productQueryService = productQueryService;
         _stockQueryService = stockQueryService;
         _auditLogService = auditLogService;
         _logger = logger;
@@ -38,23 +41,23 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
+    public async Task<ActionResult<IEnumerable<ProductListDto>>> GetProducts(CancellationToken ct)
     {
-        var products = await _unitOfWork.Products.AllAsync();
-        return Ok(_mapper.Map<IEnumerable<ProductDto>>(products));
+        var products = await _productQueryService.GetProductsAsync(ct);
+        return Ok(products);
     }
 
     [HttpGet("{productId}")]
-    public async Task<ActionResult<ProductDto>> GetProduct(Guid productId)
+    public async Task<ActionResult<ProductDetailsDto>> GetProduct(Guid productId, CancellationToken ct)
     {
-        var product = await _unitOfWork.Products.FindAsync(productId);
+        var product = await _productQueryService.GetProductAsync(productId, ct);
         if (product == null) return NotFound();
 
-        return Ok(_mapper.Map<ProductDto>(product));
+        return Ok(product);
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductDto>> CreateProduct(CreateProductDto productDto)
+    public async Task<ActionResult<ProductDetailsDto>> CreateProduct(CreateProductDto productDto)
     {
         if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku))
         {
@@ -86,7 +89,7 @@ public class ProductsController : ControllerBase
         await _unitOfWork.SaveChangesAsync();
 
         _logger.LogInformation("Product {ProductId} created by {UserId}", product.Id, user.Id);
-        var createdDto = _mapper.Map<ProductDto>(product);
+        var createdDto = _mapper.Map<ProductDetailsDto>(product);
         return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, createdDto);
     }
 

@@ -27,11 +27,12 @@ namespace WarehouseManagementSystem.API.Services.Queries
                 from pb in query
                 join s in _context.Stocks.AsNoTracking() on pb.Id equals s.ProductBatchId into stockGroup
                 from s in stockGroup.DefaultIfEmpty()
-                group s by new { pb.Id, pb.BatchNumber, pb.Product.Name, pb.ExpirationDate, pb.CreatedAt } into g
+                group s by new { pb.Id, pb.BatchNumber, pb.Product.Name, pb.ManufacturedDate, pb.ExpirationDate, pb.CreatedAt } into g
                 select new ProductBatchListDto(
                     g.Key.Id,
                     g.Key.BatchNumber,
                     g.Key.Name,
+                    g.Key.ManufacturedDate,
                     g.Key.ExpirationDate,
                     (int)g.Sum(s => s != null ? s.QuantityTotal : 0),
                     (int)g.Sum(s => s != null ? s.QuantityTotal - s.QuantityReserved : 0),
@@ -39,6 +40,23 @@ namespace WarehouseManagementSystem.API.Services.Queries
                     g.Key.CreatedAt
                 )
             ).ToListAsync(ct);
+        }
+
+        public async Task<ProductBatchDto?> GetProductBatchDetails(Guid batchId, CancellationToken ct = default)
+        {
+            return await _context.ProductBatches
+                .AsNoTracking()
+                .Where(pb => pb.Id == batchId)
+                .Select(pb => new ProductBatchDto
+                {
+                    Id = pb.Id,
+                    BatchNumber = pb.BatchNumber,
+                    ProductId = pb.ProductId,
+                    ProductName = pb.Product.Name,
+                    ManufacturedDate = pb.ManufacturedDate,
+                    ExpirationDate = pb.ExpirationDate
+                })
+                .FirstOrDefaultAsync(ct);
         }
     }
 }

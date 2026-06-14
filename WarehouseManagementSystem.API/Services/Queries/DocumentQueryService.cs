@@ -34,8 +34,8 @@ public class DocumentQueryService : IDocumentQueryService
                 document.Status,
                 SourceWarehouseName = sourceWarehouse.Name,
                 TargetWarehouseName = targetWarehouse != null ? targetWarehouse.Name : null,
-                CreatedByName = document.CreatedByUser.Name,
-                ConfirmedByName = document.ConfirmedByUser.Name,
+                CreatedByName = document.CreatedByUser != null ? document.CreatedByUser.Name : null,
+                ConfirmedByName = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
                 document.CreatedAt,
                 document.ConfirmedAt
             }
@@ -47,11 +47,11 @@ public class DocumentQueryService : IDocumentQueryService
                 Type = g.Key.Type,
                 Status = g.Key.Status,
                 SourceWarehouse = g.Key.SourceWarehouseName,
-                TargetWarehouse = g.Key.TargetWarehouseName,
+                DestinationWarehouse = g.Key.TargetWarehouseName,
                 CreatedBy = g.Key.CreatedByName,
-                ConfirmedBy = g.Key.ConfirmedByName,
+                ApprovedBy = g.Key.ConfirmedByName,
                 CreatedAt = g.Key.CreatedAt,
-                ConfirmedAt = g.Key.ConfirmedAt,
+                ApprovedAt = g.Key.ConfirmedAt,
                 ItemCount = g.Count(x => x.item != null),
                 TotalQuantity = g.Sum(x => (decimal?)x.item.Quantity) ?? 0
             }
@@ -61,7 +61,16 @@ public class DocumentQueryService : IDocumentQueryService
     public async Task<Document?> GetByIdAsync(Guid documentId, CancellationToken ct = default)
     {
         return await _context.Documents
+            .Include(d => d.SourceWarehouse)
+            .Include(d => d.TargetWarehouse)
             .Include(d => d.Items)
+                .ThenInclude(i => i.Product)
+            .Include(d => d.Items)
+                .ThenInclude(i => i.ProductBatch)
+            .Include(d => d.Items)
+                .ThenInclude(i => i.SourceZone)
+            .Include(d => d.Items)
+                .ThenInclude(i => i.TargetZone)
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == documentId, ct);
     }
@@ -190,8 +199,8 @@ public class DocumentQueryService : IDocumentQueryService
                 document.Status,
                 SourceWarehouseName = sourceWarehouse.Name,
                 TargetWarehouseName = targetWarehouse != null ? targetWarehouse.Name : null,
-                CreatedByName = document.CreatedByUser.Name,
-                ConfirmedByName = document.ConfirmedByUser.Name,
+                CreatedByName = document.CreatedByUser != null ? document.CreatedByUser.Name : null,
+                ConfirmedByName = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
                 document.CreatedAt,
                 document.ConfirmedAt
             }
@@ -203,11 +212,11 @@ public class DocumentQueryService : IDocumentQueryService
                 Type = g.Key.Type,
                 Status = g.Key.Status,
                 SourceWarehouse = g.Key.SourceWarehouseName,
-                TargetWarehouse = g.Key.TargetWarehouseName,
+                DestinationWarehouse = g.Key.TargetWarehouseName,
                 CreatedBy = g.Key.CreatedByName,
-                ConfirmedBy = g.Key.ConfirmedByName,
+                ApprovedBy = g.Key.ConfirmedByName,
                 CreatedAt = g.Key.CreatedAt,
-                ConfirmedAt = g.Key.ConfirmedAt,
+                ApprovedAt = g.Key.ConfirmedAt,
                 ItemCount = g.Count(x => x.item != null),
                 TotalQuantity = g.Sum(x => (decimal?)x.item.Quantity) ?? 0
             }
