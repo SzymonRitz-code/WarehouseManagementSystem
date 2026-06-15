@@ -22,7 +22,22 @@ export class UserDetailComponent implements OnInit {
   constructor(private router: Router, private activatedRoute: ActivatedRoute, private userService: UserService) { }
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.user = this.userService.getUser(this.id)!;
+    const cachedUser = this.userService.getUser(this.id);
+
+    if (cachedUser) {
+      this.user = cachedUser;
+      return;
+    }
+
+    this.userService.getUsers().subscribe(users => {
+      const loadedUser = users.find(user => user.id === this.id);
+      if (!loadedUser) {
+        this.router.navigateByUrl('/users');
+        return;
+      }
+
+      this.user = loadedUser;
+    });
   }
 
   onEdit() {

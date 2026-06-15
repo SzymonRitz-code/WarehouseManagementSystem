@@ -35,7 +35,6 @@ export class UserFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.user = this.userService.getUser(this.id)!;
     this.userForm = this.fb.nonNullable.group({
       id: [''],
       username: ['', Validators.required],
@@ -46,17 +45,37 @@ export class UserFormComponent implements OnInit {
       status: ['', Validators.required]
     });
     if (this.id) {
-      this.user = this.userService.getUser(this.id)!;
-      this.userForm.patchValue({
-        id: (this.user as User).id,
-        username: this.user.username,
-        firstName: this.user.firstName,
-        lastName: this.user.lastName,
-        email: this.user.email,
-        role: this.user.role,
-        status: this.user.status
-      })
+      const cachedUser = this.userService.getUser(this.id);
+
+      if (cachedUser) {
+        this.user = cachedUser;
+        this.patchFormFromUser(cachedUser);
+        return;
+      }
+
+      this.userService.getUsers().subscribe(users => {
+        const loadedUser = users.find(user => user.id === this.id);
+        if (!loadedUser) {
+          this.router.navigateByUrl('/users');
+          return;
+        }
+
+        this.user = loadedUser;
+        this.patchFormFromUser(loadedUser);
+      });
     }
+  }
+
+  private patchFormFromUser(user: User) {
+    this.userForm.patchValue({
+      id: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
   }
 
   onSave() {

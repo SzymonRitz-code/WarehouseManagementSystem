@@ -12,10 +12,22 @@ namespace IdentityServer;
 
 public interface IFakeUserService
 {
-    List<TestUser> getUsers();
+    List<TestUser> GetUsers();
+    List<FakeUserSummary> GetUserSummaries();
+    FakeUserSummary? GetUserSummary(string subjectId);
     bool ValidateCredentials(string username, string password);
     TestUser? FindByUsername(string username);
 }
+
+public record FakeUserSummary(
+    string Id,
+    string Username,
+    string FirstName,
+    string LastName,
+    string Email,
+    string Role,
+    bool Status
+);
 
 public class FakeUserService : IFakeUserService
 {
@@ -71,10 +83,22 @@ public class FakeUserService : IFakeUserService
     }
 
 
-    public List<TestUser> getUsers()
+    public List<TestUser> GetUsers()
     {
         return Users;
     }
+
+    public List<FakeUserSummary> GetUserSummaries()
+    {
+        return Users.Select(MapToSummary).ToList();
+    }
+
+    public FakeUserSummary? GetUserSummary(string subjectId)
+    {
+        var user = Users.FirstOrDefault(x => x.SubjectId.Equals(subjectId, StringComparison.OrdinalIgnoreCase));
+        return user is null ? null : MapToSummary(user);
+    }
+
     public bool ValidateCredentials(string username, string password)
     {
         var user = FindByUsername(username);
@@ -92,4 +116,24 @@ public class FakeUserService : IFakeUserService
         return false;
     }
     public TestUser? FindByUsername(string username) => Users.FirstOrDefault(x => x.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+    private static FakeUserSummary MapToSummary(TestUser user)
+    {
+        var firstName = user.Claims.FirstOrDefault(c => c.Type == JwtClaimTypes.GivenName)?.Value ?? string.Empty;
+        var lastName = user.Claims.FirstOrDefault(c => c.Type == JwtClaimTypes.FamilyName)?.Value ?? string.Empty;
+        var email = user.Claims.FirstOrDefault(c => c.Type == JwtClaimTypes.Email)?.Value ?? string.Empty;
+        var role = user.Claims.FirstOrDefault(c => c.Type == JwtClaimTypes.Role)?.Value ?? "user";
+        var statusClaim = user.Claims.FirstOrDefault(c => c.Type == JwtClaimTypes.EmailVerified)?.Value;
+        var status = bool.TryParse(statusClaim, out var parsedStatus) && parsedStatus;
+
+        return new FakeUserSummary(
+            Id: user.SubjectId,
+            Username: user.Username,
+            FirstName: firstName,
+            LastName: lastName,
+            Email: email,
+            Role: role,
+            Status: status
+        );
+    }
 }

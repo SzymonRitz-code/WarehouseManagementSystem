@@ -2,7 +2,7 @@ import { CreateUser } from "./create-user"
 
 export interface User extends CreateUser {
     id: string,
-    createdAt: Date,
+    createdAt?: Date,
     updatedAt?: Date
 }
 

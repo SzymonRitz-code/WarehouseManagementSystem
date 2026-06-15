@@ -36,6 +36,16 @@ internal static class HostingExtensions
         isBuilder.AddServerSideSessions();
 
         builder.Services.AddAuthorization();
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowWmsClient",
+                policy =>
+                {
+                    policy.WithOrigins("https://localhost:4200")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+        });
         //and put some authorization on the admin / management pages
         //builder.Services.AddAuthorization(options =>
         //       options.AddPolicy("admin",
@@ -71,8 +81,17 @@ internal static class HostingExtensions
 
         app.UseStaticFiles();
         app.UseRouting();
+        app.UseCors("AllowWmsClient");
         app.UseIdentityServer();
         app.UseAuthorization();
+
+        app.MapGet("/api/users", (IFakeUserService fakeUserService) =>
+            Results.Ok(fakeUserService.GetUserSummaries()));
+        app.MapGet("/api/users/{subjectId}", (string subjectId, IFakeUserService fakeUserService) =>
+        {
+            var user = fakeUserService.GetUserSummary(subjectId);
+            return user is null ? Results.NotFound() : Results.Ok(user);
+        });
 
         app.MapRazorPages()
             .RequireAuthorization();
