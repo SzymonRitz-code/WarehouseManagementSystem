@@ -19,13 +19,20 @@ public class DocumentsController : ControllerBase
     private readonly IDocumentQueryService _queryService;
     private readonly IMapper _mapper;
     private readonly IUserService _userService;
+    private readonly ILogger<DocumentsController> _logger;
 
-    public DocumentsController(IDocumentCommandService commandService, IDocumentQueryService queryService, IMapper mapper, IUserService userService)
+    public DocumentsController(
+        IDocumentCommandService commandService,
+        IDocumentQueryService queryService,
+        IMapper mapper,
+        IUserService userService,
+        ILogger<DocumentsController> logger)
     {
         _commandService = commandService;
         _queryService = queryService;
         _mapper = mapper;
         _userService = userService;
+        _logger = logger;
     }
     [HttpGet("test")]
     [AllowAnonymous]
@@ -46,16 +53,8 @@ public class DocumentsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<DocumentListDto>> GetDocuments()
     {
-        try
-        {
-            var documents = await _queryService.GetDocumentsAsync();
-            return Ok(_mapper.Map<List<DocumentListDto>>(documents));
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
-        return Ok(new List<DocumentListDto>());
+        var documents = await _queryService.GetDocumentsAsync();
+        return Ok(_mapper.Map<List<DocumentListDto>>(documents));
     }
     /// <summary>
     /// Pobranie oczekujących dokumentów
@@ -63,17 +62,8 @@ public class DocumentsController : ControllerBase
     [HttpGet("pending")]
     public async Task<ActionResult<IEnumerable<DocumentListDto>>> GetPendingDocuments()
     {
-        try
-        {
-            var pending = await _queryService.GetPendingDocumentsAsync();
-            return Ok(_mapper.Map<IEnumerable<DocumentListDto>>(pending));
-
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
-        return Ok(new List<DocumentListDto>());
+        var pending = await _queryService.GetPendingDocumentsAsync();
+        return Ok(_mapper.Map<IEnumerable<DocumentListDto>>(pending));
     }
     /// <summary>
     /// Pobranie dokumentu po Id
@@ -118,11 +108,11 @@ public class DocumentsController : ControllerBase
                 items: itemDrafts,
                 documentDate: documentDto.DocumentDate,
                 targetWarehouseId: documentDto.TargetWarehouseId,
-                notes: documentDto.Notes
-);
+                notes: documentDto.Notes);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Document create failed for user {UserId}", _userService.GetUser(HttpContext).Id);
             throw;
         }
 
@@ -155,16 +145,24 @@ public class DocumentsController : ControllerBase
         )).ToList();
 
         // Tworzymy dokument poprzez serwis domenowy
-        var document = await _commandService.UpdateDocumentAsync(
-            documentId: documentDto.Id,
-            _userService.GetUser(HttpContext),
-            type: documentDto.Type,
-            sourceWarehouseId: documentDto.SourceWarehouseId,
-            items: itemDrafts,
-            documentDate: documentDto.DocumentDate,
-            targetWarehouseId: documentDto.TargetWarehouseId,
-            notes: documentDto.Notes
-        );
+        try
+        {
+            await _commandService.UpdateDocumentAsync(
+                documentId: documentDto.Id,
+                _userService.GetUser(HttpContext),
+                type: documentDto.Type,
+                sourceWarehouseId: documentDto.SourceWarehouseId,
+                items: itemDrafts,
+                documentDate: documentDto.DocumentDate,
+                targetWarehouseId: documentDto.TargetWarehouseId,
+                notes: documentDto.Notes
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Document update failed for document {DocumentId}", documentId);
+            throw;
+        }
         return NoContent();
     }
     /// <summary>
@@ -175,7 +173,15 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> TransferDocument(Guid documentId, [FromQuery] Guid transferStartedById)
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
-        await _commandService.StartTransferAsync(documentId, transferStartedById);
+        try
+        {
+            await _commandService.StartTransferAsync(documentId, transferStartedById);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Document transfer failed for document {DocumentId}", documentId);
+            throw;
+        }
         return NoContent();
     }
     /// <summary>
@@ -186,7 +192,15 @@ public class DocumentsController : ControllerBase
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
         // Coś w stylu User.Identity.Name
-        await _commandService.ConfirmDocumentAsync(documentId, _userService.GetUser(HttpContext));
+        try
+        {
+            await _commandService.ConfirmDocumentAsync(documentId, _userService.GetUser(HttpContext));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Document confirm failed for document {DocumentId}", documentId);
+            throw;
+        }
         return NoContent();
     }
 
@@ -197,7 +211,15 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
-        await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext));
+        try
+        {
+            await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Document cancel failed for document {DocumentId}", documentId);
+            throw;
+        }
         return NoContent();
     }
 

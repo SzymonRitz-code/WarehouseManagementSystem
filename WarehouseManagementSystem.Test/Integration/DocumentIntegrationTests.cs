@@ -306,8 +306,8 @@ public class DocumentIntegrationTests
 
         Func<Task> act = () => _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Target warehouse is required*");
+        await act.Should().ThrowAsync<MissingTargetWarehouseForMmDocumentException>()
+            .WithMessage($"Document {doc.Id} requires a target warehouse for MM confirmation.");
     }
 
     [Fact]

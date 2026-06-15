@@ -16,53 +16,15 @@ public class StockQueryService : IStockQueryService
     }
     public async Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default)
     {
-        return await _context.Stocks
-            .AsNoTracking()
-            .Select(s => new StockDto
-            {
-                Id = s.Id,
-                ProductId = s.ProductId,
-                ProductSku = s.Product.SKU,
-                ProductName = s.Product.Name,
-                WarehouseId = s.WarehouseId,
-                WarehouseName = s.Warehouse.Name,
-                ZoneName = s.WarehouseZone.Name,
-                QuantityAvailable = s.QuantityTotal - s.QuantityReserved,
-                QuantityReserved = s.QuantityReserved,
-                QuantityTotal = s.QuantityTotal,
-                Unit = s.Product.Unit.ToString(),
-                LastUpdated = s.LastUpdated
-            })
-            .ToListAsync();
+        return await ProjectToStockDto(_context.Stocks.AsNoTracking())
+            .ToListAsync(ct);
     }
-    //public async Task<List<StockMoveDto>> GetStockMoves()
-    //{
-    //    return await _context.StockMoves
-    //        .AsNoTracking()
-    //        .Include(x => x.Product)
-    //        .Include(x => x.FromWarehouse)
-    //        .Include(x => x.FromZone)
-    //        .Include(x => x.ToWarehouse)
-    //        .Include(x => x.ToZone)
-    //        .OrderByDescending(x => x.MovedAt)
-    //        .Select(x => new StockMoveDto(
-    //            x.Id,
-    //            x.Product.SKU,
-    //            x.Product.Name,
-    //            x.FromWarehouse.Name,
-    //            x.FromZone.Name,
-    //            x.ToWarehouse.Name,
-    //            x.ToZone.Name,
-    //            x.Quantity,
-    //            x.Product.Unit.ToString(),
-    //            x.MoveType.ToString(),
-    //            x.Status.ToString(),
-    //            x.MovedBy.ToString(),
-    //            x.MovedAt,
-    //            x.Reference
-    //        ))
-    //        .ToListAsync();
-    //}
+
+    public async Task<StockDto?> GetStockDetailsAsync(Guid stockId, CancellationToken ct = default)
+    {
+        return await ProjectToStockDto(_context.Stocks.AsNoTracking())
+            .FirstOrDefaultAsync(s => s.Id == stockId, ct);
+    }
     public async Task<Stock?> GetByIdAsync(Guid stockId, CancellationToken ct = default)
     {
         return await _context.Stocks
@@ -230,5 +192,26 @@ public class StockQueryService : IStockQueryService
                 (s.QuantityTotal - s.QuantityReserved) > 0)
             .OrderByDescending(s => s.QuantityTotal - s.QuantityReserved)
             .ToListAsync(ct);
+    }
+
+    private static IQueryable<StockDto> ProjectToStockDto(IQueryable<Stock> stocks)
+    {
+        return stocks.Select(s => new StockDto
+        {
+            Id = s.Id,
+            ProductBatchNumber = s.ProductBatch != null ? s.ProductBatch.BatchNumber : null,
+            QuantityTotal = s.QuantityTotal,
+            QuantityReserved = s.QuantityReserved,
+            QuantityAvailable = s.QuantityTotal - s.QuantityReserved,
+            LastUpdated = s.LastUpdated,
+            ProductId = s.ProductId,
+            ProductSku = s.Product.SKU,
+            ProductName = s.Product.Name,
+            WarehouseId = s.WarehouseId,
+            WarehouseName = s.Warehouse.Name,
+            ZoneId = s.WarehouseZoneId,
+            ZoneName = s.WarehouseZone.Name,
+            Unit = s.Product.Unit.ToString()
+        });
     }
 }

@@ -75,20 +75,28 @@ public class ProductsController : ControllerBase
             productDto.Volume,
             productDto.Description);
 
+        try
+        {
+            _unitOfWork.Products.Add(product);
+            var user = _userService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(Product),
+                product.Id,
+                "Create",
+                user.Id,
+                null,
+                AuditSnapshots.Product(product),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+            await _unitOfWork.SaveChangesAsync();
 
-        _unitOfWork.Products.Add(product);
-        var user = _userService.GetUser(HttpContext);
-        await _auditLogService.LogChangesAsync(
-            nameof(Product),
-            product.Id,
-            "Create",
-            user.Id,
-            null,
-            AuditSnapshots.Product(product),
-            HttpContext.Connection.RemoteIpAddress?.ToString());
-        await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Product {ProductId} created by {UserId}", product.Id, user.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Product create failed for SKU {Sku}", productDto.Sku);
+            throw;
+        }
 
-        _logger.LogInformation("Product {ProductId} created by {UserId}", product.Id, user.Id);
         var createdDto = _mapper.Map<ProductDetailsDto>(product);
         return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, createdDto);
     }
@@ -156,18 +164,26 @@ public class ProductsController : ControllerBase
         if (product == null) return NotFound();
         var oldProduct = AuditSnapshots.Product(product);
 
-        _unitOfWork.Products.Delete(product);
-        var user = _userService.GetUser(HttpContext);
-        await _auditLogService.LogChangesAsync(
-            nameof(Product),
-            product.Id,
-            "Delete",
-            user.Id,
-            oldProduct,
-            null,
-            HttpContext.Connection.RemoteIpAddress?.ToString());
-        await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Product {ProductId} deleted by {UserId}", product.Id, user.Id);
+        try
+        {
+            _unitOfWork.Products.Delete(product);
+            var user = _userService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(Product),
+                product.Id,
+                "Delete",
+                user.Id,
+                oldProduct,
+                null,
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+            await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Product {ProductId} deleted by {UserId}", product.Id, user.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Product delete failed for product {ProductId}", productId);
+            throw;
+        }
 
         return NoContent();
     }

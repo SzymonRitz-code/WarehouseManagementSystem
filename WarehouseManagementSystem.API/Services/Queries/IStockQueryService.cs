@@ -12,6 +12,11 @@ public interface IStockQueryService
     Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default);
 
     /// <summary>
+    /// Pobiera szczegóły stanu magazynowego do prezentacji.
+    /// </summary>
+    Task<StockDto?> GetStockDetailsAsync(Guid stockId, CancellationToken ct = default);
+
+    /// <summary>
     /// Pobiera stan magazynowy po Id.
     /// </summary>
     Task<Stock?> GetByIdAsync(Guid stockId, CancellationToken ct = default);

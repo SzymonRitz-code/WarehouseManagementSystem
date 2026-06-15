@@ -85,15 +85,15 @@ public class WarehousesController : ControllerBase
 
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        var warehouse = new Warehouse(
-            warehouseDto.Code,
-            warehouseDto.Name,
-            warehouseDto.Country,
-            warehouseDto.City,
-            warehouseDto.Address, _userService.GetUser(HttpContext));
-
         try
         {
+            var warehouse = new Warehouse(
+                warehouseDto.Code,
+                warehouseDto.Name,
+                warehouseDto.Country,
+                warehouseDto.City,
+                warehouseDto.Address, _userService.GetUser(HttpContext));
+
             _unitOfWork.Warehouses.Add(warehouse);
             var user = _userService.GetUser(HttpContext);
             await _auditLogService.LogChangesAsync(
@@ -106,15 +106,15 @@ public class WarehousesController : ControllerBase
                 HttpContext.Connection.RemoteIpAddress?.ToString());
             await _unitOfWork.SaveChangesAsync();
             _logger.LogInformation("Warehouse {WarehouseId} created by {UserId}", warehouse.Id, user.Id);
+
+            var createdDto = _mapper.Map<WarehouseDetailsDto>(warehouse);
+            return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, createdDto);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Warehouse create failed");
+            _logger.LogError(ex, "Warehouse create failed for code {Code}", warehouseDto.Code);
             throw;
         }
-
-        var createdDto = _mapper.Map<WarehouseDetailsDto>(warehouse);
-        return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, createdDto);
     }
 
     [HttpPut("{warehouseId}")]
@@ -154,6 +154,11 @@ public class WarehousesController : ControllerBase
             if (!WarehouseExists(warehouseId)) return NotFound();
             throw;
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Warehouse update failed for warehouse {WarehouseId}", warehouseId);
+            throw;
+        }
 
         return NoContent();
     }
@@ -167,18 +172,26 @@ public class WarehousesController : ControllerBase
         if (warehouse == null) return NotFound();
         var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
 
-        _unitOfWork.Warehouses.Delete(warehouse);
-        var user = _userService.GetUser(HttpContext);
-        await _auditLogService.LogChangesAsync(
-            nameof(Warehouse),
-            warehouse.Id,
-            "Delete",
-            user.Id,
-            oldWarehouse,
-            null,
-            HttpContext.Connection.RemoteIpAddress?.ToString());
-        await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Warehouse {WarehouseId} deleted by {UserId}", warehouse.Id, user.Id);
+        try
+        {
+            _unitOfWork.Warehouses.Delete(warehouse);
+            var user = _userService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(Warehouse),
+                warehouse.Id,
+                "Delete",
+                user.Id,
+                oldWarehouse,
+                null,
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+            await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Warehouse {WarehouseId} deleted by {UserId}", warehouse.Id, user.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Warehouse delete failed for warehouse {WarehouseId}", warehouseId);
+            throw;
+        }
 
         return NoContent();
     }

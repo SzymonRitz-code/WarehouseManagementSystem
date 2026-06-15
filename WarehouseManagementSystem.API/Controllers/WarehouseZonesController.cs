@@ -92,6 +92,11 @@ public class WarehouseZonesController : ControllerBase
             if (!WarehouseZoneExists(warehouseZoneId)) return NotFound();
             throw;
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Warehouse zone update failed for warehouseZone {WarehouseZoneId}", warehouseZoneId);
+            throw;
+        }
 
         return NoContent();
     }
@@ -105,23 +110,30 @@ public class WarehouseZonesController : ControllerBase
         }
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        var zone = new WarehouseZone(zoneDto.Code, zoneDto.Name, zoneDto.TemperatureType, zoneDto.IsPickingZone, zoneDto.WarehouseId, _userService.GetUser(HttpContext));
-        _unitOfWork.WarehouseZones.Add(zone);
-        var user = _userService.GetUser(HttpContext);
-        await _auditLogService.LogChangesAsync(
-            nameof(WarehouseZone),
-            zone.Id,
-            "Create",
-            user.Id,
-            null,
-            AuditSnapshots.WarehouseZone(zone),
-            HttpContext.Connection.RemoteIpAddress?.ToString());
-        await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Warehouse zone {WarehouseZoneId} created by {UserId}", zone.Id, user.Id);
+        try
+        {
+            var zone = new WarehouseZone(zoneDto.Code, zoneDto.Name, zoneDto.TemperatureType, zoneDto.IsPickingZone, zoneDto.WarehouseId, _userService.GetUser(HttpContext));
+            _unitOfWork.WarehouseZones.Add(zone);
+            var user = _userService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(WarehouseZone),
+                zone.Id,
+                "Create",
+                user.Id,
+                null,
+                AuditSnapshots.WarehouseZone(zone),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+            await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Warehouse zone {WarehouseZoneId} created by {UserId}", zone.Id, user.Id);
 
-
-        var createdDto = _mapper.Map<WarehouseZoneDetailsDto>(zone);
-        return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, createdDto);
+            var createdDto = _mapper.Map<WarehouseZoneDetailsDto>(zone);
+            return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, createdDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Warehouse zone create failed for code {Code}", zoneDto.Code);
+            throw;
+        }
     }
 
     [HttpDelete("{warehouseZoneId}")]
@@ -131,18 +143,26 @@ public class WarehouseZonesController : ControllerBase
         if (zone == null) return NotFound();
         var oldZone = AuditSnapshots.WarehouseZone(zone);
 
-        _unitOfWork.WarehouseZones.Delete(zone);
-        var user = _userService.GetUser(HttpContext);
-        await _auditLogService.LogChangesAsync(
-            nameof(WarehouseZone),
-            zone.Id,
-            "Delete",
-            user.Id,
-            oldZone,
-            null,
-            HttpContext.Connection.RemoteIpAddress?.ToString());
-        await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Warehouse zone {WarehouseZoneId} deleted by {UserId}", zone.Id, user.Id);
+        try
+        {
+            _unitOfWork.WarehouseZones.Delete(zone);
+            var user = _userService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(WarehouseZone),
+                zone.Id,
+                "Delete",
+                user.Id,
+                oldZone,
+                null,
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+            await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Warehouse zone {WarehouseZoneId} deleted by {UserId}", zone.Id, user.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Warehouse zone delete failed for warehouseZone {WarehouseZoneId}", warehouseZoneId);
+            throw;
+        }
 
         return NoContent();
     }

@@ -161,12 +161,6 @@ export const routes: Routes = [
               import('./features/stocks/pages/reservations/reservations.component')
                 .then(m => m.ReservationsComponent),
             title: 'WMS | Reservations'
-          },
-          {
-            path: 'move', loadComponent: () =>
-              import('./features/stocks/pages/stock-move/stock-move.component')
-                .then(m => m.StockMoveComponent),
-            title: 'WMS | Move Stock'
           }
         ],
       },

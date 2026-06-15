@@ -89,7 +89,6 @@ public class ProductBatchesController : ControllerBase
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         ProductBatch batch;
-        // TODO Dodać obługę walidacji błędów domenowych. Komentarze można robić też /// wewnątrz kodu i onzaczają dokumentację poszczególnych lini kodu
         try
         {
             batch = new ProductBatch(
@@ -98,25 +97,33 @@ public class ProductBatchesController : ControllerBase
                 _userService.GetUser(HttpContext),
                 batchDto.ManufacturedDate,
                 batchDto.ExpirationDate);
-
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Product batch create failed for product {ProductId} and batch {BatchNumber}", batchDto.ProductId, batchDto.BatchNumber);
             throw;
         }
 
-        _unitOfWork.ProductBatches.Add(batch);
-        var user = _userService.GetUser(HttpContext);
-        await _auditLogService.LogChangesAsync(
-            nameof(ProductBatch),
-            batch.Id,
-            "Create",
-            user.Id,
-            null,
-            AuditSnapshots.ProductBatch(batch),
-            HttpContext.Connection.RemoteIpAddress?.ToString());
-        await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Product batch {BatchId} created by {UserId}", batch.Id, user.Id);
+        try
+        {
+            _unitOfWork.ProductBatches.Add(batch);
+            var user = _userService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(ProductBatch),
+                batch.Id,
+                "Create",
+                user.Id,
+                null,
+                AuditSnapshots.ProductBatch(batch),
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+            await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Product batch {BatchId} created by {UserId}", batch.Id, user.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Product batch persistence failed for batch {BatchId}", batch.Id);
+            throw;
+        }
 
         var createdDto = _mapper.Map<ProductBatchDto>(batch);
         // Gdy mam sub-path trzeba dodać wszystkie zeminne w route(tutaj productId i Batch) 
@@ -175,18 +182,26 @@ public class ProductBatchesController : ControllerBase
         if (batch == null) return NotFound();
         var oldBatch = AuditSnapshots.ProductBatch(batch);
 
-        _unitOfWork.ProductBatches.Delete(batch);
-        var user = _userService.GetUser(HttpContext);
-        await _auditLogService.LogChangesAsync(
-            nameof(ProductBatch),
-            batch.Id,
-            "Delete",
-            user.Id,
-            oldBatch,
-            null,
-            HttpContext.Connection.RemoteIpAddress?.ToString());
-        await _unitOfWork.SaveChangesAsync();
-        _logger.LogInformation("Product batch {BatchId} deleted by {UserId}", batch.Id, user.Id);
+        try
+        {
+            _unitOfWork.ProductBatches.Delete(batch);
+            var user = _userService.GetUser(HttpContext);
+            await _auditLogService.LogChangesAsync(
+                nameof(ProductBatch),
+                batch.Id,
+                "Delete",
+                user.Id,
+                oldBatch,
+                null,
+                HttpContext.Connection.RemoteIpAddress?.ToString());
+            await _unitOfWork.SaveChangesAsync();
+            _logger.LogInformation("Product batch {BatchId} deleted by {UserId}", batch.Id, user.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Product batch delete failed for batch {BatchId}", batchId);
+            throw;
+        }
 
         return NoContent();
     }
