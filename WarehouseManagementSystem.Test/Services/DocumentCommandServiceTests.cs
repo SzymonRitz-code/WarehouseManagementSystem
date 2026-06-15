@@ -38,6 +38,15 @@ public class DocumentIntegrationTests
             _clockMock.Object,
             _logger.Object,
             _auditLogService.Object);
+        var transactionMock = new Mock<IUnitOfWorkTransaction>();
+        transactionMock
+            .Setup(x => x.CommitAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock
+            .Setup(x => x.BeginTransactionAsync(
+                It.IsAny<System.Data.IsolationLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
         _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
@@ -93,62 +102,6 @@ public class DocumentIntegrationTests
         document.Items.Should().HaveCount(1);
         document.Items.First().ProductId.Should().Be(draftItems.First().ProductId);
     }
-
-    [Fact]
-    public async Task StartTransferAsync_ShouldThrow_WhenDocumentNotConfirmed()
-    {
-        // Arrange
-        var doc = new Document(
-            DateTime.UtcNow,
-            DocumentType.PZ,
-            _userServiceMock.Object.GetUser(default),
-            Guid.NewGuid(),
-            null,
-            null);
-
-        _unitOfWorkMock
-            .Setup(x => x.Documents.FindAsync(doc.Id))
-            .ReturnsAsync(doc);
-
-        // Act
-        Func<Task> act = () => _service.StartTransferAsync(doc.Id, Guid.NewGuid());
-
-        // Assert
-        await act.Should().ThrowAsync<DocumentNotInDraftStateException>()
-            .WithMessage($"Document {doc.Id} is not in Draft state.");
-    }
-
-    [Fact]
-    public async Task StartTransferAsync_ShouldStartTransferAndSave_WhenDocumentConfirmed()
-    {
-        var productId = Guid.NewGuid();
-        var zoneId = Guid.NewGuid();
-        // Arrange
-        var confirmedBy = _userServiceMock.Object.GetUser(default);
-        var doc = new Document(
-            DateTime.UtcNow,
-            DocumentType.PZ,
-            _userServiceMock.Object.GetUser(default),
-            Guid.NewGuid(),
-            null,
-            null);
-        doc.AddItem(new DocumentItem(productId, 5, null, zoneId, null));
-
-        doc.Confirm(confirmedBy); // zatwierdzamy dokument
-
-        var now = DateTimeOffset.UtcNow;
-        _unitOfWorkMock.Setup(x => x.Documents.FindAsync(doc.Id)).ReturnsAsync(doc);
-        _clockMock.Setup(x => x.UtcNow).Returns(now);
-
-        // Act
-        await _service.StartTransferAsync(doc.Id, Guid.NewGuid());
-
-        // Assert
-        doc.Status.Should().Be(DocumentStatus.Transfer);
-        doc.TransferStartedAt.Should().BeCloseTo(now, TimeSpan.FromSeconds(1));
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
 
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldGenerateNumberAndSave()

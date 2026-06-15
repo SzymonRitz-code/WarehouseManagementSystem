@@ -64,23 +64,6 @@ export const routes: Routes = [
         ]
       },
 
-      // // Inventory Adjustments
-      // {
-      //   path: 'adjustments',
-      //   children: [
-      //     {
-      //       path: '', loadComponent: () =>
-      //         import('./features/adjustments/adjustment-list/adjustment-list.component').then(m => m.AdjustmentListComponent),
-      //       title: 'WMS | Adjustments'
-      //     },
-      //     {
-      //       path: 'form', loadComponent: () =>
-      //         import('./features/adjustments/adjustment-create/adjustment-create.component').then(m => m.AdjustmentCreateComponent),
-      //       title: 'WMS | Create Adjustment'
-      //     }
-      //   ]
-      // },
-
       // Products
       {
         path: 'products',
@@ -155,12 +138,6 @@ export const routes: Routes = [
               import('./features/stocks/pages/stock-availability/stock-availability.component')
                 .then(m => m.StockAvailabilityComponent),
             title: 'WMS | Stock Availability'
-          },
-          {
-            path: 'reservations', loadComponent: () =>
-              import('./features/stocks/pages/reservations/reservations.component')
-                .then(m => m.ReservationsComponent),
-            title: 'WMS | Reservations'
           }
         ],
       },

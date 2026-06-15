@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { LabelComponent } from "../../../../shared/components/form/label/label.component";
@@ -11,7 +12,7 @@ import { UserService } from '../../../services/user-service';
 @Component({
   selector: 'app-user-detail',
   standalone: true,
-  imports: [PageBreadcrumbComponent, ComponentCardComponent, LabelComponent, InputDetailComponent, DetailActionsComponent],
+  imports: [CommonModule, PageBreadcrumbComponent, ComponentCardComponent, LabelComponent, InputDetailComponent, DetailActionsComponent],
   templateUrl: './user-detail.component.html'
 })
 export class UserDetailComponent implements OnInit {

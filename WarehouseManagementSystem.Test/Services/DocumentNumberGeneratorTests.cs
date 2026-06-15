@@ -34,6 +34,7 @@ public class DocumentNumberGeneratorTests
         var date = new DateTimeOffset(2025, 3, 8, 0, 0, 0, TimeSpan.Zero);
 
         var number = await generator.GenerateAsync(DocumentType.PZ, warehouseId, date);
+        await context.SaveChangesAsync();
 
         number.Should().Be("PZ/2025/000001");
 
@@ -65,6 +66,7 @@ public class DocumentNumberGeneratorTests
         var date = new DateTimeOffset(2025, 3, 8, 0, 0, 0, TimeSpan.Zero);
 
         var number = await generator.GenerateAsync(DocumentType.PZ, warehouseId, date);
+        await context.SaveChangesAsync();
 
         number.Should().Be("PZ/2025/000006");
 
@@ -84,6 +86,7 @@ public class DocumentNumberGeneratorTests
 
         var number1 = await generator.GenerateAsync(DocumentType.PZ, warehouse1, date);
         var number2 = await generator.GenerateAsync(DocumentType.PZ, warehouse2, date);
+        await context.SaveChangesAsync();
 
         number1.Should().Be("PZ/2025/000001");
         number2.Should().Be("PZ/2025/000001");
@@ -113,6 +116,7 @@ public class DocumentNumberGeneratorTests
         var date = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         var number = await generator.GenerateAsync(DocumentType.PZ, warehouseId, date);
+        await context.SaveChangesAsync();
 
         number.Should().Be("PZ/2026/000001");
 

@@ -15,7 +15,7 @@ import { ProductService } from '../../../../products/services/product-service';
 })
 export class DocumentItemsComponent implements OnInit {
 
-  @Input() formArray!: FormArray<FormGroup>;
+  @Input() formArray: FormArray<FormGroup> = new FormArray<FormGroup>([]);
 
 
   productOptions: any[] = []

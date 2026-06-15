@@ -2,7 +2,7 @@
     <app-page-breadcrumb pageTitle="User Details" />
 
     <app-component-card title="User Information">
-        <div class="space-y-6">
+        <div *ngIf="user; else loadingUser" class="space-y-6">
             <div>
                 <app-label for="inputEmail">Email</app-label>
                 <app-input-detail id="inputEmail" name="email" [value]="user.email"></app-input-detail>
@@ -36,6 +36,9 @@
                 <app-input-detail id="inputUpdatedAt" name="updatedAt" [value]="user.updatedAt"></app-input-detail>
             </div>
         </div>
+        <ng-template #loadingUser>
+            <div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Loading user...</div>
+        </ng-template>
         <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
         </app-detail-actions>
     </app-component-card>

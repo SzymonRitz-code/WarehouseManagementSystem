@@ -34,9 +34,6 @@ public class DocumentsController : ControllerBase
         _userService = userService;
         _logger = logger;
     }
-    [HttpGet("test")]
-    [AllowAnonymous]
-    public IActionResult Test() => Ok("działa");
     /// <summary>
     /// Pobranie dokumentu po Id
     /// </summary>
@@ -161,25 +158,6 @@ public class DocumentsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Document update failed for document {DocumentId}", documentId);
-            throw;
-        }
-        return NoContent();
-    }
-    /// <summary>
-    /// Potwierdza dokument
-    /// </summary>
-    [HttpPut("{documentId}/transfer")]
-    [Obsolete("MVP flow. Not used in current MM document-driven process. Reserved for future workflow-based transfer execution.")]
-    public async Task<IActionResult> TransferDocument(Guid documentId, [FromQuery] Guid transferStartedById)
-    {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
-        try
-        {
-            await _commandService.StartTransferAsync(documentId, transferStartedById);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Document transfer failed for document {DocumentId}", documentId);
             throw;
         }
         return NoContent();

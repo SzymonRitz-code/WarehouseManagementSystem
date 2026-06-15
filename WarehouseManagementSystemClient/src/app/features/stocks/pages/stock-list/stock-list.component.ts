@@ -4,7 +4,7 @@ import { TableComponent } from "../../../../shared/components/table/table.compon
 import { Stock } from '../../model/stock';
 import { StockService } from '../../services/stock-service';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -15,11 +15,31 @@ import { CommonModule } from '@angular/common';
 })
 export class StockListComponent implements OnInit {
 
-  stocks$: Observable<Stock[]> = new Observable<Stock[]>();
+  stocks$: Observable<Stock[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
+
   constructor(private stockService: StockService) { }
 
   ngOnInit(): void {
-    this.stocks$ = this.stockService.getStocks();
+    this.loadStocks();
+  }
+
+  retry(): void {
+    this.loadStocks();
+  }
+
+  private loadStocks(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.stocks$ = this.stockService.getStocks().pipe(
+      catchError(() => {
+        this.errorMessage = 'Stocks could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
 
   columns = [

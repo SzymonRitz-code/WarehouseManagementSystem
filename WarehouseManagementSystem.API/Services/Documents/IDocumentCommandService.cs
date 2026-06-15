@@ -7,22 +7,23 @@ using WarehouseManagementSystem.Domain.ValueObjects;
 namespace WarehouseManagementSystem.API.Services.Documents;
 
 /// <summary>
-/// Centralny serwis do zarządzania dokumentami magazynowymi.
-/// Obsługuje wszystkie typy dokumentów: PZ, WZ, MM.
+/// Service responsible for handling document commands such as creating, updating, confirming and canceling documents.
 /// </summary>
 public interface IDocumentCommandService
 {
     /// <summary>
-    /// Tworzy nowy dokument magazynowy.
+    /// Creates a new document in Draft status. 
+    /// The document can be later updated, confirmed or cancelled.
     /// </summary>
-    /// <param name="type">Typ dokumentu (PZ, WZ, MM)</param>
-    /// <param name="createdBy">Osoba dodająca  (w przypadku MM)</param>
-    /// <param name="sourceWarehouseId">Magazyn docelowy lub źródłowy (w przypadku MM)</param>
-    /// <param name="items">Pozycje dokumentu (Stock)</param>
-    /// <param name="documentDate">Data dokumentu</param>
-    /// <param name="targetWarehouseId">Docelowy magazyn w przypadku MM</param>
-    /// <param name="notes">Notatki</param>
-    /// <returns>Utworzony dokument domenowy</returns>
+    /// <param name="type">Document type</param>
+    /// <param name="createdBy">User who created the document</param>
+    /// <param name="sourceWarehouseId">Source warehouse ID</param>
+    /// <param name="items">Document items</param>
+    /// <param name="documentDate">Document date</param>
+    /// <param name="targetWarehouseId">Target warehouse ID</param>
+    /// <param name="notes">Document notes</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Returns the created document</returns>
     Task<Document> CreateDocumentAsync(
          DocumentType type,
          Domain.ValueObjects.UserSnapshot createdBy,
@@ -34,17 +35,18 @@ public interface IDocumentCommandService
         CancellationToken ct = default);
 
     /// <summary>
-    /// Aktualizuje dokument dla stanu Draft
+    /// Updates an existing document. Only documents in Draft status can be updated.
     /// </summary>
-    /// <param name="documentId"></param>
-    /// <param name="type"></param>
-    /// <param name="sourceWarehouseId"></param>
-    /// <param name="items"></param>
-    /// <param name="documentDate"></param>
-    /// <param name="targetWarehouseId"></param>
-    /// <param name="notes"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="documentId">document ID</param>
+    /// <param name="updatedbyBy">user who updated the document</param>
+    /// <param name="type">document type</param>
+    /// <param name="sourceWarehouseId">source warehouse ID</param>
+    /// <param name="items">document items</param>
+    /// <param name="documentDate">document date</param>
+    /// <param name="targetWarehouseId">target warehouse ID</param>
+    /// <param name="notes">document notes</param>
+    /// <param name="ct">cancellation token</param>
+    /// <returns>Returns updated document</returns>
     Task<Document> UpdateDocumentAsync(
         Guid documentId,
         UserSnapshot updatedbyBy,
@@ -57,20 +59,23 @@ public interface IDocumentCommandService
         CancellationToken ct = default);
 
     /// <summary>
-    /// Rozpoczyna transwer.
+    /// Confirms the document. Only documents in Draft status can be confirmed. 
+    /// Confirmation changes the document status to Confirmed and triggers inventory updates.
     /// </summary>
-    /// <param name="documentId"></param>
-    /// <param name="userId"></param>
-    Task StartTransferAsync(Guid documentId, Guid userId);
-
-    /// <summary>
-    /// Potwierdza dokument.
-    /// </summary>
+    /// <param name="documentId">Document ID</param>
+    /// <param name="confirmedBy">User who confirmed the document</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns></returns>
     Task ConfirmDocumentAsync(Guid documentId, UserSnapshot confirmedBy, CancellationToken ct = default);
 
     /// <summary>
-    /// Anuluje dokument.
+    /// Cancels the document. Only documents in Draft status can be canceled. 
+    /// Cancellation changes the document status to Canceled and prevents any further operations on the document.
     /// </summary>
+    /// <param name="documentId">Document ID</param>
+    /// <param name="canceledBy">User who canceled the document</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns></returns>
     Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default);
 
 }

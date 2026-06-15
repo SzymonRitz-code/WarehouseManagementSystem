@@ -32,11 +32,7 @@ export class DocumentService {
         return this.http.put<Document>(`${this.apiUrl}/documents/${id}`, { ...document, id });
     }
     confirmDocument(document: Pick<Document, 'id'> | Pick<DocumentList, 'id'>): Observable<Document> {
-        console.log(`Confirming document ${document.id}`);
         return this.http.put<Document>(`${this.apiUrl}/documents/${document.id}/confirm`, document);
-    }
-    transferDocument(document: Pick<Document, 'id'>): Observable<Document> {
-        return this.http.put<Document>(`${this.apiUrl}/documents/${document.id}/transfer`, document);
     }
     cancelDocument(document: Pick<Document, 'id'> | Pick<DocumentList, 'id'>): Observable<Document> {
         return this.http.put<Document>(`${this.apiUrl}/documents/${document.id}/cancel`, document);

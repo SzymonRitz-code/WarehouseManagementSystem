@@ -1,3 +1,4 @@
+using System.Data;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Exceptions;
@@ -138,31 +139,21 @@ public class DocumentCommandService : IDocumentCommandService
         return document;
     }
 
-    [Obsolete("MVP flow. Not used in current MM document-driven process. Reserved for future workflow-based transfer execution.")]
-    // TODO: Future phase - workflow-based transfer execution (MM v2)
-    public async Task StartTransferAsync(Guid documentId, Guid userId)
-    {
-        var document = await _unitOfWork.Documents.FindAsync(documentId)
-                       ?? throw new DocumentNotFoundException(documentId);
-        var oldDocument = AuditSnapshots.Document(document);
-        document.StartTransfer(userId, _clock.UtcNow);
-        await _auditLogService.LogChangesAsync(
-            entityName: nameof(Document),
-            entityId: documentId,
-            operation: "StartTransfer",
-            performedById: userId,
-            oldSnapshot: oldDocument,
-            newSnapshot: AuditSnapshots.Document(document));
-
-        await _unitOfWork.SaveChangesAsync();
-    }
-
     public async Task ConfirmDocumentAsync(Guid documentId, UserSnapshot confirmedBy, CancellationToken ct = default)
     {
         _logger.LogInformation("Confirming document {DocumentId} by {UserId}", documentId, confirmedBy.Id);
 
         var document = await GetDocumentWithItemsOrThrowAsync(documentId);
         var oldDocument = AuditSnapshots.Document(document);
+
+        // The confirmation transaction starts here because this is the first point where the command
+        // changes business state. Stock mutations, document number allocation, document confirmation
+        // and audit logging must commit as one unit. If these operations were saved independently,
+        // a failure after stock movement but before document confirmation could leave inventory changed
+        // while the document still looked pending, and two concurrent confirmations could observe the
+        // same document-number sequence before either write was committed.
+        await using var transaction = await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         switch (document.Type)
         {
             case DocumentType.PZ:
@@ -227,7 +218,8 @@ public class DocumentCommandService : IDocumentCommandService
             oldSnapshot: oldDocument,
             newSnapshot: AuditSnapshots.Document(document),
             ct: ct);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
         _logger.LogInformation("Document {DocumentId} confirmed by {UserId}", documentId, confirmedBy.Id);
     }
 

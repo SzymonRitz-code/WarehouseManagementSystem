@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { InputDetailComponent } from "../../../../shared/components/form/input/input-detail.component";
@@ -11,7 +12,7 @@ import { WarehouseService } from '../../services/warehouse-service';
 @Component({
   selector: 'app-warehouse-detail',
   standalone: true,
-  imports: [PageBreadcrumbComponent, ComponentCardComponent, InputDetailComponent, LabelComponent, DetailActionsComponent],
+  imports: [CommonModule, PageBreadcrumbComponent, ComponentCardComponent, InputDetailComponent, LabelComponent, DetailActionsComponent],
   templateUrl: './warehouse-detail.component.html'
 })
 export class WarehouseDetailComponent implements OnInit {

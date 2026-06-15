@@ -38,11 +38,13 @@ This will compile your project and store the build artifacts in the `dist/` dire
 
 ## Running unit tests
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Unit tests run through Angular's `@angular/build:unit-test` builder with the Vitest runner. The test target is configured in `angular.json` with `tsconfig.spec.json`, includes `src/**/*.spec.ts`, and loads `src/test-providers.ts` so component tests use `HttpClientTesting` instead of calling the API.
 
 ```bash
-ng test
+npm test -- --watch=false
 ```
+
+Use `npm test` for interactive watch mode. This project does not use Karma.
 
 ## Running end-to-end tests
 

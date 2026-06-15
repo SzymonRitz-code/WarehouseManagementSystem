@@ -67,8 +67,11 @@ builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
         builder.Configuration.GetConnectionString("WarehouseManagementSystemConnection")
     );
 
-    options.EnableSensitiveDataLogging()
-           .EnableDetailedErrors();
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging()
+               .EnableDetailedErrors();
+    }
 });
 
 // Services
@@ -108,28 +111,6 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod();
         });
 });
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddJwtBearer(o =>
-//    {
-//        o.Authority = "https://localhost:7079";
-//        //o.TokenValidationParameters.ValidateAudience = true;
-//        //o.Audience = "wmsApi";
-//        //o.TokenValidationParameters.ValidTypes = new[] { "at+jwt" };
-//        //o.TokenValidationParameters = new TokenValidationParameters
-//        //{
-//        //    NameClaimType = JwtClaimTypes.Name
-//        //};
-//        o.TokenValidationParameters.ValidateAudience = false;
-//        o.Audience = "wmsApi";
-//        o.TokenValidationParameters.ValidTypes = new[] { "at+jwt" };
-//        //o.TokenValidationParameters = new TokenValidationParameters
-//        //{ 
-//        //    //ValidateAudience = true,
-//        //    NameClaimType = JwtClaimTypes.Name,
-//        //    ValidTypes = new[] { "at+jwt" }  // dodanie Tokenu wraz z autoryzacją 
-//        //};
-//    });
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
@@ -137,7 +118,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         o.MetadataAddress = "https://localhost:44380/.well-known/openid-configuration";
         o.RequireHttpsMetadata = true; // tymczasowo można na falce
         o.Audience = "wmsApi";
-        o.MapInboundClaims = false; // 
+        o.MapInboundClaims = false; //
 
         o.TokenValidationParameters = new TokenValidationParameters
         {

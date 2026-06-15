@@ -24,7 +24,19 @@ public class DocumentNumberGenerator : IDocumentNumberGenerator
     {
         var year = documentDate.Year;
 
-        var sequence = await _context.DocumentSequences
+        // This generator intentionally does not call SaveChangesAsync. Document numbers are allocated
+        // inside DocumentCommandService.ConfirmDocumentAsync, which opens a Serializable transaction.
+        // That isolation level makes concurrent confirmations for the same type/year/warehouse wait
+        // on the same sequence row or key range before incrementing LastNumber. Without that outer
+        // transaction two requests could read the same LastNumber, generate duplicate numbers, or
+        // commit a sequence increment even though the document confirmation later failed.
+        var sequence = _context.DocumentSequences.Local
+            .SingleOrDefault(x =>
+                x.Type == type &&
+                x.Year == year &&
+                x.WarehouseId == warehouseId);
+
+        sequence ??= await _context.DocumentSequences
             .SingleOrDefaultAsync(x =>
                 x.Type == type &&
                 x.Year == year &&
@@ -45,8 +57,6 @@ public class DocumentNumberGenerator : IDocumentNumberGenerator
         }
 
         sequence.LastNumber++;
-
-        await _context.SaveChangesAsync();
 
         return FormatPreview(type, sequence.LastNumber, documentDate);
     }

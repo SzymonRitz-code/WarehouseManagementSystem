@@ -48,6 +48,15 @@ public class DocumentIntegrationTests
             _auditLogService.Object);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _unitOfWorkMock.Setup(u => u.Documents).Returns(_documentRepoMock.Object);
+        var transactionMock = new Mock<IUnitOfWorkTransaction>();
+        transactionMock
+            .Setup(x => x.CommitAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWorkMock
+            .Setup(x => x.BeginTransactionAsync(
+                It.IsAny<System.Data.IsolationLevel>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactionMock.Object);
         _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }

@@ -39,7 +39,8 @@ namespace WarehouseManagementSystem.API.Controllers
             Guid stockId,
             Guid reservationId)
         {
-            var reservation = (await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId)).First(r => r.Id == reservationId);
+            var reservation = (await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId))
+                .FirstOrDefault(r => r.Id == reservationId);
 
             if (reservation == null || reservation.StockId != stockId)
                 return NotFound();

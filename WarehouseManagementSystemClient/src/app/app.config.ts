@@ -6,9 +6,10 @@ import { routes } from './app.routes';
 import { firstValueFrom } from 'rxjs';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { environment } from './environments/environment';
 
 export const authConfig = {
-  authority: `https://localhost:44380`,
+  authority: environment.idpUrl,
   redirectUrl: `https://localhost:4200/signin-oidc`,
   postLogoutRedirectUri: `https://localhost:4200/signout-callback-oidc`,
 
@@ -17,7 +18,7 @@ export const authConfig = {
   scope: 'openid profile offline_access wms.api',
 
   responseType: 'code',
-  secureRoutes: ['https://localhost:44377/api'],
+  secureRoutes: [environment.apiUrl],
   silentRenew: true,
   useRefreshToken: true,
   renewTimeBeforeTokenExpiresInSeconds: 30,

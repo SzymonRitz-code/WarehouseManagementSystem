@@ -80,6 +80,12 @@
                     </ng-container>
 
                 </tr>
+                <tr *ngIf="filteredData.length === 0">
+                    <td [attr.colspan]="columns.length + (rowActions ? 1 : 0)"
+                        class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                        No records to display.
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>

@@ -66,7 +66,7 @@ export class TextAreaComponent implements ControlValueAccessor, Validator {
   }
 
   writeValue(obj: any): void {
-    this.value = obj.val ?? '';
+    this.value = obj?.val ?? obj ?? '';
   }
 
   registerOnChange(fn: any): void {

@@ -1,4 +1,5 @@
-﻿using WarehouseManagementSystem.Domain.Interfaces.Repositories;
+using System.Data;
+using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 
 namespace WarehouseManagementSystem.Domain.Interfaces;
 
@@ -14,4 +15,7 @@ public interface IUnitOfWork : IDisposable
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     int SaveChanges();
+    Task<IUnitOfWorkTransaction> BeginTransactionAsync(
+        IsolationLevel isolationLevel = IsolationLevel.ReadCommitted,
+        CancellationToken cancellationToken = default);
 }

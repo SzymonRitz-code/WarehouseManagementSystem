@@ -2,7 +2,7 @@
     <app-page-breadcrumb pageTitle="Warehouse Details" />
 
     <app-component-card title="Warehouse Information">
-        <div class="space-y-6">
+        <div *ngIf="warehouse; else loadingWarehouse" class="space-y-6">
             <div>
                 <app-label for="inputCode">Code</app-label>
                 <app-input-detail id="inputCode" type="text" name="warehouseCode" [value]="warehouse.code"></app-input-detail> 
@@ -26,6 +26,9 @@
                 <app-input-detail id="inputStatus" name="status" [value]="warehouse.isActive" [type]="'boolean'"></app-input-detail>
             </div>
         </div>
+        <ng-template #loadingWarehouse>
+            <div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Loading warehouse...</div>
+        </ng-template>
 
         <!-- sekcja akcji -->
         <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
