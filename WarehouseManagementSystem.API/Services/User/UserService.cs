@@ -18,11 +18,14 @@ namespace WarehouseManagementSystem.API.Services.User
             var sub = context.User.FindFirst("sub")?.Value
                 ?? throw new UnauthorizedAccessException("User identity not found in token.");
 
+            if (!Guid.TryParse(sub, out var userId))
+                throw new UnauthorizedAccessException("User identity in token is invalid.");
+
             var name = context.User.FindFirst("name")?.Value ?? "Unknown";
             var email = context.User.FindFirst("email")?.Value ?? string.Empty;
 
             return new UserSnapshot(
-                id: Guid.Parse(sub),
+                id: userId,
                 name: name,
                 email: email
             );

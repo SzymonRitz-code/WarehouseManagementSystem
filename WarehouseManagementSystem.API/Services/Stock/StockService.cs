@@ -1,4 +1,5 @@
-﻿using WarehouseManagementSystem.Domain.Interfaces;
+using WarehouseManagementSystem.Domain.Exceptions;
+using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
@@ -14,7 +15,7 @@ public class StockService : IStockService
     public StockService(IUnitOfWork unitOfWork, ISystemClock clock)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _clock = clock;
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
     #region Stock Creation / Retrieval
@@ -50,8 +51,7 @@ public class StockService : IStockService
         decimal quantity,
         Guid? batchId)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        EnsurePositiveQuantity(quantity);
 
         var stock = await GetOrCreateAsync(productId, warehouseId, warehouseZoneId, batchId);
         stock.Increase(quantity);
@@ -66,8 +66,7 @@ public class StockService : IStockService
         decimal quantity,
         Guid? batchId)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        EnsurePositiveQuantity(quantity);
 
         var stock = await GetOrCreateAsync(productId, warehouseId, warehouseZoneId, batchId);
         stock.Decrease(quantity);
@@ -84,8 +83,7 @@ public class StockService : IStockService
         decimal quantity,
         Guid? batchId)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        EnsurePositiveQuantity(quantity);
 
         var sourceStock = await GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, batchId);
         var targetStock = await GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, batchId);
@@ -107,13 +105,10 @@ public class StockService : IStockService
         UserSnapshot createdBy,
         DateTimeOffset? expiresAt = null)
     {
-        if (quantity <= 0)
-            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        EnsurePositiveQuantity(quantity);
 
-        var stock = await _unitOfWork.Stocks.FindAsync(stockId)
-                    ?? throw new InvalidOperationException("Stock not found.");
+        var stock = await GetStockOrThrowAsync(stockId);
 
-        // Tworzymy rezerwację przez agregat Stock
         var reservation = stock.CreateReservation(quantity, reservationSource, createdBy, expiresAt);
 
         await _unitOfWork.SaveChangesAsync();
@@ -122,8 +117,8 @@ public class StockService : IStockService
 
     public async Task ReleaseReservationAsync(Guid stockId, Guid reservationId)
     {
-        var stock = await _unitOfWork.Stocks.FindAsync(stockId)
-                    ?? throw new InvalidOperationException("Stock not found.");
+        var stock = await GetStockOrThrowAsync(stockId);
+        EnsureReservationExists(stock, reservationId);
 
         stock.ReleaseReservation(reservationId);
 
@@ -132,11 +127,7 @@ public class StockService : IStockService
 
     public async Task CancelReservationAsync(Guid reservationId)
     {
-        var stock = (await _unitOfWork.Stocks
-            .All()).FirstOrDefault(s => s.Reservations.Any(r => r.Id == reservationId));
-
-        if (stock == null)
-            throw new InvalidOperationException("Stock not found for reservation.");
+        var stock = await GetStockContainingReservationOrThrowAsync(reservationId);
 
         stock.CancelReservation(reservationId);
 
@@ -145,11 +136,7 @@ public class StockService : IStockService
 
     public async Task ConfirmReservationAsync(Guid reservationId)
     {
-        var stock = (await _unitOfWork.Stocks
-            .All()).FirstOrDefault(s => s.Reservations.Any(r => r.Id == reservationId));
-
-        if (stock == null)
-            throw new InvalidOperationException("Stock not found for reservation.");
+        var stock = await GetStockContainingReservationOrThrowAsync(reservationId);
 
         stock.ConfirmReservation(reservationId);
 
@@ -159,18 +146,45 @@ public class StockService : IStockService
     public async Task ExpireReservationsAsync()
     {
         var now = _clock.UtcNow;
-        var expiredReservations = await _unitOfWork.Stocks
-            .GetExpiredReservationsAsync(now);
+        var expiredReservations = await _unitOfWork.Stocks.GetExpiredReservationsAsync(now);
 
         foreach (var reservation in expiredReservations)
         {
             var stock = await _unitOfWork.Stocks.FindAsync(reservation.StockId);
-            if (stock == null) continue;
+            if (stock == null)
+                continue;
 
             stock.ExpireReservation(reservation.Id);
         }
 
         await _unitOfWork.SaveChangesAsync();
     }
+
     #endregion
+
+    private async Task<Stock> GetStockOrThrowAsync(Guid stockId)
+    {
+        return await _unitOfWork.Stocks.FindAsync(stockId)
+               ?? throw new StockNotFoundException(stockId);
+    }
+
+    private async Task<Stock> GetStockContainingReservationOrThrowAsync(Guid reservationId)
+    {
+        var stock = (await _unitOfWork.Stocks.All())
+            .FirstOrDefault(s => s.Reservations.Any(r => r.Id == reservationId));
+
+        return stock ?? throw new ReservationNotFoundException(reservationId);
+    }
+
+    private static void EnsureReservationExists(Stock stock, Guid reservationId)
+    {
+        if (!stock.Reservations.Any(r => r.Id == reservationId))
+            throw new ReservationNotFoundException(reservationId);
+    }
+
+    private static void EnsurePositiveQuantity(decimal quantity)
+    {
+        if (quantity <= 0)
+            throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+    }
 }

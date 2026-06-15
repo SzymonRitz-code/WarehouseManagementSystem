@@ -217,8 +217,8 @@ public class DocumentIntegrationTests
 
         Func<Task> act = () => _service.ConfirmDocumentAsync(Guid.NewGuid(), _userServiceMock.Object.GetUser(default));
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Document not found*");
+        await act.Should().ThrowAsync<DocumentNotFoundException>()
+            .WithMessage("*was not found*");
     }
 
     [Fact]

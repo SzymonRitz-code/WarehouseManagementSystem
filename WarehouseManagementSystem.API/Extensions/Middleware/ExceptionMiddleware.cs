@@ -23,20 +23,26 @@ namespace WarehouseManagementSystem.API.Extensions.Middleware
         {
             var (statusCode, title) = ex switch
             {
-                DocumentNotFoundException => (404, ex.Message),
-                DomainException => (422, ex.Message),
-                ArgumentException => (400, ex.Message),
-                _ => (500, ex.Message)
+                NotFoundDomainException => (StatusCodes.Status404NotFound, ex.Message),
+                UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, ex.Message),
+                ArgumentException => (StatusCodes.Status400BadRequest, ex.Message),
+                DomainException => (StatusCodes.Status422UnprocessableEntity, ex.Message),
+                InvalidOperationException => (StatusCodes.Status409Conflict, ex.Message),
+                _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
             };
 
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/problem+json";
 
+            var detail = statusCode == StatusCodes.Status500InternalServerError
+                ? "An unexpected error occurred."
+                : ex.Message;
+
             var problem = new ProblemDetails
             {
                 Status = statusCode,
                 Title = title,
-                Detail = ex.Message,
+                Detail = detail,
                 Instance = context.Request.Path
             };
 

@@ -5,9 +5,20 @@ public abstract class DomainException(string errorCode, string message) : Except
     public string ErrorCode { get; } = errorCode;
 }
 
+public abstract class NotFoundDomainException(string errorCode, string message)
+    : DomainException(errorCode, message);
+
 // DocumentNotFoundException.cs
 public class DocumentNotFoundException(Guid documentId)
-    : DomainException("DOCUMENT_NOT_FOUND", $"Document {documentId} was not found.");
+    : NotFoundDomainException("DOCUMENT_NOT_FOUND", $"Document {documentId} was not found.");
+
+// StockNotFoundException.cs
+public class StockNotFoundException(Guid stockId)
+    : NotFoundDomainException("STOCK_NOT_FOUND", $"Stock {stockId} was not found.");
+
+// ReservationNotFoundException.cs
+public class ReservationNotFoundException(Guid reservationId)
+    : NotFoundDomainException("RESERVATION_NOT_FOUND", $"Reservation {reservationId} was not found.");
 
 // DocumentNotInDraftStateException.cs
 public class DocumentNotInDraftStateException(Guid documentId)

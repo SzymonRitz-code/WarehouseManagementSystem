@@ -308,14 +308,14 @@ public class DocumentIntegrationTests
     public async Task ConfirmDocumentAsync_ShouldThrow_WhenDocumentNotFound()
     {
         _unitOfWorkMock
-            .Setup(x => x.Documents.FindAsync(It.IsAny<Guid>()))
+            .Setup(x => x.Documents.GetDocumentWithItems(It.IsAny<Guid>()))
             .ReturnsAsync((Document?)null);
 
         Func<Task> act = () => _service.ConfirmDocumentAsync(Guid.NewGuid(), _userServiceMock.Object.GetUser(default));
 
         await act.Should()
-            .ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Document not found*");
+            .ThrowAsync<DocumentNotFoundException>()
+            .WithMessage("*was not found*");
     }
 
     [Fact]

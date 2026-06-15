@@ -1,4 +1,3 @@
-﻿using Microsoft.CodeAnalysis;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Exceptions;
@@ -33,7 +32,7 @@ public class DocumentCommandService : IDocumentCommandService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
-        this._clock = systemClock;
+        _clock = systemClock ?? throw new ArgumentNullException(nameof(systemClock));
     }
 
     public async Task<Document> CreateDocumentAsync(
@@ -46,7 +45,8 @@ public class DocumentCommandService : IDocumentCommandService
         string? notes = null,
         CancellationToken ct = default)
     {
-        if (items == null || !items.Any())
+        var drafts = NormalizeItems(items);
+        if (drafts.Count == 0)
             throw new ArgumentException("Document must have at least one item.", nameof(items));
 
         _logger.LogInformation("Creating document by {UserId}", createdBy.Id);
@@ -60,7 +60,7 @@ public class DocumentCommandService : IDocumentCommandService
             notes: notes
         );
 
-        foreach (var draft in items)
+        foreach (var draft in drafts)
         {
             var item = new DocumentItem(
                 productId: draft.ProductId,
@@ -88,6 +88,7 @@ public class DocumentCommandService : IDocumentCommandService
 
         return document;
     }
+
     public async Task<Document> UpdateDocumentAsync(
         Guid documentId,
         UserSnapshot updatedBy,
@@ -99,10 +100,11 @@ public class DocumentCommandService : IDocumentCommandService
         string? notes = null,
         CancellationToken ct = default)
     {
-        if (items == null || !items.Any())
+        var drafts = NormalizeItems(items);
+        if (drafts.Count == 0)
             throw new ArgumentException("Document must have at least one item.", nameof(items));
 
-        var document = await _unitOfWork.Documents.GetDocumentWithItems(documentId) ?? throw new InvalidOperationException("Document not found.");
+        var document = await GetDocumentWithItemsOrThrowAsync(documentId);
         var oldDocument = AuditSnapshots.Document(document);
         _logger.LogInformation("Updating document {DocumentId} by {UserId}", documentId, updatedBy.Id);
 
@@ -112,36 +114,36 @@ public class DocumentCommandService : IDocumentCommandService
         document.SetTargetWarehouse(targetWarehouseId);
         document.SetNotes(notes);
 
-        var itemsToReplace = items.Select(draft => new DocumentItem(
-                productId: draft.ProductId,
-                quantity: draft.Quantity,
-                productBatchId: draft.ProductBatchId,
-                sourceZoneId: draft.SourceZoneId,
-                targetZoneId: draft.TargetZoneId
-            )).ToList();
+        var itemsToReplace = drafts.Select(draft => new DocumentItem(
+            productId: draft.ProductId,
+            quantity: draft.Quantity,
+            productBatchId: draft.ProductBatchId,
+            sourceZoneId: draft.SourceZoneId,
+            targetZoneId: draft.TargetZoneId)).ToList();
 
         document.ReplaceItems(itemsToReplace);
 
         _unitOfWork.Documents.Update(document);
         await _auditLogService.LogChangesAsync(
-                entityName: nameof(Document),
-                entityId: documentId,
-                operation: "Update",
-                performedById: updatedBy.Id,
-                oldSnapshot: oldDocument,
-                newSnapshot: AuditSnapshots.Document(document),
-                ct: ct);
+            entityName: nameof(Document),
+            entityId: documentId,
+            operation: "Update",
+            performedById: updatedBy.Id,
+            oldSnapshot: oldDocument,
+            newSnapshot: AuditSnapshots.Document(document),
+            ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("Document {DocumentId} updated by {UserId}", documentId, updatedBy.Id);
         return document;
     }
+
     [Obsolete("MVP flow. Not used in current MM document-driven process. Reserved for future workflow-based transfer execution.")]
     // TODO: Future phase - workflow-based transfer execution (MM v2)
     public async Task StartTransferAsync(Guid documentId, Guid userId)
     {
         var document = await _unitOfWork.Documents.FindAsync(documentId)
-                       ?? throw new InvalidOperationException("Document not found.");
+                       ?? throw new DocumentNotFoundException(documentId);
         var oldDocument = AuditSnapshots.Document(document);
         document.StartTransfer(userId, _clock.UtcNow);
         await _auditLogService.LogChangesAsync(
@@ -159,12 +161,11 @@ public class DocumentCommandService : IDocumentCommandService
     {
         _logger.LogInformation("Confirming document {DocumentId} by {UserId}", documentId, confirmedBy.Id);
 
-        var document = await _unitOfWork.Documents.GetDocumentWithItems(documentId)
-                       ?? throw new InvalidOperationException("Document not found.");
+        var document = await GetDocumentWithItemsOrThrowAsync(documentId);
         var oldDocument = AuditSnapshots.Document(document);
         switch (document.Type)
         {
-            case DocumentType.PZ: // Przyjęcie towaru
+            case DocumentType.PZ:
                 foreach (var item in document.Items)
                 {
                     await _stockService.IncreaseStockAsync(
@@ -172,12 +173,12 @@ public class DocumentCommandService : IDocumentCommandService
                         warehouseId: document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
                         warehouseZoneId: item.SourceZoneId ?? throw new MissingSourceZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
-                        batchId: item.ProductBatchId
-                    );
+                        batchId: item.ProductBatchId);
                 }
+
                 break;
 
-            case DocumentType.WZ: // Wydanie towaru
+            case DocumentType.WZ:
                 foreach (var item in document.Items)
                 {
                     await _stockService.DecreaseStockAsync(
@@ -185,12 +186,12 @@ public class DocumentCommandService : IDocumentCommandService
                         warehouseId: document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
                         warehouseZoneId: item.SourceZoneId ?? throw new MissingSourceZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
-                        batchId: item.ProductBatchId
-                    );
+                        batchId: item.ProductBatchId);
                 }
+
                 break;
 
-            case DocumentType.MM: // Przesunięcie magazynowe
+            case DocumentType.MM:
                 if (document.TargetWarehouseId == null)
                     throw new MissingTargetWarehouseForMmDocumentException(document.Id);
 
@@ -203,12 +204,11 @@ public class DocumentCommandService : IDocumentCommandService
                         targetWarehouseId: document.TargetWarehouseId.Value,
                         targetZoneId: item.TargetZoneId ?? throw new MissingTargetZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
-                        batchId: item.ProductBatchId
-                    );
+                        batchId: item.ProductBatchId);
                 }
+
                 break;
         }
-
 
         var documentNumber = await _numberGenerator.GenerateAsync(
             document.Type,
@@ -234,34 +234,33 @@ public class DocumentCommandService : IDocumentCommandService
     public async Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default)
     {
         var document = await _unitOfWork.Documents.FindAsync(documentId)
-                       ?? throw new InvalidOperationException("Document not found.");
+                       ?? throw new DocumentNotFoundException(documentId);
         _logger.LogInformation("Canceling document {DocumentId} by {UserId}", documentId, canceledBy.Id);
         var oldDocument = AuditSnapshots.Document(document);
+
         switch (document.Type)
         {
-            case DocumentType.WZ: // Wydanie towaru – mogły być rezerwacje
+            case DocumentType.WZ:
                 var reservations = await _unitOfWork.Stocks.GetActiveReservationsByDocumentIdAsync(document.Id);
 
                 foreach (var reservation in reservations)
                 {
-                    // Używamy serwisu do zwolnienia rezerwacji
                     await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id);
                 }
+
                 break;
 
-            case DocumentType.MM: // Przesunięcie magazynowe – jeśli rezerwacje były
+            case DocumentType.MM:
                 var mmReservations = await _unitOfWork.Stocks.GetActiveReservationsByDocumentIdAsync(document.Id);
 
                 foreach (var reservation in mmReservations)
                 {
                     await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id);
                 }
-                break;
 
-                // PZ – przyjęcia zwykle nie mają rezerwacji, więc nic do zwolnienia
+                break;
         }
 
-        // Zmiana statusu dokumentu na anulowany
         document.Cancel(canceledBy);
 
         _unitOfWork.Documents.Update(document);
@@ -277,5 +276,14 @@ public class DocumentCommandService : IDocumentCommandService
         _logger.LogInformation("Document {DocumentId} canceled by {UserId}", documentId, canceledBy.Id);
     }
 
+    private async Task<Document> GetDocumentWithItemsOrThrowAsync(Guid documentId)
+    {
+        return await _unitOfWork.Documents.GetDocumentWithItems(documentId)
+               ?? throw new DocumentNotFoundException(documentId);
+    }
 
+    private static List<DocumentItemDraft> NormalizeItems(IEnumerable<DocumentItemDraft> items)
+    {
+        return items?.ToList() ?? throw new ArgumentNullException(nameof(items));
+    }
 }
