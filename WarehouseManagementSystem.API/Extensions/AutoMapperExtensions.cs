@@ -27,8 +27,8 @@
         public static void AddAuditLogMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<AuditLog, AuditLogDto>()
-                .ForMember(dto => dto.PerformedByName, opt => opt.MapFrom(a => a.PerformedBy.Name))
-                .ForMember(dto => dto.PerformedByEmail, opt => opt.MapFrom(a => a.PerformedBy.Email));
+                .ForMember(dto => dto.PerformedByName, opt => opt.MapFrom(_ => string.Empty))
+                .ForMember(dto => dto.PerformedByEmail, opt => opt.MapFrom(_ => string.Empty));
         }
 
         public static void AddStockMappings(this IMapperConfigurationExpression cfg)

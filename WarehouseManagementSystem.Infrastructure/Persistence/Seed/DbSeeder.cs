@@ -1,6 +1,8 @@
-using Bogus;
+﻿using Bogus;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Model.AuditDomain;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 using WarehouseManagementSystem.Domain.Model.Documents;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
@@ -18,10 +20,33 @@ public static class DbSeeder
 {
     private const int DefaultSeed = 42;
 
-    private static readonly UserSnapshot SystemUser = new(
-        Guid.Parse("11111111-1111-1111-1111-111111111111"),
-        "AliceSmith@email.com",
-        "Alice Smith");
+    private static readonly IReadOnlyList<UserSnapshot> SeederUsers =
+    [
+        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "AliceSmith@email.com", "Alice Smith"),
+        new(Guid.Parse("22222222-2222-2222-2222-222222222222"), "michael.johnson@northwind-warehouse.com", "Michael Johnson"),
+        new(Guid.Parse("33333333-3333-3333-3333-333333333333"), "sarah.williams@northwind-warehouse.com", "Sarah Williams"),
+        new(Guid.Parse("44444444-4444-4444-4444-444444444444"), "david.brown@northwind-warehouse.com", "David Brown"),
+        new(Guid.Parse("55555555-5555-5555-5555-555555555555"), "emily.davis@northwind-warehouse.com", "Emily Davis"),
+        new(Guid.Parse("66666666-6666-6666-6666-666666666666"), "james.miller@northwind-warehouse.com", "James Miller"),
+        new(Guid.Parse("77777777-7777-7777-7777-777777777777"), "linda.wilson@northwind-warehouse.com", "Linda Wilson"),
+        new(Guid.Parse("88888888-8888-8888-8888-888888888888"), "robert.moore@northwind-warehouse.com", "Robert Moore"),
+        new(Guid.Parse("99999999-9999-9999-9999-999999999999"), "patricia.taylor@northwind-warehouse.com", "Patricia Taylor"),
+        new(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "william.anderson@northwind-warehouse.com", "William Anderson"),
+        new(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "barbara.thomas@northwind-warehouse.com", "Barbara Thomas"),
+        new(Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"), "richard.jackson@northwind-warehouse.com", "Richard Jackson"),
+        new(Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), "elizabeth.white@northwind-warehouse.com", "Elizabeth White"),
+        new(Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"), "thomas.harris@northwind-warehouse.com", "Thomas Harris"),
+        new(Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff"), "jennifer.martin@northwind-warehouse.com", "Jennifer Martin"),
+        new(Guid.Parse("12121212-1212-1212-1212-121212121212"), "charles.thompson@northwind-warehouse.com", "Charles Thompson"),
+        new(Guid.Parse("13131313-1313-1313-1313-131313131313"), "mary.garcia@northwind-warehouse.com", "Mary Garcia"),
+        new(Guid.Parse("14141414-1414-1414-1414-141414141414"), "christopher.martinez@northwind-warehouse.com", "Christopher Martinez"),
+        new(Guid.Parse("15151515-1515-1515-1515-151515151515"), "nancy.robinson@northwind-warehouse.com", "Nancy Robinson"),
+        new(Guid.Parse("16161616-1616-1616-1616-161616161616"), "daniel.clark@northwind-warehouse.com", "Daniel Clark"),
+        new(Guid.Parse("17171717-1717-1717-1717-171717171717"), "karen.rodriguez@northwind-warehouse.com", "Karen Rodriguez"),
+        new(Guid.Parse("18181818-1818-1818-1818-181818181818"), "mark.lewis@northwind-warehouse.com", "Mark Lewis"),
+        new(Guid.Parse("19191919-1919-1919-1919-191919191919"), "susan.lee@northwind-warehouse.com", "Susan Lee"),
+        new(Guid.Parse("20202020-2020-2020-2020-202020202020"), "kevin.walker@northwind-warehouse.com", "Kevin Walker")
+    ];
 
     public sealed record Options(
         int ProductCount = 12_000,
@@ -56,6 +81,39 @@ public static class DbSeeder
         int DocumentItems,
         IReadOnlyDictionary<(DocumentType Type, int Year, Guid? WarehouseId), int> SequenceCounters);
 
+    private sealed class StockSeedState
+    {
+        public StockSeedState(
+            Guid productId,
+            Guid warehouseId,
+            Guid warehouseZoneId,
+            Guid? productBatchId,
+            decimal available)
+        {
+            ProductId = productId;
+            WarehouseId = warehouseId;
+            WarehouseZoneId = warehouseZoneId;
+            ProductBatchId = productBatchId;
+            Available = available;
+        }
+
+        public Guid ProductId { get; }
+        public Guid WarehouseId { get; }
+        public Guid WarehouseZoneId { get; }
+        public Guid? ProductBatchId { get; }
+        public decimal Available { get; private set; }
+
+        public void Increase(decimal quantity)
+        {
+            Available += quantity;
+        }
+
+        public void Decrease(decimal quantity)
+        {
+            Available -= quantity;
+        }
+    }
+
     public static async Task<Result> SeedMasterDataAsync(
         WarehouseManagementSystemDbContext db,
         Options? options = null,
@@ -63,43 +121,68 @@ public static class DbSeeder
     {
         options ??= new Options();
 
+        // The master-data seed is idempotent: if the database already has warehouses, products,
+        // batches, or stocks, we do not add another full dataset.
         if (await HasMasterDataAsync(db, cancellationToken))
         {
             return new Result(0, 0, 0, 0, 0, Skipped: true);
         }
 
+        // For large volumes, disable EF Core automatic change detection.
+        // Entities are saved in batches, so explicit SaveChanges calls are enough.
         var originalAutoDetectChanges = db.ChangeTracker.AutoDetectChangesEnabled;
         db.ChangeTracker.AutoDetectChangesEnabled = false;
 
         try
         {
+            // A fixed seed makes the dataset repeatable for the same options.
             var random = new Random(options.Seed);
             Randomizer.Seed = new Random(options.Seed);
             var faker = new Faker("en");
 
             ValidateOptions(options);
 
-            var warehouses = GenerateWarehouses(faker, options.WarehouseCount, options.ZonesPerWarehouse);
-            await SaveInBatchesAsync(db, warehouses, cancellationToken);
-
+            // Warehouses and zones come first because stock records depend on zones.
+            var warehouses = GenerateWarehouses(random, faker, options.WarehouseCount, options.ZonesPerWarehouse);
             var zones = warehouses.SelectMany(x => x.Zones).ToList();
+            await SaveAsync(db, warehouses, cancellationToken);
+            await SaveAsync(
+                db,
+                warehouses.Select(CreateCreateAuditLog).Concat(zones.Select(CreateCreateAuditLog)).ToList(),
+                cancellationToken);
 
+            // Products are distributed realistically across categories, units, and batch tracking.
             var products = GenerateProducts(random, faker, options.ProductCount);
-            await SaveInBatchesAsync(db, products, cancellationToken);
+            await SaveWithAuditAsync(
+                db,
+                products,
+                products.Select(CreateCreateAuditLog).ToList(),
+                cancellationToken);
 
+            // Batches are created only for products requiring lot/batch tracking.
             var batches = GenerateProductBatches(
                 random,
                 products,
                 options.AverageBatchesPerTrackedProduct);
-            await SaveInBatchesAsync(db, batches, cancellationToken);
+            await SaveWithAuditAsync(
+                db,
+                batches,
+                batches.Select(CreateCreateAuditLog).ToList(),
+                cancellationToken);
 
+            // Stock records connect product, warehouse, zone, and optional batch.
+            // This is the base that later operational documents move through.
             var stocks = GenerateStocks(
                 random,
                 products,
                 zones,
                 batches,
                 options.AverageStockRowsPerProduct);
-            await SaveInBatchesAsync(db, stocks, cancellationToken);
+            await SaveWithAuditAsync(
+                db,
+                stocks,
+                stocks.Select(stock => CreateCreateAuditLog(stock, PickUser(random))).ToList(),
+                cancellationToken);
 
             return new Result(
                 warehouses.Count,
@@ -108,6 +191,9 @@ public static class DbSeeder
                 batches.Count,
                 stocks.Count,
                 Skipped: false);
+        }catch(Exception ex)
+        {
+            throw new InvalidOperationException("Error seeding master data.", ex);
         }
         finally
         {
@@ -123,12 +209,14 @@ public static class DbSeeder
         options ??= new OperationalOptions();
         ValidateOperationalOptions(options);
 
+        // Operational documents are also seeded only once to avoid duplicating millions of rows.
         if (await db.Documents.AnyAsync(cancellationToken)
             || await db.DocumentItems.AnyAsync(cancellationToken))
         {
             return new OperationalResult(0, 0, 0, Skipped: true);
         }
 
+        // Operational data depends on existing master data: warehouses, zones, products, and batches.
         var warehouses = await db.Warehouses
             .Include(x => x.Zones)
             .AsNoTracking()
@@ -139,8 +227,11 @@ public static class DbSeeder
         var productBatches = await db.ProductBatches
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+        var stocks = await db.Stocks
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
-        if (warehouses.Count == 0 || products.Count == 0)
+        if (warehouses.Count == 0 || products.Count == 0 || stocks.Count == 0)
         {
             throw new InvalidOperationException("Seed master data before operational data.");
         }
@@ -150,22 +241,29 @@ public static class DbSeeder
 
         try
         {
-            var generated = await GenerateDocumentsAsync(
+            // Generate documents and items in batches instead of keeping all 10 million items in memory.
+            var generated = GenerateDocumentsAsync(
                 db,
                 options,
                 warehouses,
                 products,
                 productBatches,
+                stocks,
                 cancellationToken);
 
+            // Document sequences are saved at the end from the counters that were actually used.
             var sequences = GenerateDocumentSequences(generated.SequenceCounters);
-            await SaveInBatchesAsync(db, sequences, cancellationToken);
+            await SaveAsync(db, sequences, cancellationToken);
 
             return new OperationalResult(
                 generated.Documents,
                 generated.DocumentItems,
                 sequences.Count,
                 Skipped: false);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Error seeding operational data.", ex);
         }
         finally
         {
@@ -244,53 +342,85 @@ public static class DbSeeder
             .ToList();
     }
 
-    private static async Task<DocumentSeedResult> GenerateDocumentsAsync(
+    private static DocumentSeedResult GenerateDocumentsAsync(
         WarehouseManagementSystemDbContext db,
         OperationalOptions options,
         IReadOnlyList<Warehouse> warehouses,
         IReadOnlyList<Product> products,
         IReadOnlyList<ProductBatch> productBatches,
+        IReadOnlyList<Stock> stocks,
         CancellationToken cancellationToken)
     {
         var random = new Random(options.Seed + 10_000);
+        // Dictionaries speed up batch and zone lookup inside the loop that creates millions of items.
         var batchesByProduct = productBatches
             .GroupBy(x => x.ProductId)
             .ToDictionary(x => x.Key, x => x.ToList());
+        var productsById = products.ToDictionary(x => x.Id);
         var zonesByWarehouse = warehouses
             .ToDictionary(x => x.Id, x => x.Zones.ToList());
+        var stockStates = stocks
+            .Where(x => x.Available > 0)
+            .Select(x => new StockSeedState(
+                x.ProductId,
+                x.WarehouseId,
+                x.WarehouseZoneId,
+                x.ProductBatchId,
+                x.Available))
+            .ToList();
         var sequenceCounters = new Dictionary<(DocumentType Type, int Year, Guid? WarehouseId), int>();
 
+        // The document count comes from the target item count and average items per document.
+        // The final item count remains exact thanks to CalculateDocumentItemCount.
         var documentTarget = (int)Math.Ceiling(
             options.MovementItemCount / (double)options.AverageItemsPerDocument);
         var remainingItems = options.MovementItemCount;
         var generatedDocuments = 0;
         var generatedItems = 0;
 
+        // Document dates are spread across the last two years to look like operational history.
         var startDate = DateTime.UtcNow.Date.AddYears(-2);
         var dateRangeDays = Math.Max(1, (DateTime.UtcNow.Date - startDate).Days);
+        var documents = new List<Document>(options.SaveDocumentBatchSize);
+        var auditLogs = new List<AuditLog>(options.SaveDocumentBatchSize * (options.AverageItemsPerDocument + 1));
+        var documentsInBatch = 0;
+        var documentsLeftAfterCurrent = 0;
+        var itemCount = 0;
+        DocumentType documentType;
+        Warehouse sourceWarehouse = null!;
+        Warehouse targetWarehouse = null!;
+        DateTime documentDate;
+        Document document = null!;
+        DocumentItem item = null!;
 
         while (generatedDocuments < documentTarget)
         {
-            var documents = new List<Document>(options.SaveDocumentBatchSize);
-            var documentsInBatch = Math.Min(
+            documents.Clear();
+            auditLogs.Clear();
+            documentsInBatch = Math.Min(
                 options.SaveDocumentBatchSize,
                 documentTarget - generatedDocuments);
-
             for (var i = 0; i < documentsInBatch; i++)
             {
-                var documentsLeftIncludingCurrent = documentTarget - generatedDocuments;
-                var maxItemsForCurrentDocument = remainingItems - (documentsLeftIncludingCurrent - 1);
-                var itemCount = Math.Min(
-                    maxItemsForCurrentDocument,
-                    Math.Max(1, options.AverageItemsPerDocument + random.Next(-2, 3)));
+                documentsLeftAfterCurrent = documentTarget - generatedDocuments - 1;
+                // Pick a sensible item count for the document while preserving the exact MovementItemCount.
+                itemCount = CalculateDocumentItemCount(
+                    random,
+                    options.AverageItemsPerDocument,
+                    remainingItems,
+                    documentsLeftAfterCurrent);
 
-                var documentType = PickDocumentType(random);
-                var sourceWarehouse = PickWarehouseForDocument(random, warehouses);
-                var targetWarehouse = documentType == DocumentType.MM
-                    ? PickDifferentWarehouse(random, warehouses, sourceWarehouse)
+                // Document type decides whether warehouse/zone is the source, target, or both sides.
+                documentType = PickDocumentType(random, stockStates);
+                sourceWarehouse = documentType is DocumentType.WZ or DocumentType.MM
+                    ? PickWarehouseWithAvailableStock(random, warehouses, stockStates)
                     : PickWarehouseForDocument(random, warehouses);
-                var documentDate = startDate.AddDays(random.Next(dateRangeDays));
-                var document = CreateDocument(
+                targetWarehouse = documentType == DocumentType.MM
+                    ? PickDifferentWarehouse(random, warehouses, sourceWarehouse)
+                    : sourceWarehouse;
+                documentDate = startDate.AddDays(random.Next(dateRangeDays));
+                // CreateDocument assigns valid document warehouses and a realistic sequence number.
+                document = CreateDocument(
                     random,
                     documentType,
                     documentDate,
@@ -300,33 +430,42 @@ public static class DbSeeder
 
                 for (var itemIndex = 0; itemIndex < itemCount; itemIndex++)
                 {
-                    var product = products[random.Next(products.Count)];
-                    batchesByProduct.TryGetValue(product.Id, out var batches);
-                    var productBatchId = product.RequiresBatch && batches is { Count: > 0 }
-                        ? batches[random.Next(batches.Count)].Id
-                        : (Guid?)null;
-
-                    var item = CreateDocumentItem(
-                        random,
-                        documentType,
-                        product,
-                        productBatchId,
-                        zonesByWarehouse[sourceWarehouse.Id],
-                        zonesByWarehouse[targetWarehouse.Id]);
+                    item = documentType is DocumentType.WZ or DocumentType.MM
+                        ? CreateOutboundDocumentItem(
+                            random,
+                            documentType,
+                            sourceWarehouse,
+                            targetWarehouse,
+                            productsById,
+                            zonesByWarehouse,
+                            stockStates)
+                        : CreateInboundDocumentItem(
+                            random,
+                            documentType,
+                            sourceWarehouse,
+                            products,
+                            batchesByProduct,
+                            zonesByWarehouse,
+                            stockStates);
 
                     document.AddItem(item);
+                    auditLogs.Add(CreateMovementAuditLog(document, item));
                 }
 
                 ApplyOperationalStatus(random, document);
                 documents.Add(document);
+                auditLogs.Add(CreateCreateAuditLog(document));
 
+                // Counters track progress and ensure the final item count closes exactly.
                 generatedDocuments++;
                 generatedItems += itemCount;
                 remainingItems -= itemCount;
             }
 
+            // Saving each batch limits memory usage and lets EF Core release tracked entities.
             db.Documents.AddRange(documents);
-            await db.SaveChangesAsync(cancellationToken);
+            db.AuditLogs.AddRange(auditLogs);
+            db.SaveChanges();
             db.ChangeTracker.Clear();
         }
 
@@ -334,6 +473,30 @@ public static class DbSeeder
             generatedDocuments,
             generatedItems,
             sequenceCounters);
+    }
+
+    private static int CalculateDocumentItemCount(
+        Random random,
+        int averageItemsPerDocument,
+        int remainingItems,
+        int documentsLeftAfterCurrent)
+    {
+        const int minItemsPerDocument = 1;
+        var maxItemsPerDocument = averageItemsPerDocument + 2;
+        // Randomize around the average so documents do not all have the same item count.
+        var desiredItemCount = Math.Max(
+            minItemsPerDocument,
+            averageItemsPerDocument + random.Next(-2, 3));
+
+        // Bounds ensure the remaining items can still be distributed across the remaining documents.
+        var minCurrentItemCount = Math.Max(
+            minItemsPerDocument,
+            remainingItems - documentsLeftAfterCurrent * maxItemsPerDocument);
+        var maxCurrentItemCount = Math.Min(
+            maxItemsPerDocument,
+            remainingItems - documentsLeftAfterCurrent * minItemsPerDocument);
+
+        return Math.Clamp(desiredItemCount, minCurrentItemCount, maxCurrentItemCount);
     }
 
     private static Document CreateDocument(
@@ -344,7 +507,9 @@ public static class DbSeeder
         Warehouse targetWarehouse,
         Dictionary<(DocumentType Type, int Year, Guid? WarehouseId), int> sequenceCounters)
     {
-        Guid? sourceWarehouseId = documentType is DocumentType.WZ or DocumentType.MM or DocumentType.ADJ
+        // Map the document type to the movement sides.
+        // PZ receives goods, WZ issues goods, MM transfers goods, ADJ adjusts stock.
+        Guid? sourceWarehouseId = documentType is DocumentType.PZ or DocumentType.WZ or DocumentType.MM or DocumentType.ADJ
             ? sourceWarehouse.Id
             : null;
         Guid? targetWarehouseId = documentType is DocumentType.PZ or DocumentType.MM
@@ -354,11 +519,12 @@ public static class DbSeeder
         var document = new Document(
             documentDate,
             documentType,
-            SystemUser,
+            PickUser(random),
             sourceWarehouseId,
             targetWarehouseId,
             BuildDocumentNotes(random, documentType));
 
+        // Numbering is separate per type, year, and warehouse, similar to a real WMS.
         var sequenceWarehouseId = sourceWarehouseId ?? targetWarehouseId;
         var sequenceKey = (documentType, documentDate.Year, sequenceWarehouseId);
         sequenceCounters.TryGetValue(sequenceKey, out var lastNumber);
@@ -395,16 +561,19 @@ public static class DbSeeder
         Guid? sourceZoneId = null;
         Guid? targetZoneId = null;
 
+        // WZ and MM remove goods from a source zone.
         if (documentType is DocumentType.WZ or DocumentType.MM)
         {
             sourceZoneId = PickZoneForProduct(random, sourceZones, product).Id;
         }
 
+        // PZ and MM put goods into a target zone.
         if (documentType is DocumentType.PZ or DocumentType.MM)
         {
             targetZoneId = PickZoneForProduct(random, targetZones, product).Id;
         }
 
+        // Adjustments often target a specific zone, but some remain global corrections.
         if (documentType == DocumentType.ADJ && random.Next(100) < 70)
         {
             sourceZoneId = PickZoneForProduct(random, sourceZones, product).Id;
@@ -418,6 +587,80 @@ public static class DbSeeder
             targetZoneId);
     }
 
+    private static DocumentItem CreateInboundDocumentItem(
+        Random random,
+        DocumentType documentType,
+        Warehouse warehouse,
+        IReadOnlyList<Product> products,
+        IReadOnlyDictionary<Guid, List<ProductBatch>> batchesByProduct,
+        IReadOnlyDictionary<Guid, List<WarehouseZone>> zonesByWarehouse,
+        List<StockSeedState> stockStates)
+    {
+        var product = products[random.Next(products.Count)];
+        batchesByProduct.TryGetValue(product.Id, out var batches);
+        var productBatchId = product.RequiresBatch && batches is { Count: > 0 }
+            ? batches[random.Next(batches.Count)].Id
+            : (Guid?)null;
+        var zone = PickZoneForProduct(random, zonesByWarehouse[warehouse.Id], product);
+        var quantity = GenerateMovementQuantity(random, product.Unit);
+
+        // Current DocumentCommandService applies PZ using source warehouse/zone, while
+        // DocumentItem's own validation expects a target zone for PZ. Setting both keeps the
+        // generated document compatible with both rules until the domain is unified.
+        Guid? sourceZoneId = documentType == DocumentType.ADJ && random.Next(100) >= 70
+            ? null
+            : zone.Id;
+        Guid? targetZoneId = documentType == DocumentType.PZ
+            ? zone.Id
+            : null;
+
+        IncreaseStockState(stockStates, product.Id, warehouse.Id, zone.Id, productBatchId, quantity);
+
+        return new DocumentItem(
+            product.Id,
+            quantity,
+            productBatchId,
+            sourceZoneId,
+            targetZoneId);
+    }
+
+    private static DocumentItem CreateOutboundDocumentItem(
+        Random random,
+        DocumentType documentType,
+        Warehouse sourceWarehouse,
+        Warehouse targetWarehouse,
+        IReadOnlyDictionary<Guid, Product> productsById,
+        IReadOnlyDictionary<Guid, List<WarehouseZone>> zonesByWarehouse,
+        List<StockSeedState> stockStates)
+    {
+        var stock = PickAvailableStock(random, stockStates, sourceWarehouse.Id);
+        var product = productsById[stock.ProductId];
+        var quantity = GenerateMovementQuantityUpTo(random, product.Unit, stock.Available);
+        var targetZoneId = documentType == DocumentType.MM
+            ? PickZoneForProduct(random, zonesByWarehouse[targetWarehouse.Id], product).Id
+            : (Guid?)null;
+
+        stock.Decrease(quantity);
+
+        if (documentType == DocumentType.MM && targetZoneId.HasValue)
+        {
+            IncreaseStockState(
+                stockStates,
+                stock.ProductId,
+                targetWarehouse.Id,
+                targetZoneId.Value,
+                stock.ProductBatchId,
+                quantity);
+        }
+
+        return new DocumentItem(
+            stock.ProductId,
+            quantity,
+            stock.ProductBatchId,
+            stock.WarehouseZoneId,
+            targetZoneId);
+    }
+
     private static void ApplyOperationalStatus(Random random, Document document)
     {
         var roll = random.Next(100);
@@ -428,20 +671,26 @@ public static class DbSeeder
 
         if (roll < 8)
         {
-            document.Cancel(SystemUser);
+            document.Cancel(PickUser(random));
             return;
         }
 
-        document.Confirm(SystemUser);
+        document.Confirm(PickUser(random));
 
         if (roll >= 94 && document.Type == DocumentType.MM)
         {
-            document.StartTransfer(SystemUser.Id, DateTimeOffset.UtcNow.AddMinutes(-random.Next(1, 240)));
+            document.StartTransfer(PickUser(random).Id, DateTimeOffset.UtcNow.AddMinutes(-random.Next(1, 240)));
         }
     }
 
-    private static DocumentType PickDocumentType(Random random)
+    private static DocumentType PickDocumentType(Random random, IReadOnlyList<StockSeedState> stockStates)
     {
+        var hasAvailableStock = stockStates.Any(x => x.Available > 0);
+        if (!hasAvailableStock)
+        {
+            return random.Next(100) < 85 ? DocumentType.PZ : DocumentType.ADJ;
+        }
+
         return random.Next(100) switch
         {
             < 42 => DocumentType.WZ,
@@ -449,6 +698,26 @@ public static class DbSeeder
             < 92 => DocumentType.MM,
             _ => DocumentType.ADJ
         };
+    }
+
+    private static Warehouse PickWarehouseWithAvailableStock(
+        Random random,
+        IReadOnlyList<Warehouse> warehouses,
+        IReadOnlyList<StockSeedState> stockStates)
+    {
+        var warehouseIds = stockStates
+            .Where(x => x.Available > 0)
+            .Select(x => x.WarehouseId)
+            .Distinct()
+            .ToList();
+
+        if (warehouseIds.Count == 0)
+        {
+            return PickWarehouseForDocument(random, warehouses);
+        }
+
+        var warehouseId = warehouseIds[random.Next(warehouseIds.Count)];
+        return warehouses.First(x => x.Id == warehouseId);
     }
 
     private static Warehouse PickWarehouseForDocument(Random random, IReadOnlyList<Warehouse> warehouses)
@@ -486,6 +755,46 @@ public static class DbSeeder
         return targetWarehouse;
     }
 
+    private static StockSeedState PickAvailableStock(
+        Random random,
+        IReadOnlyList<StockSeedState> stockStates,
+        Guid preferredWarehouseId)
+    {
+        var preferred = stockStates
+            .Where(x => x.WarehouseId == preferredWarehouseId && x.Available > 0)
+            .ToList();
+
+        if (preferred.Count == 0)
+        {
+            throw new InvalidOperationException("Cannot generate outbound document item without available stock.");
+        }
+
+        return preferred[random.Next(preferred.Count)];
+    }
+
+    private static void IncreaseStockState(
+        List<StockSeedState> stockStates,
+        Guid productId,
+        Guid warehouseId,
+        Guid warehouseZoneId,
+        Guid? productBatchId,
+        decimal quantity)
+    {
+        var stock = stockStates.FirstOrDefault(x =>
+            x.ProductId == productId &&
+            x.WarehouseId == warehouseId &&
+            x.WarehouseZoneId == warehouseZoneId &&
+            x.ProductBatchId == productBatchId);
+
+        if (stock is null)
+        {
+            stockStates.Add(new StockSeedState(productId, warehouseId, warehouseZoneId, productBatchId, quantity));
+            return;
+        }
+
+        stock.Increase(quantity);
+    }
+
     private static WarehouseZone PickZoneForProduct(
         Random random,
         IReadOnlyList<WarehouseZone> zones,
@@ -521,9 +830,29 @@ public static class DbSeeder
         return Math.Max(0.01m, Math.Round(quantity, 2));
     }
 
-
-    private static List<Warehouse> GenerateWarehouses(Faker faker, int warehouseCount, int zonesPerWarehouse)
+    private static decimal GenerateMovementQuantityUpTo(Random random, UnitOfMeasure unit, decimal available)
     {
+        if (available <= 0)
+        {
+            throw new InvalidOperationException("Cannot generate movement quantity for empty stock.");
+        }
+
+        var desiredQuantity = GenerateMovementQuantity(random, unit);
+        var maxQuantity = Math.Max(0.01m, Math.Round(available, 2));
+        var quantity = Math.Min(desiredQuantity, maxQuantity);
+
+        if (quantity <= 0.01m)
+        {
+            return 0.01m;
+        }
+
+        return Math.Round(quantity, 2);
+    }
+
+
+    private static List<Warehouse> GenerateWarehouses(Random random, Faker faker, int warehouseCount, int zonesPerWarehouse)
+    {
+        // Warehouse templates represent a medium operation with a few regional sites.
         var warehouseTemplates = new[]
         {
             ("WH-CHI", "Chicago Distribution Center", "United States", "Chicago"),
@@ -565,7 +894,7 @@ public static class DbSeeder
                 template.Item3,
                 template.Item4,
                 faker.Address.StreetAddress(),
-                SystemUser);
+                PickUser(random));
 
             foreach (var zone in GenerateZoneDefinitions(zoneTemplates, zonesPerWarehouse))
             {
@@ -609,6 +938,7 @@ public static class DbSeeder
 
         for (var i = 0; i < count; i++)
         {
+            // Categories, units, and batch tracking are weighted, so the assortment is not perfectly flat.
             var category = PickWeighted(random, categories);
             var template = category.Products[random.Next(category.Products.Length)];
             var brand = category.Brands[random.Next(category.Brands.Length)];
@@ -623,12 +953,13 @@ public static class DbSeeder
 
             var (weight, volume) = EstimateDimensions(random, unit, pack);
 
+            // Names, SKUs, and descriptions are built from domain elements, keeping data varied and coherent.
             products.Add(new Product(
                 sku,
                 name,
                 unit,
                 requiresBatch,
-                SystemUser,
+                PickUser(random),
                 weight,
                 volume,
                 description));
@@ -688,12 +1019,14 @@ public static class DbSeeder
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var batches = new List<ProductBatch>(products.Count / 2 * averageBatchesPerProduct);
 
+        // Create batches only where the product requires them; standard SKUs do not inflate batch counts.
         foreach (var product in products.Where(x => x.RequiresBatch))
         {
             var batchCount = Math.Max(2, averageBatchesPerProduct + random.Next(-2, 4));
 
             for (var i = 0; i < batchCount; i++)
             {
+                // Manufacturing and expiration dates are spread in time, with a small expired-batch share.
                 var manufacturedDaysAgo = random.Next(14, 720);
                 var manufactured = today.AddDays(-manufacturedDaysAgo);
 
@@ -707,7 +1040,13 @@ public static class DbSeeder
                 var expiration = manufactured.AddDays(shelfLifeDays);
                 if (random.Next(100) < 4)
                 {
-                    expiration = today.AddDays(-random.Next(1, 45));
+                    var latestExpiredDate = today.AddDays(-1);
+                    var earliestValidExpiration = manufactured.AddDays(1);
+                    var expiredWindowDays = Math.Max(0, latestExpiredDate.DayNumber - earliestValidExpiration.DayNumber);
+
+                    expiration = expiredWindowDays > 0
+                        ? earliestValidExpiration.AddDays(random.Next(1, expiredWindowDays + 1))
+                        : manufactured.AddDays(Math.Max(1, shelfLifeDays));
                 }
                 else if (expiration < today.AddDays(7))
                 {
@@ -715,7 +1054,7 @@ public static class DbSeeder
                 }
 
                 var batchNumber = $"B{today.Year % 100}{random.Next(1, 53):00}-{product.SKU[^6..]}-{i + 1:00}";
-                batches.Add(new ProductBatch(product.Id, batchNumber, SystemUser, manufactured, expiration));
+                batches.Add(new ProductBatch(product.Id, batchNumber, PickUser(random), manufactured, expiration));
             }
         }
 
@@ -739,6 +1078,7 @@ public static class DbSeeder
         foreach (var product in products)
         {
             batchesByProduct.TryGetValue(product.Id, out var productBatches);
+            // Kandydaci to wszystkie sensowne kombinacje: produkt + dopuszczalna strefa + opcjonalna partia.
             var candidates = BuildStockCandidates(random, zones, product, productBatches);
             var maxDistinctRows = candidates.Count;
             var rowCount = Math.Min(
@@ -749,10 +1089,8 @@ public static class DbSeeder
             {
                 var candidate = candidates[i];
                 var key = (product.Id, candidate.WarehouseId, candidate.Zone.Id, candidate.BatchId);
-                if (!keys.Add(key))
-                {
-                    continue;
-                }
+                // HashSet keeps stock rows unique for the same product/warehouse/zone/batch combination.
+                if (!keys.Add(key)) { continue; }
 
                 result.Add(new Stock(
                     product.Id,
@@ -773,6 +1111,7 @@ public static class DbSeeder
         IReadOnlyList<ProductBatch>? productBatches)
     {
         var eligibleZones = GetEligibleStockZones(zones, product);
+        // Batch-tracked products get separate stock rows per batch; other products use null.
         var batchIds = product.RequiresBatch && productBatches is { Count: > 0 }
             ? productBatches.Select(x => (Guid?)x.Id).ToList()
             : [null];
@@ -783,6 +1122,7 @@ public static class DbSeeder
 
         for (var i = candidates.Count - 1; i > 0; i--)
         {
+            // Shuffle candidates so products do not always land in the same first zones.
             var swapIndex = random.Next(i + 1);
             (candidates[i], candidates[swapIndex]) = (candidates[swapIndex], candidates[i]);
         }
@@ -794,6 +1134,7 @@ public static class DbSeeder
         IEnumerable<WarehouseZone> zones,
         Product product)
     {
+        // Zone selection respects product temperature: frozen, cold, or ambient.
         var allowedTemperature = GetRequiredTemperature(product);
         var allZones = zones.ToList();
         var candidates = allZones
@@ -880,12 +1221,19 @@ public static class DbSeeder
         return min + (decimal)random.NextDouble() * (max - min);
     }
 
+    private static UserSnapshot PickUser(Random random)
+    {
+        var user = SeederUsers[random.Next(SeederUsers.Count)];
+        return new UserSnapshot(user.Id, user.Email, user.Name);
+    }
+
     private static T PickWeighted<T>(Random random, IReadOnlyList<Weighted<T>> weighted)
     {
         var total = weighted.Sum(x => x.Weight);
         var roll = random.Next(total);
         var cursor = 0;
 
+        // Weighted picking gives realistic proportions, for example more FMCG than pharmaceuticals.
         foreach (var item in weighted)
         {
             cursor += item.Weight;
@@ -898,9 +1246,119 @@ public static class DbSeeder
         return weighted[^1].Value;
     }
 
-    private static async Task SaveInBatchesAsync<T>(
+    private static AuditLog CreateCreateAuditLog(Warehouse warehouse)
+    {
+        return CreateAuditLog(
+            nameof(Warehouse),
+            warehouse.Id,
+            "Create",
+            warehouse.CreatedByUser,
+            $"{{\"code\":\"{warehouse.Code}\",\"name\":\"{warehouse.Name}\"}}");
+    }
+
+    private static AuditLog CreateCreateAuditLog(WarehouseZone zone)
+    {
+        return CreateAuditLog(
+            nameof(WarehouseZone),
+            zone.Id,
+            "Create",
+            zone.CreatedByUser,
+            $"{{\"warehouseId\":\"{zone.WarehouseId}\",\"code\":\"{zone.Code}\",\"name\":\"{zone.Name}\"}}");
+    }
+
+    private static AuditLog CreateCreateAuditLog(Product product)
+    {
+        return CreateAuditLog(
+            nameof(Product),
+            product.Id,
+            "Create",
+            product.CreatedByUser,
+            $"{{\"sku\":\"{product.SKU}\",\"name\":\"{product.Name}\",\"unit\":\"{product.Unit}\",\"requiresBatch\":{product.RequiresBatch.ToString().ToLowerInvariant()}}}");
+    }
+
+    private static AuditLog CreateCreateAuditLog(ProductBatch batch)
+    {
+        return CreateAuditLog(
+            nameof(ProductBatch),
+            batch.Id,
+            "Create",
+            batch.CreatedByUser,
+            $"{{\"productId\":\"{batch.ProductId}\",\"batchNumber\":\"{batch.BatchNumber}\"}}");
+    }
+
+    private static AuditLog CreateCreateAuditLog(Stock stock, UserSnapshot performedBy)
+    {
+        return CreateAuditLog(
+            nameof(Stock),
+            stock.Id,
+            "Create",
+            performedBy,
+            $"{{\"productId\":\"{stock.ProductId}\",\"warehouseId\":\"{stock.WarehouseId}\",\"warehouseZoneId\":\"{stock.WarehouseZoneId}\",\"productBatchId\":\"{stock.ProductBatchId}\",\"quantityTotal\":{stock.QuantityTotal.ToString(CultureInfo.InvariantCulture)}}}");
+    }
+
+    private static AuditLog CreateCreateAuditLog(Document document)
+    {
+        return CreateAuditLog(
+            nameof(Document),
+            document.Id,
+            "Create",
+            document.CreatedByUser,
+            $"{{\"type\":\"{document.Type}\",\"status\":\"{document.Status}\",\"number\":\"{document.Number}\",\"itemCount\":{document.Items.Count}}}");
+    }
+
+    private static AuditLog CreateMovementAuditLog(Document document, DocumentItem item)
+    {
+        return CreateAuditLog(
+            nameof(DocumentItem),
+            item.Id,
+            "Movement",
+            document.CreatedByUser,
+            $"{{\"documentId\":\"{document.Id}\",\"documentType\":\"{document.Type}\",\"productId\":\"{item.ProductId}\",\"productBatchId\":\"{item.ProductBatchId}\",\"sourceZoneId\":\"{item.SourceZoneId}\",\"targetZoneId\":\"{item.TargetZoneId}\",\"quantity\":{item.Quantity.ToString(CultureInfo.InvariantCulture)}}}");
+    }
+
+    private static AuditLog CreateAuditLog(
+        string entityName,
+        Guid entityId,
+        string operation,
+        UserSnapshot performedBy,
+        string newValues)
+    {
+        return new AuditLog
+        {
+            Id = Guid.NewGuid(),
+            EntityName = entityName,
+            EntityId = entityId,
+            Operation = operation,
+            OldValues = string.Empty,
+            NewValues = newValues,
+            PerformedAt = DateTimeOffset.UtcNow,
+            IpAddress = "seed",
+            PerformedById = performedBy.Id,
+            PerformedBy = new UserSnapshot(performedBy.Id, performedBy.Email, performedBy.Name)
+        };
+    }
+
+    private static async Task SaveAsync<T>(
         WarehouseManagementSystemDbContext db,
         IReadOnlyList<T> entities,
+        CancellationToken cancellationToken)
+        where T : class
+    {
+        const int batchSize = 2_000;
+
+        // Generic batch save used for master data and document sequences.
+        for (var i = 0; i < entities.Count; i += batchSize)
+        {
+            db.Set<T>().AddRange(entities.Skip(i).Take(batchSize));
+            await db.SaveChangesAsync(cancellationToken);
+            db.ChangeTracker.Clear();
+        }
+    }
+
+    private static async Task SaveWithAuditAsync<T>(
+        WarehouseManagementSystemDbContext db,
+        IReadOnlyList<T> entities,
+        IReadOnlyList<AuditLog> auditLogs,
         CancellationToken cancellationToken)
         where T : class
     {
@@ -909,6 +1367,7 @@ public static class DbSeeder
         for (var i = 0; i < entities.Count; i += batchSize)
         {
             db.Set<T>().AddRange(entities.Skip(i).Take(batchSize));
+            db.AuditLogs.AddRange(auditLogs.Skip(i).Take(batchSize));
             await db.SaveChangesAsync(cancellationToken);
             db.ChangeTracker.Clear();
         }
@@ -1037,15 +1496,9 @@ public static class DbSeeder
                 new(second, secondWeight)
             };
 
-            if (third.HasValue)
-            {
-                units.Add(new Weighted<UnitOfMeasure>(third.Value, thirdWeight));
-            }
+            if (third.HasValue) { units.Add(new Weighted<UnitOfMeasure>(third.Value, thirdWeight)); }
 
-            if (fourth.HasValue)
-            {
-                units.Add(new Weighted<UnitOfMeasure>(fourth.Value, fourthWeight));
-            }
+            if (fourth.HasValue) { units.Add(new Weighted<UnitOfMeasure>(fourth.Value, fourthWeight)); }
 
             return units;
         }

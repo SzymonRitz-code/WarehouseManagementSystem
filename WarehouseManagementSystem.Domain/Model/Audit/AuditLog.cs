@@ -1,4 +1,5 @@
 ﻿using WarehouseManagementSystem.Domain.Model.SecurityDomain;
+using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.AuditDomain
 {
@@ -15,7 +16,7 @@ namespace WarehouseManagementSystem.Domain.Model.AuditDomain
 
         public Guid PerformedById { get; set; }
 
-        public User PerformedBy { get; set; }
+        public UserSnapshot PerformedBy { get; set; }
 
     }
 }

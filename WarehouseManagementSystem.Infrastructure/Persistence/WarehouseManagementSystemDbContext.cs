@@ -24,7 +24,6 @@ public class WarehouseManagementSystemDbContext : DbContext
     public DbSet<StockReservation> StockReservations { get; set; }
     public DbSet<Warehouse> Warehouses { get; set; }
     public DbSet<WarehouseZone> WarehouseZones { get; set; }
-    //public DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -46,7 +45,6 @@ public class WarehouseManagementSystemDbContext : DbContext
         ConfigureDocumentItem(modelBuilder);
         ConfigureDocumentSequence(modelBuilder);
 
-        //ConfigureUser(modelBuilder);
         ConfigureAuditLog(modelBuilder);
 
         base.OnModelCreating(modelBuilder);
@@ -405,23 +403,6 @@ public class WarehouseManagementSystemDbContext : DbContext
             .IsUnique();
     }
 
-    // ================= SECURITY =================
-    //private void ConfigureUser(ModelBuilder modelBuilder)
-    //{
-    //    var builder = modelBuilder.Entity<User>();
-    //    builder.HasKey(x => x.Id);
-
-    //    builder.Property(x => x.Email)
-    //           .IsRequired()
-    //           .HasMaxLength(255);
-
-    //    builder.Property(x => x.Name)
-    //           .IsRequired(false)
-    //           .HasMaxLength(200);
-
-    //    builder.HasIndex(x => x.Email).IsUnique();
-    //}
-
     // ================= AUDIT =================
     private void ConfigureAuditLog(ModelBuilder modelBuilder)
     {
@@ -453,10 +434,12 @@ public class WarehouseManagementSystemDbContext : DbContext
                .HasMaxLength(50)
                .IsRequired(false);
 
-        builder.HasOne(x => x.PerformedBy)
-               .WithMany()
-               .HasForeignKey(x => x.PerformedById)
-               .OnDelete(DeleteBehavior.Restrict);
+        builder.OwnsOne(x => x.PerformedBy, user =>
+        {
+            user.Property(x => (Guid)x.Id).HasColumnName("PerformedById");
+            user.Property(x => (string)x.Name).HasMaxLength(50).HasColumnName("PerformedByName");
+            user.Property(x => (string)x.Email).HasMaxLength(256).HasColumnName("PerformedByEmail");
+        });
 
         builder.HasIndex(x => new { x.EntityName, x.EntityId });
     }

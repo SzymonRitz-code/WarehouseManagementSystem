@@ -172,6 +172,8 @@ builder.Services.AddAuthorization(o =>
 });
 var app = builder.Build();
 
+await app.SeedDatabaseIfEnabledAsync();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
