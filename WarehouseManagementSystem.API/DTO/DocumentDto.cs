@@ -26,9 +26,6 @@ public class DocumentDto
     public Guid? ConfirmedById { get; set; }
     public string? ConfirmedByName { get; set; }
     public string? ConfirmedByEmail { get; set; }
-    public Guid? TransferStartedById { get; set; }
-    public string? TransferStartedByName { get; set; }
-    public string? TransferStartedByEmail { get; set; }
 
     public List<DocumentItemDto> Items { get; set; } = [];
 }

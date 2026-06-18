@@ -183,7 +183,7 @@ public class DocumentTests
         var transferUser = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
-        Action act = () => doc.StartTransfer(transferUser, now);
+        Action act = () => doc.StartTransfer(now);
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
@@ -198,7 +198,7 @@ public class DocumentTests
         var transferUser = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
-        Action act = () => doc.StartTransfer(transferUser, now);
+        Action act = () => doc.StartTransfer(now);
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
@@ -213,11 +213,10 @@ public class DocumentTests
         var transferUser = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
-        doc.StartTransfer(transferUser, now);
+        doc.StartTransfer(now);
 
         doc.Status.Should().Be(DocumentStatus.Transfer);
         doc.TransferStartedAt.Should().Be(now);
-        doc.TransferStartedById.Should().Be(transferUser);
     }
 
     [Fact]
@@ -225,14 +224,13 @@ public class DocumentTests
     {
         // Arrange
         var createdBy = _userServiceMock.Object.GetUser(default);
-        var transferUser = Guid.NewGuid();
         var document = new Document(DateTime.Today, DocumentType.PZ, createdBy);
         var item = new DocumentItem(Guid.NewGuid(), 5, null, null, Guid.NewGuid());
         document.AddItem(item);
 
         // Confirm first to allow transfer
         document.Confirm(createdBy);
-        document.StartTransfer(transferUser, DateTimeOffset.UtcNow);
+        document.StartTransfer(DateTimeOffset.UtcNow);
 
         var confirmedBy = _userServiceMock.Object.GetUser(default);
 
@@ -360,7 +358,7 @@ public class DocumentTests
     {
         var doc = DraftWithItem();
         doc.Cancel(_userServiceMock.Object.GetUser(default));
-        var act = () => doc.StartTransfer(Guid.NewGuid(), DateTimeOffset.UtcNow);
+        var act = () => doc.StartTransfer(DateTimeOffset.UtcNow);
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 

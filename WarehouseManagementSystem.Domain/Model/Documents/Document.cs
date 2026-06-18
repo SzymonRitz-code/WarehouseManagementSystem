@@ -50,10 +50,6 @@ public class Document
     public UserSnapshot? ConfirmedByUser { get; private set; }
     public UserSnapshot? CancelledByUser { get; private set; }
 
-    public Guid? TransferStartedById { get; private set; }
-    public string? TransferStartedByName { get; private set; }
-    public string? TransferStartedByEmail { get; private set; }
-
     public Guid? SourceWarehouseId { get; private set; }
     public Warehouse? SourceWarehouse { get; private set; }
 
@@ -118,7 +114,7 @@ public class Document
 
         _items.Remove(item);
     }
-    public void StartTransfer(Guid userId, DateTimeOffset now)
+    public void StartTransfer(DateTimeOffset now)
     {
         if (Status == DocumentStatus.Cancelled)
             throw new DocumentNotInDraftStateException(Id);
@@ -128,7 +124,6 @@ public class Document
 
         Status = DocumentStatus.Transfer;
         TransferStartedAt = now;
-        TransferStartedById = userId;
     }
 
     public void Confirm(ValueObjects.UserSnapshot confirmedByUser)

@@ -92,7 +92,6 @@ public static class AuditSnapshots
         CreatedBy = document.CreatedByUser,
         ConfirmedBy = document.ConfirmedByUser,
         document.TransferStartedAt,
-        document.TransferStartedById,
         document.SourceWarehouseId,
         document.TargetWarehouseId,
         Items = document.Items

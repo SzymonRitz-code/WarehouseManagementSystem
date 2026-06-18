@@ -78,10 +78,7 @@
                 .ForMember(dto => dto.CreatedByName, opt => opt.MapFrom(d => d.CreatedByUser != null ? d.CreatedByUser.Name : null))
                 .ForMember(dto => dto.ConfirmedById, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? (Guid?)d.ConfirmedByUser.Id : null))
                 .ForMember(dto => dto.ConfirmedByEmail, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Email : null))
-                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null))
-                .ForMember(dto => dto.TransferStartedById, opt => opt.MapFrom(d => d.TransferStartedById))
-                .ForMember(dto => dto.TransferStartedByName, opt => opt.MapFrom(d => d.TransferStartedByName))
-                .ForMember(dto => dto.TransferStartedByEmail, opt => opt.MapFrom(d => d.TransferStartedByEmail));
+                .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null));
         }
 
         public static void AddDocumentItemMappings(this IMapperConfigurationExpression cfg)

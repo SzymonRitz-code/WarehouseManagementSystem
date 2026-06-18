@@ -10,6 +10,7 @@ using WarehouseManagementSystem.API.Extensions.Middleware;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Seed;
 using WarehouseManagementSystem.API.Services.Stocks;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Interfaces;
@@ -89,6 +90,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 
 builder.Services.AddTransient<IDocumentNumberGenerator, DocumentNumberGenerator>();
+builder.Services.AddHostedService<DatabaseSeedingHostedService>();
 builder.Services.AddHostedService<ReservationExpirationJob>();
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
 builder.Services.AddSingleton<IUserService, UserService>();
@@ -171,8 +173,6 @@ builder.Services.AddAuthorization(o =>
     //o.AddPolicy("isemployee", p => p.RequireClaim("employeeno"));
 });
 var app = builder.Build();
-
-await app.SeedDatabaseIfEnabledAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

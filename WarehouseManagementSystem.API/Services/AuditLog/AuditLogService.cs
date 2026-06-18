@@ -30,6 +30,8 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
 
     public class AuditLogService : IAuditLogService
     {
+        private const int MaxAuditValueLength = 500;
+
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -99,18 +101,27 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
                 EntityName = entityName,
                 EntityId = entityId,
                 Operation = operation,
-                OldValues = oldValues != null
-                    ? JsonSerializer.Serialize(oldValues, JsonOptions)
-                    : string.Empty,
-                NewValues = newValues != null
-                    ? JsonSerializer.Serialize(newValues, JsonOptions)
-                    : string.Empty,
+                OldValues = SerializeAuditValues(oldValues),
+                NewValues = SerializeAuditValues(newValues),
                 PerformedAt = DateTimeOffset.UtcNow,
                 PerformedById = performedById,
                 IpAddress = ipAddress
             };
 
             _unitOfWork.AuditLogs.Add(log);
+        }
+
+        private static string SerializeAuditValues(object? values)
+        {
+            if (values is null)
+            {
+                return string.Empty;
+            }
+
+            var json = JsonSerializer.Serialize(values, JsonOptions);
+            return json.Length <= MaxAuditValueLength
+                ? json
+                : string.Concat(json.AsSpan(0, MaxAuditValueLength - 3), "...");
         }
 
         private static (Dictionary<string, object?> OldValues, Dictionary<string, object?> NewValues) BuildChangeSet(
