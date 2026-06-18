@@ -94,6 +94,11 @@ public class WarehouseManagementSystemDbContext : DbContext
         builder.ToTable(t =>
             t.HasCheckConstraint("CK_Stock_PositiveQty",
                 "[QuantityTotal] >= 0 AND [QuantityReserved] >= 0"));
+
+        builder.HasIndex(x => x.ProductBatchId);
+        builder.HasIndex(x => new { x.ProductId, x.WarehouseId, x.WarehouseZoneId, x.ProductBatchId });
+        builder.HasIndex(x => x.WarehouseId);
+        builder.HasIndex(x => x.WarehouseZoneId);
     }
 
     private void ConfigureStockReservation(ModelBuilder modelBuilder)
@@ -118,14 +123,14 @@ public class WarehouseManagementSystemDbContext : DbContext
             user.Property(x => (string)x.Email).HasMaxLength(256).HasColumnName("CreatedByEmail");
         });
 
-        builder.HasIndex(x => x.StockId);
-        builder.HasIndex(x => x.ExpiresAt);
-        builder.HasIndex(x => x.Status);
-
         builder.HasOne(x => x.Stock)
                .WithMany(s => s.Reservations)
                .HasForeignKey(x => x.StockId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.StockId);
+        builder.HasIndex(x => x.ExpiresAt);
+        builder.HasIndex(x => x.Status);
     }
 
     private void ConfigureProductBatch(ModelBuilder modelBuilder)
@@ -156,6 +161,7 @@ public class WarehouseManagementSystemDbContext : DbContext
                .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => new { x.BatchNumber, x.ProductId });
+        builder.HasIndex(x => new { x.ProductId });
     }
 
     // ================= WAREHOUSE =================
@@ -197,7 +203,16 @@ public class WarehouseManagementSystemDbContext : DbContext
             user.Property(x => (string)x.Email).HasMaxLength(256).HasColumnName("CreatedByEmail");
         });
 
-        builder.HasIndex(x => x.Code).IsUnique();
+        builder.HasIndex(x => x.Code).IncludeProperties(x => new
+        {
+            x.Name,
+            x.Country,
+            x.City,
+            x.Address,
+            x.IsActive,
+            x.CreatedAt,
+            CreatedByName = x.CreatedByUser.Name
+        }).IsUnique();
     }
 
     private void ConfigureWarehouseZone(ModelBuilder modelBuilder)
@@ -225,12 +240,17 @@ public class WarehouseManagementSystemDbContext : DbContext
             user.Property(x => (string)x.Email).HasMaxLength(256).HasColumnName("CreatedByEmail");
         });
 
-        builder.HasIndex(x => new { x.WarehouseId, x.Code }).IsUnique();
-
         builder.HasOne(x => x.Warehouse)
                .WithMany(w => w.Zones)
                .HasForeignKey(x => x.WarehouseId)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.WarehouseId, x.Code }).IncludeProperties(x => new
+        {
+            x.Name,
+            x.TemperatureType,
+            x.IsPickingZone
+        }).IsUnique();
     }
 
     // ================= CATALOG =================
@@ -253,6 +273,9 @@ public class WarehouseManagementSystemDbContext : DbContext
         builder.Property(x => x.Weight)
                .HasPrecision(18, 6);
 
+        builder.Property(x => x.Description)
+               .HasMaxLength(1000);
+
         builder.OwnsOne(x => x.CreatedByUser, user =>
         {
             user.Property(x => (Guid)x.Id).HasColumnName("CreatedById");
@@ -260,7 +283,13 @@ public class WarehouseManagementSystemDbContext : DbContext
             user.Property(x => (string)x.Email).HasMaxLength(256).HasColumnName("CreatedByEmail");
         });
 
-        builder.HasIndex(x => x.SKU).IsUnique();
+        builder.HasIndex(x => new { x.SKU, x.IsActive }).IncludeProperties(x => new
+        {
+            x.Name,
+            x.Unit,
+            x.Weight,
+            x.Volume
+        }).IsUnique();
     }
 
     // ================= DOCUMENTS =================
@@ -306,6 +335,10 @@ public class WarehouseManagementSystemDbContext : DbContext
                 .IsRowVersion()
                 .IsConcurrencyToken();
 
+        builder.Property(x => x.Notes)
+               .IsRequired(false)
+               .HasMaxLength(1000);
+
         // Relacje do magazynów
         builder.HasOne(x => x.SourceWarehouse)
                .WithMany(w => w.SourceDocuments)
@@ -335,7 +368,6 @@ public class WarehouseManagementSystemDbContext : DbContext
             user.Property(x => (string)x.Name).HasMaxLength(50).HasColumnName("ConfirmedByName");
             user.Property(x => (string)x.Email).HasMaxLength(256).HasColumnName("ConfirmedByEmail");
         }));
-
         builder.OwnsOne(x => x.CancelledByUser, (Action<OwnedNavigationBuilder<Document, Domain.ValueObjects.UserSnapshot>>)(user =>
         {
             user.Property(x => (Guid)x.Id).HasColumnName("CancelledById");
@@ -344,7 +376,20 @@ public class WarehouseManagementSystemDbContext : DbContext
         }));
         // Indeksy pomocnicze
         builder.HasIndex(x => x.DocumentDate);
-        builder.HasIndex(x => x.SourceWarehouseId);
+        builder.HasIndex(x => x.Number);
+        builder.HasIndex(x => x.SourceWarehouseId).IncludeProperties(x => new
+        {
+            x.Number,
+            x.Type,
+            x.Status,
+            x.CreatedAt,
+            x.ConfirmedAt,
+            x.DocumentDate,
+            x.TargetWarehouseId,
+            ConfirmedByName = x.ConfirmedByUser.Name,
+            CreatedByName = x.CreatedByUser.Name,
+            CancelledByName = x.CancelledByUser.Name
+        });
         builder.HasIndex(x => x.TargetWarehouseId);
     }
 
@@ -377,7 +422,14 @@ public class WarehouseManagementSystemDbContext : DbContext
                .HasForeignKey(x => x.TargetZoneId)
                .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(x => x.DocumentId);
+        builder.HasIndex(x => x.DocumentId).IncludeProperties(x => new
+        {
+            x.Quantity,
+            x.ProductId,
+            x.ProductBatchId,
+            x.SourceZoneId,
+            x.TargetZoneId
+        });
         builder.HasIndex(x => x.ProductId);
         builder.HasIndex(x => x.ProductBatchId);
         builder.HasIndex(x => x.SourceZoneId);
@@ -421,10 +473,10 @@ public class WarehouseManagementSystemDbContext : DbContext
                .HasMaxLength(50);
 
         builder.Property(x => x.OldValues)
-               .HasColumnType("nvarchar(max)");
+               .HasMaxLength(500);
 
         builder.Property(x => x.NewValues)
-               .HasColumnType("nvarchar(max)");
+               .HasMaxLength(500);
 
         builder.Property(x => x.PerformedAt)
                .IsRequired()

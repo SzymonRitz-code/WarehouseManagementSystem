@@ -17,43 +17,37 @@ public class DocumentQueryService : IDocumentQueryService
     }
     public async Task<IReadOnlyList<DocumentListDto>> GetDocumentsAsync(CancellationToken ct = default)
     {
+        var itemSummaries =
+            from item in _context.DocumentItems.AsNoTracking()
+            group item by item.DocumentId
+            into itemGroup
+            select new
+            {
+                DocumentId = itemGroup.Key,
+                ItemCount = itemGroup.Count(),
+                TotalQuantity = itemGroup.Sum(x => x.Quantity)
+            };
 
         return await (
             from document in _context.Documents
-            join item in _context.DocumentItems on document.Id equals item.DocumentId into itemJoin
-            from item in itemJoin.DefaultIfEmpty()
+            join itemSummary in itemSummaries on document.Id equals itemSummary.DocumentId
             join sourceWarehouse in _context.Warehouses on document.SourceWarehouseId equals sourceWarehouse.Id
             join targetWarehouse in _context.Warehouses on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
             from targetWarehouse in targetJoin.DefaultIfEmpty()
-            group new { document, item, sourceWarehouse, targetWarehouse }
-            by new
-            {
-                document.Id,
-                document.Number,
-                document.Type,
-                document.Status,
-                SourceWarehouseName = sourceWarehouse.Name,
-                TargetWarehouseName = targetWarehouse != null ? targetWarehouse.Name : null,
-                CreatedByName = document.CreatedByUser != null ? document.CreatedByUser.Name : null,
-                ConfirmedByName = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
-                document.CreatedAt,
-                document.ConfirmedAt
-            }
-            into g
             select new DocumentListDto
             {
-                Id = g.Key.Id,
-                DocumentNumber = g.Key.Number,
-                Type = g.Key.Type,
-                Status = g.Key.Status,
-                SourceWarehouse = g.Key.SourceWarehouseName,
-                DestinationWarehouse = g.Key.TargetWarehouseName,
-                CreatedBy = g.Key.CreatedByName,
-                ApprovedBy = g.Key.ConfirmedByName,
-                CreatedAt = g.Key.CreatedAt,
-                ApprovedAt = g.Key.ConfirmedAt,
-                ItemCount = g.Count(x => x.item != null),
-                TotalQuantity = g.Sum(x => (decimal?)x.item.Quantity) ?? 0
+                Id = document.Id,
+                DocumentNumber = document.Number,
+                Type = document.Type,
+                Status = document.Status,
+                SourceWarehouse = sourceWarehouse.Name,
+                DestinationWarehouse = targetWarehouse != null ? targetWarehouse.Name : null,
+                CreatedBy = document.CreatedByUser.Name,
+                ApprovedBy = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
+                CreatedAt = document.CreatedAt,
+                ApprovedAt = document.ConfirmedAt,
+                ItemCount = itemSummary.ItemCount,
+                TotalQuantity = itemSummary.TotalQuantity
             }
         ).AsNoTracking().ToListAsync(ct);
     }
