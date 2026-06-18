@@ -16,14 +16,86 @@ public class StockQueryService : IStockQueryService
     }
     public async Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default)
     {
-        return await ProjectToStockDto(_context.Stocks.AsNoTracking())
+        return await (
+            from stock in _context.Stocks.AsNoTracking()
+            join product in _context.Products.AsNoTracking() on stock.ProductId equals product.Id
+            join warehouse in _context.Warehouses.AsNoTracking() on stock.WarehouseId equals warehouse.Id
+            join zone in _context.WarehouseZones.AsNoTracking() on stock.WarehouseZoneId equals zone.Id
+            select new StockDto
+            {
+                Id = stock.Id,
+                ProductBatchNumber = null,
+                QuantityTotal = stock.QuantityTotal,
+                QuantityReserved = stock.QuantityReserved,
+                QuantityAvailable = stock.QuantityTotal - stock.QuantityReserved,
+                LastUpdated = stock.LastUpdated,
+                ProductId = stock.ProductId,
+                ProductSku = product.SKU,
+                ProductName = product.Name,
+                WarehouseId = stock.WarehouseId,
+                WarehouseName = warehouse.Name,
+                ZoneId = stock.WarehouseZoneId,
+                ZoneName = zone.Name,
+                Unit = product.Unit.ToString()
+            })
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<StockDto>> GetStockAvailabilityAsync(CancellationToken ct = default)
+    {
+        return await (
+            from stock in _context.Stocks.AsNoTracking()
+            join product in _context.Products.AsNoTracking() on stock.ProductId equals product.Id
+            join warehouse in _context.Warehouses.AsNoTracking() on stock.WarehouseId equals warehouse.Id
+            join zone in _context.WarehouseZones.AsNoTracking() on stock.WarehouseZoneId equals zone.Id
+            select new StockDto
+            {
+                Id = stock.Id,
+                ProductBatchNumber = null,
+                QuantityTotal = stock.QuantityTotal,
+                QuantityReserved = stock.QuantityReserved,
+                QuantityAvailable = stock.QuantityTotal - stock.QuantityReserved,
+                LastUpdated = stock.LastUpdated,
+                ProductId = stock.ProductId,
+                ProductSku = product.SKU,
+                ProductName = product.Name,
+                WarehouseId = stock.WarehouseId,
+                WarehouseName = warehouse.Name,
+                ZoneId = stock.WarehouseZoneId,
+                ZoneName = zone.Name,
+                Unit = product.Unit.ToString()
+            })
             .ToListAsync(ct);
     }
 
     public async Task<StockDto?> GetStockDetailsAsync(Guid stockId, CancellationToken ct = default)
     {
-        return await ProjectToStockDto(_context.Stocks.AsNoTracking())
-            .FirstOrDefaultAsync(s => s.Id == stockId, ct);
+        return await (
+            from stock in _context.Stocks.AsNoTracking()
+            join product in _context.Products.AsNoTracking() on stock.ProductId equals product.Id
+            join warehouse in _context.Warehouses.AsNoTracking() on stock.WarehouseId equals warehouse.Id
+            join zone in _context.WarehouseZones.AsNoTracking() on stock.WarehouseZoneId equals zone.Id
+            join batch in _context.ProductBatches.AsNoTracking() on stock.ProductBatchId equals batch.Id into batches
+            from batch in batches.DefaultIfEmpty()
+            where stock.Id == stockId
+            select new StockDto
+            {
+                Id = stock.Id,
+                ProductBatchNumber = batch != null ? batch.BatchNumber : null,
+                QuantityTotal = stock.QuantityTotal,
+                QuantityReserved = stock.QuantityReserved,
+                QuantityAvailable = stock.QuantityTotal - stock.QuantityReserved,
+                LastUpdated = stock.LastUpdated,
+                ProductId = stock.ProductId,
+                ProductSku = product.SKU,
+                ProductName = product.Name,
+                WarehouseId = stock.WarehouseId,
+                WarehouseName = warehouse.Name,
+                ZoneId = stock.WarehouseZoneId,
+                ZoneName = zone.Name,
+                Unit = product.Unit.ToString()
+            })
+            .FirstOrDefaultAsync(ct);
     }
     public async Task<Stock?> GetByIdAsync(Guid stockId, CancellationToken ct = default)
     {
@@ -194,24 +266,4 @@ public class StockQueryService : IStockQueryService
             .ToListAsync(ct);
     }
 
-    private static IQueryable<StockDto> ProjectToStockDto(IQueryable<Stock> stocks)
-    {
-        return stocks.Select(s => new StockDto
-        {
-            Id = s.Id,
-            ProductBatchNumber = s.ProductBatch != null ? s.ProductBatch.BatchNumber : null,
-            QuantityTotal = s.QuantityTotal,
-            QuantityReserved = s.QuantityReserved,
-            QuantityAvailable = s.QuantityTotal - s.QuantityReserved,
-            LastUpdated = s.LastUpdated,
-            ProductId = s.ProductId,
-            ProductSku = s.Product.SKU,
-            ProductName = s.Product.Name,
-            WarehouseId = s.WarehouseId,
-            WarehouseName = s.Warehouse.Name,
-            ZoneId = s.WarehouseZoneId,
-            ZoneName = s.WarehouseZone.Name,
-            Unit = s.Product.Unit.ToString()
-        });
-    }
 }

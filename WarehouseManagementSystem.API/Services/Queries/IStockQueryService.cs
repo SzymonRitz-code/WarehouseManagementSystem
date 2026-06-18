@@ -7,9 +7,14 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 public interface IStockQueryService
 {
     /// <summary>
-    /// Pobiera stan magazynowy po Id.
+    /// Pobiera stan magazynowy.
     /// </summary>
     Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Pobiera dostępność stanów magazynowych do widoku availability.
+    /// </summary>
+    Task<List<StockDto>> GetStockAvailabilityAsync(CancellationToken ct = default);
 
     /// <summary>
     /// Pobiera szczegóły stanu magazynowego do prezentacji.

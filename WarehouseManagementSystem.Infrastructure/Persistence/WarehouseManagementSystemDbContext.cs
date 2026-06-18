@@ -210,8 +210,7 @@ public class WarehouseManagementSystemDbContext : DbContext
             x.City,
             x.Address,
             x.IsActive,
-            x.CreatedAt,
-            CreatedByName = x.CreatedByUser.Name
+            x.CreatedAt
         }).IsUnique();
     }
 
@@ -385,10 +384,7 @@ public class WarehouseManagementSystemDbContext : DbContext
             x.CreatedAt,
             x.ConfirmedAt,
             x.DocumentDate,
-            x.TargetWarehouseId,
-            ConfirmedByName = x.ConfirmedByUser.Name,
-            CreatedByName = x.CreatedByUser.Name,
-            CancelledByName = x.CancelledByUser.Name
+            x.TargetWarehouseId
         });
         builder.HasIndex(x => x.TargetWarehouseId);
     }

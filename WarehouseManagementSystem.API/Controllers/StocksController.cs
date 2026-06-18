@@ -28,7 +28,7 @@ public class StocksController : ControllerBase
     [HttpGet("availability")]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStockAvailability(CancellationToken ct)
     {
-        var stocks = await _stockQuery.GetStocksAsync(ct);
+        var stocks = await _stockQuery.GetStockAvailabilityAsync(ct);
 
         return Ok(stocks);
     }
