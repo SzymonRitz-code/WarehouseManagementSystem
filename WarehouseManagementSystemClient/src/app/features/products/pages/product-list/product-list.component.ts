@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { ProductList } from '../../model/product';
 import { ProductService } from '../../services/product-service';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 
@@ -17,7 +17,9 @@ import { CommonModule } from '@angular/common';
 })
 export class ProductListComponent implements OnInit {
 
-  products$!: Observable<ProductList[]>;
+  products$: Observable<ProductList[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
   columns = [
     { key: 'sku', label: 'SKU', sortable: true },
     { key: 'name', label: 'Name', sortable: true },
@@ -37,7 +39,24 @@ export class ProductListComponent implements OnInit {
 
 
   ngOnInit(): void {
-    this.products$ = this.productService.getProducts();
+    this.loadProducts();
+  }
+
+  retry(): void {
+    this.loadProducts();
+  }
+
+  private loadProducts(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.products$ = this.productService.getProducts().pipe(
+      catchError(() => {
+        this.errorMessage = 'Products could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
 
   goToForm() {

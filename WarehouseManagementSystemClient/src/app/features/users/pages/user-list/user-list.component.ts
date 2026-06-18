@@ -6,7 +6,7 @@ import { TableComponent } from "../../../../shared/components/table/table.compon
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { UserService } from '../../../services/user-service';
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 
 @Component({
   selector: 'app-user-list',
@@ -16,12 +16,32 @@ import { Observable } from 'rxjs';
 })
 export class UserListComponent implements OnInit {
 
-  users$!: Observable<User[]>;
+  users$: Observable<User[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
+
   constructor(private router: Router, private userService: UserService) { }
 
 
   ngOnInit(): void {
-      this.users$ = this.userService.getUsers();
+    this.loadUsers();
+  }
+
+  retry(): void {
+    this.loadUsers();
+  }
+
+  private loadUsers(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.users$ = this.userService.getUsers().pipe(
+      catchError(() => {
+        this.errorMessage = 'Users could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
 
 

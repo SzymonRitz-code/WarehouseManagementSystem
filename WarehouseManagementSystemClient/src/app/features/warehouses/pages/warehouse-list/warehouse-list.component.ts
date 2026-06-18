@@ -6,7 +6,7 @@ import { WarehouseList } from '../../model/warehouse';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 
 @Component({
   selector: 'app-warehouse-list',
@@ -16,12 +16,31 @@ import { Observable } from 'rxjs';
 })
 export class WarehouseListComponent implements OnInit { 
 
-  warehouses$!: Observable<WarehouseList[]>;
+  warehouses$: Observable<WarehouseList[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
 
   constructor(private warehouseService: WarehouseService, private router: Router) { }
 
   ngOnInit(): void {
-    this.warehouses$ = this.warehouseService.getWarehouses();
+    this.loadWarehouses();
+  }
+
+  retry(): void {
+    this.loadWarehouses();
+  }
+
+  private loadWarehouses(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.warehouses$ = this.warehouseService.getWarehouses().pipe(
+      catchError(() => {
+        this.errorMessage = 'Warehouses could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
 
   columns = [

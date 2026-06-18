@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 import { DocumentType } from '../../../../core/enums/documentType';
 import { DocumentList } from '../../model/document';
 import { DocumentService } from '../../services/document-service';
@@ -17,7 +17,9 @@ import { TableComponent } from '../../../../shared/components/table/table.compon
   templateUrl: './document-pending-list.component.html'
 })
 export class DocumentPendingListComponent implements OnInit {
-  documents$!: Observable<DocumentList[]>;
+  documents$: Observable<DocumentList[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
   selectedDocument: DocumentList | null = null;
   actionMode: 'confirm' | 'cancel' | null = null;
   isActionPending = false;
@@ -50,7 +52,24 @@ export class DocumentPendingListComponent implements OnInit {
   constructor(private router: Router, private documentService: DocumentService) {}
 
   ngOnInit(): void {
-    this.documents$ = this.documentService.getPendingDocuments();
+    this.loadPendingDocuments();
+  }
+
+  retry(): void {
+    this.loadPendingDocuments();
+  }
+
+  private loadPendingDocuments(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.documents$ = this.documentService.getPendingDocuments().pipe(
+      catchError(() => {
+        this.errorMessage = 'Pending documents could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
 
   goToForm() {
@@ -100,7 +119,7 @@ export class DocumentPendingListComponent implements OnInit {
 
     request$.subscribe({
       next: () => {
-        this.documents$ = this.documentService.getPendingDocuments();
+        this.loadPendingDocuments();
         this.closeActionModal();
       },
       error: (err) => {

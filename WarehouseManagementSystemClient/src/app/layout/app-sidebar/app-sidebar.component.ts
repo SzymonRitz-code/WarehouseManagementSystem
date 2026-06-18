@@ -90,8 +90,7 @@ export class AppSidebarComponent {
             <line x1="7" y1="16" x2="17" y2="16" stroke="currentColor" stroke-width="1.5"/>
             </svg>`,
       subItems: [
-        { name: "Stocks List", path: "/stocks" },
-        { name: "Stock Availability", path: "/stocks/availability" }
+        { name: "Stocks List", path: "/stocks" }
       ],
     },
     {

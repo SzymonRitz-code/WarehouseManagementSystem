@@ -3,7 +3,7 @@ import { PageBreadcrumbComponent } from "../../../../../shared/components/common
 import { ComponentCardComponent } from "../../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../../shared/components/table/table.component";
 import { BatchList } from '../../../model/product-batch';
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ProductBatchService } from '../../../services/product-batch-service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,7 +28,9 @@ import { TextAreaComponent } from "../../../../../shared/components/form/input/t
 })
 export class ProductBatchListComponent implements OnInit {
   id!: string;
-  batches$!: Observable<BatchList[]>;
+  batches$: Observable<BatchList[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
   product!: Product | undefined;
   productId!: string;
 
@@ -61,7 +63,24 @@ export class ProductBatchListComponent implements OnInit {
     this.productService.getProduct(this.id).subscribe({
       next: (product) => this.product = product
     }).unsubscribe();
-    this.batches$ = this.productBatchService.getBatches(this.id);
+    this.loadBatches();
+  }
+
+  retry(): void {
+    this.loadBatches();
+  }
+
+  private loadBatches(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.batches$ = this.productBatchService.getBatches(this.id).pipe(
+      catchError(() => {
+        this.errorMessage = 'Product batches could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
   onBatchAction($event: { row: BatchList; action: string; }) {
     const { row, action } = $event;

@@ -5,7 +5,7 @@ import { TableComponent } from "../../../../shared/components/table/table.compon
 import { ZoneService } from '../../services/zone-service';
 import { ZoneList } from '../../model/zone';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -16,7 +16,9 @@ import { CommonModule } from '@angular/common';
 })
 export class ZoneListComponent implements OnInit {
 
-  zones$!: Observable<ZoneList[]>;
+  zones$: Observable<ZoneList[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
 
   columns = [
     { key: 'code', label: 'Code', sortable: true },
@@ -37,7 +39,24 @@ export class ZoneListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.zones$ = this.zoneService.getZones();
+    this.loadZones();
+  }
+
+  retry(): void {
+    this.loadZones();
+  }
+
+  private loadZones(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.zones$ = this.zoneService.getZones().pipe(
+      catchError(() => {
+        this.errorMessage = 'Zones could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
 
 

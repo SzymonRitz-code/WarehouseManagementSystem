@@ -5,7 +5,7 @@ import { ComponentCardComponent } from "../../../../shared/components/common/com
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { ActivatedRoute, Router } from '@angular/router';
 import { DocumentList } from '../../model/document';
-import { Observable } from 'rxjs';
+import { catchError, finalize, Observable, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -16,7 +16,9 @@ import { CommonModule } from '@angular/common';
 })
 export class DocumentListComponent implements OnInit {
 
-  documents$!: Observable<DocumentList[]>;
+  documents$: Observable<DocumentList[]> = of([]);
+  isLoading = false;
+  errorMessage = '';
 
   columns = [
     { key: 'documentNumber', label: 'Document Number', sortable: true },        // numer nadany w systemie
@@ -40,7 +42,24 @@ export class DocumentListComponent implements OnInit {
   constructor(private router: Router, private documentService: DocumentService) { }
 
   ngOnInit(): void {
-    this.documents$ = this.documentService.getDocuments();
+    this.loadDocuments();
+  }
+
+  retry(): void {
+    this.loadDocuments();
+  }
+
+  private loadDocuments(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.documents$ = this.documentService.getDocuments().pipe(
+      catchError(() => {
+        this.errorMessage = 'Documents could not be loaded. Please try again.';
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    );
   }
 
 
@@ -65,7 +84,7 @@ export class DocumentListComponent implements OnInit {
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
         console.log(`Document ${updatedDoc.id} cancelled.`);
-        this.documents$ = this.documentService.getDocuments(); // Odśwież listę dokumentów
+        this.loadDocuments();
       },
       error: (err) => {
         console.error('Error cancelling document:', err);
@@ -77,7 +96,7 @@ export class DocumentListComponent implements OnInit {
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
         console.log(`Document ${updatedDoc.id} confirmed.`);
-        this.documents$ = this.documentService.getDocuments(); // Odśwież listę dokumentów
+        this.loadDocuments();
       },
       error: (err) => {
         console.error('Error confirming document:', err);
