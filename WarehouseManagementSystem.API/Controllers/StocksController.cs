@@ -18,9 +18,9 @@ public class StocksController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<StockDto>>> GetStocks(CancellationToken ct)
+    public async Task<ActionResult<PagedResult<StockDto>>> GetStocks([FromQuery] StockListQuery query, CancellationToken ct)
     {
-        var stocks = await _stockQuery.GetStocksAsync(ct);
+        var stocks = await _stockQuery.GetStocksAsync(query, ct);
 
         return Ok(stocks);
     }

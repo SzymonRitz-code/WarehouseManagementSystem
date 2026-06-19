@@ -14,17 +14,30 @@ public class StockQueryService : IStockQueryService
     {
         _context = context;
     }
-    public async Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default)
+    public async Task<PagedResult<StockDto>> GetStocksAsync(StockListQuery query, CancellationToken ct = default)
     {
-        return await (
-            from stock in _context.Stocks.AsNoTracking()
+        var stocks = BuildStockListQuery();
+
+        stocks = ApplyStockListSearch(stocks, query);
+
+        var totalItems = await stocks.CountAsync(ct);
+        var orderedStocks = ApplyStockListSorting(stocks, query.SortBy, query.SortDirection);
+
+        var pagedStocks = orderedStocks
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize);
+
+        var items = await (
+            from stock in pagedStocks
             join product in _context.Products.AsNoTracking() on stock.ProductId equals product.Id
             join warehouse in _context.Warehouses.AsNoTracking() on stock.WarehouseId equals warehouse.Id
             join zone in _context.WarehouseZones.AsNoTracking() on stock.WarehouseZoneId equals zone.Id
+            join batch in _context.ProductBatches.AsNoTracking() on stock.ProductBatchId equals batch.Id into batches
+            from batch in batches.DefaultIfEmpty()
             select new StockDto
             {
                 Id = stock.Id,
-                ProductBatchNumber = null,
+                ProductBatchNumber = batch != null ? batch.BatchNumber : null,
                 QuantityTotal = stock.QuantityTotal,
                 QuantityReserved = stock.QuantityReserved,
                 QuantityAvailable = stock.QuantityTotal - stock.QuantityReserved,
@@ -39,6 +52,14 @@ public class StockQueryService : IStockQueryService
                 Unit = product.Unit.ToString()
             })
             .ToListAsync(ct);
+
+        return new PagedResult<StockDto>
+        {
+            Items = items,
+            Page = query.Page,
+            PageSize = query.PageSize,
+            TotalItems = totalItems
+        };
     }
 
     public async Task<List<StockDto>> GetStockAvailabilityAsync(CancellationToken ct = default)
@@ -264,6 +285,73 @@ public class StockQueryService : IStockQueryService
                 (s.QuantityTotal - s.QuantityReserved) > 0)
             .OrderByDescending(s => s.QuantityTotal - s.QuantityReserved)
             .ToListAsync(ct);
+    }
+
+    private IQueryable<Stock> BuildStockListQuery()
+    {
+        return _context.Stocks.AsNoTracking();
+    }
+
+    private IQueryable<Stock> ApplyStockListSearch(
+        IQueryable<Stock> stocks,
+        StockListQuery query)
+    {
+        if (query.WarehouseId.HasValue)
+        {
+            stocks = stocks.Where(s => s.WarehouseId == query.WarehouseId.Value);
+        }
+
+        if (query.ZoneId.HasValue)
+        {
+            stocks = stocks.Where(s => s.WarehouseZoneId == query.ZoneId.Value);
+        }
+
+        if (query.AvailableOnly == true)
+        {
+            stocks = stocks.Where(s => s.QuantityTotal - s.QuantityReserved > 0);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim();
+
+            stocks =
+                from stock in stocks
+                join product in _context.Products.AsNoTracking() on stock.ProductId equals product.Id
+                join batch in _context.ProductBatches.AsNoTracking() on stock.ProductBatchId equals batch.Id into batches
+                from batch in batches.DefaultIfEmpty()
+                where product.SKU.Contains(search)
+                      || product.Name.Contains(search)
+                      || (batch != null && batch.BatchNumber.Contains(search))
+                select stock;
+        }
+
+        return stocks;
+    }
+
+    private static IQueryable<Stock> ApplyStockListSorting(
+        IQueryable<Stock> stocks,
+        string? sortBy,
+        string? sortDirection)
+    {
+        var descending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+        var sortKey = sortBy?.Trim().ToLowerInvariant();
+
+        return sortKey switch
+        {
+            "quantityavailable" => descending
+                ? stocks.OrderByDescending(s => s.QuantityTotal - s.QuantityReserved).ThenByDescending(s => s.LastUpdated)
+                : stocks.OrderBy(s => s.QuantityTotal - s.QuantityReserved).ThenByDescending(s => s.LastUpdated),
+            "quantityreserved" => descending
+                ? stocks.OrderByDescending(s => s.QuantityReserved).ThenByDescending(s => s.LastUpdated)
+                : stocks.OrderBy(s => s.QuantityReserved).ThenByDescending(s => s.LastUpdated),
+            "quantitytotal" => descending
+                ? stocks.OrderByDescending(s => s.QuantityTotal).ThenByDescending(s => s.LastUpdated)
+                : stocks.OrderBy(s => s.QuantityTotal).ThenByDescending(s => s.LastUpdated),
+            _ => descending
+                ? stocks.OrderByDescending(s => s.LastUpdated)
+                : stocks.OrderBy(s => s.LastUpdated)
+        };
     }
 
 }

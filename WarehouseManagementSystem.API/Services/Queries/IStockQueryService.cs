@@ -9,7 +9,7 @@ public interface IStockQueryService
     /// <summary>
     /// Pobiera stan magazynowy.
     /// </summary>
-    Task<List<StockDto>> GetStocksAsync(CancellationToken ct = default);
+    Task<PagedResult<StockDto>> GetStocksAsync(StockListQuery query, CancellationToken ct = default);
 
     /// <summary>
     /// Pobiera dostępność stanów magazynowych do widoku availability.

@@ -15,11 +15,16 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
   @Input() rowActions!: any[];
   @Input() data: T[] | null = [];
   @Input() pageSize = 10;
+  @Input() currentPage = 1;
+  @Input() totalItems = 0;
+  @Input() serverSide = false;
+  @Input() filterable = true;
 
   @Output() sortChange = new EventEmitter<{ key: string; direction: 'asc' | 'desc' }>();
+  @Output() pageChange = new EventEmitter<number>();
+  @Output() pageSizeChange = new EventEmitter<number>();
   @Output() rowAction = new EventEmitter<{ row: T; action: string }>();
 
-  currentPage = 1;
   sortKey: string | null = null;
   sortDir: 'asc' | 'desc' = 'asc';
   filters: Partial<Record<keyof T, string>> = {};
@@ -37,6 +42,8 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
     return (item as any).id ?? index;
   }
   get paginatedData() {
+    if (this.serverSide) return this.filteredData;
+
     const start = (this.currentPage - 1) * this.pageSize;
     return this.filteredData.slice(start, start + this.pageSize);
   }
@@ -45,10 +52,17 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
   }
 
   get totalPages() {
+    if (this.serverSide) {
+      return Math.ceil(this.totalItems / this.pageSize);
+    }
+
     return Math.ceil(this.filteredData.length / this.pageSize);
   }
   onPageSizeChange() {
     this.currentPage = 1; // reset paginacji
+    if (this.serverSide) {
+      this.pageSizeChange.emit(Number(this.pageSize));
+    }
   }
 
   get sortedData(): T[] {
@@ -62,6 +76,8 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
     });
   }
   applyFilters() {
+    if (this.serverSide) return;
+
     this.currentPage = 1;
     this.filteredData = this.sortedData.filter((row: T) =>
       this.columns.every(col => {
@@ -79,6 +95,9 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
   goToPage(page: number) {
     if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;
+    if (this.serverSide) {
+      this.pageChange.emit(page);
+    }
   }
 
   toggleSort(columnKey: string) {
@@ -89,6 +108,8 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
       this.sortDir = 'asc';
     }
     this.sortChange.emit({ key: columnKey, direction: this.sortDir });
+    if (this.serverSide) return;
+
     this.applyFilters();
   }
   get visiblePages(): (number | '...')[] {
@@ -117,5 +138,9 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
   }
   emitRowAction(row: T, action: string) {
     this.rowAction.emit({ row, action });
+  }
+
+  get displayedRecordCount(): number {
+    return this.serverSide ? this.totalItems : this.filteredData.length;
   }
 }
