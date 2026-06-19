@@ -8,9 +8,9 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 public interface IDocumentQueryService
 {
     /// <summary>
-    /// Pobiera wszystkie dokumenty.
+    /// Pobiera stronę dokumentów z sortowaniem i filtrami.
     /// </summary>
-    Task<IReadOnlyList<DocumentListDto>> GetDocumentsAsync(CancellationToken ct = default);
+    Task<PagedResult<DocumentListDto>> GetDocumentsPageAsync(DocumentListQuery query, CancellationToken ct = default);
     /// <summary>
     /// Pobiera dokument po Id wraz z pozycjami.
     /// </summary>

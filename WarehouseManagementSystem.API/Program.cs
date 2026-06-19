@@ -30,7 +30,6 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
     //options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
 });
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {
@@ -183,6 +182,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowWmsClient");
+app.UseResponseCaching();
 app.UseSerilogRequestLogging();
 
 app.UseMiddleware<ExceptionMiddleware>();

@@ -47,7 +47,15 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
-    [HttpGet("{productId}")]
+    [HttpGet("paged")]
+    public async Task<ActionResult<PagedResult<ProductListDto>>> GetProductsPage([FromQuery] ProductListQuery query, CancellationToken ct)
+    {
+        var products = await _productQueryService.GetProductsPageAsync(query, ct);
+        return Ok(products);
+    }
+
+    [HttpGet("{productId:guid}")] // wcześniej było [HttpGet("{productId}")] ale po dodaniu [HttpGet("paged")] api rzucało 409 co oznacza kolizję routingu,
+                                  // bo nie wiedziało czy to ma być paged czy productId. Dlatego dodałem constraint :guid
     public async Task<ActionResult<ProductDetailsDto>> GetProduct(Guid productId, CancellationToken ct)
     {
         var product = await _productQueryService.GetProductAsync(productId, ct);
@@ -101,7 +109,7 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, createdDto);
     }
 
-    [HttpPut("{productId}")]
+    [HttpPut("{productId:guid}")]
     public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, UpdateProductDto productDto)
     {
         if (productId != productDto.Id) return BadRequest("Route ID and body ID mismatch.");
@@ -157,7 +165,7 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{productId}")]
+    [HttpDelete("{productId:guid}")]
     public async Task<IActionResult> DeleteProduct(Guid productId)
     {
         var product = await _unitOfWork.Products.FindAsync(productId);
@@ -190,14 +198,14 @@ public class ProductsController : ControllerBase
 
     private bool ProductExists(Guid id) => _unitOfWork.Products.Any(p => p.Id == id);
 
-    [HttpGet("{productId}/stocks")]
+    [HttpGet("{productId:guid}/stocks")]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksForProduct(Guid productId)
     {
         var stocks = await _stockQueryService.GetByProductAsync(productId);
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
-    [HttpGet("{productId}/stocks/available")]
+    [HttpGet("{productId:guid}/stocks/available")]
     public async Task<ActionResult<decimal>> GetAvailableQuantityForProduct(Guid productId, [FromQuery] Guid warehouseId)
     {
         var available = await _stockQueryService.GetAvailableQuantityAsync(productId, null, warehouseId, null);

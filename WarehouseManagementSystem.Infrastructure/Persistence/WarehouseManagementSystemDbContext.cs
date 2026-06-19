@@ -375,6 +375,7 @@ public class WarehouseManagementSystemDbContext : DbContext
         }));
         // Indeksy pomocnicze
         builder.HasIndex(x => x.DocumentDate);
+        builder.HasIndex(x => x.CreatedAt);
         builder.HasIndex(x => x.Number);
         builder.HasIndex(x => x.SourceWarehouseId).IncludeProperties(x => new
         {

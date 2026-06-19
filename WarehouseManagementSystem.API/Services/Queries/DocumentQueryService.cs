@@ -15,41 +15,52 @@ public class DocumentQueryService : IDocumentQueryService
     {
         _context = context;
     }
-    public async Task<IReadOnlyList<DocumentListDto>> GetDocumentsAsync(CancellationToken ct = default)
+    public async Task<PagedResult<DocumentListDto>> GetDocumentsPageAsync(DocumentListQuery query, CancellationToken ct = default)
     {
-        var itemSummaries =
-            from item in _context.DocumentItems.AsNoTracking()
-            group item by item.DocumentId
-            into itemGroup
-            select new
-            {
-                DocumentId = itemGroup.Key,
-                ItemCount = itemGroup.Count(),
-                TotalQuantity = itemGroup.Sum(x => x.Quantity)
-            };
+        var documents = BuildDocumentListQuery();
 
-        return await (
-            from document in _context.Documents
-            join itemSummary in itemSummaries on document.Id equals itemSummary.DocumentId
-            join sourceWarehouse in _context.Warehouses on document.SourceWarehouseId equals sourceWarehouse.Id
-            join targetWarehouse in _context.Warehouses on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
+        documents = ApplyDocumentListSearch(documents, query);
+
+        var totalItems = await documents.CountAsync(ct);
+        var orderedDocuments = ApplyDocumentListSorting(documents, query.SortBy, query.SortDirection);
+
+        var pagedDocuments = orderedDocuments
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize);
+
+        var items = await (
+            from document in pagedDocuments
+            join sourceWarehouse in _context.Warehouses.AsNoTracking()
+                on document.SourceWarehouseId equals sourceWarehouse.Id into sourceJoin
+            from sourceWarehouse in sourceJoin.DefaultIfEmpty()
+            join targetWarehouse in _context.Warehouses.AsNoTracking()
+                on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
             from targetWarehouse in targetJoin.DefaultIfEmpty()
+            join item in _context.DocumentItems.AsNoTracking()
+                on document.Id equals item.DocumentId into itemJoin
             select new DocumentListDto
             {
                 Id = document.Id,
-                DocumentNumber = document.Number,
+                DocumentNumber = document.DocumentNumber,
                 Type = document.Type,
                 Status = document.Status,
-                SourceWarehouse = sourceWarehouse.Name,
+                SourceWarehouse = sourceWarehouse != null ? sourceWarehouse.Name : string.Empty,
                 DestinationWarehouse = targetWarehouse != null ? targetWarehouse.Name : null,
-                CreatedBy = document.CreatedByUser.Name,
-                ApprovedBy = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
+                CreatedBy = document.CreatedBy,
+                ApprovedBy = document.ApprovedBy,
                 CreatedAt = document.CreatedAt,
-                ApprovedAt = document.ConfirmedAt,
-                ItemCount = itemSummary.ItemCount,
-                TotalQuantity = itemSummary.TotalQuantity
-            }
-        ).AsNoTracking().ToListAsync(ct);
+                ApprovedAt = document.ApprovedAt,
+                ItemCount = itemJoin.Count(),
+                TotalQuantity = itemJoin.Sum(item => (decimal?)item.Quantity) ?? 0
+            }).ToListAsync(ct);
+
+        return new PagedResult<DocumentListDto>
+        {
+            Items = items,
+            Page = query.Page,
+            PageSize = query.PageSize,
+            TotalItems = totalItems
+        };
     }
 
     public async Task<Document?> GetByIdAsync(Guid documentId, CancellationToken ct = default)
@@ -284,5 +295,114 @@ public class DocumentQueryService : IDocumentQueryService
             .ToListAsync(ct);
     }
 
+    private IQueryable<DocumentListQueryRow> BuildDocumentListQuery()
+    {
+        return _context.Documents
+            .AsNoTracking()
+            .Select(document => new DocumentListQueryRow
+            {
+                Id = document.Id,
+                DocumentNumber = document.Number,
+                Type = document.Type,
+                Status = document.Status,
+                SourceWarehouseId = document.SourceWarehouseId,
+                TargetWarehouseId = document.TargetWarehouseId,
+                CreatedBy = document.CreatedByUser.Name,
+                ApprovedBy = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
+                CreatedAt = document.CreatedAt,
+                ApprovedAt = document.ConfirmedAt
+            });
+    }
+
+    private static IQueryable<DocumentListQueryRow> ApplyDocumentListSearch(
+        IQueryable<DocumentListQueryRow> documents,
+        DocumentListQuery query)
+    {
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim();
+
+            documents = documents.Where(d =>
+                (d.DocumentNumber != null && d.DocumentNumber.Contains(search)) ||
+                (d.CreatedBy != null && d.CreatedBy.Contains(search)) ||
+                (d.ApprovedBy != null && d.ApprovedBy.Contains(search)));
+        }
+
+        if (query.Type.HasValue)
+        {
+            documents = documents.Where(d => d.Type == query.Type.Value);
+        }
+
+        if (query.Status.HasValue)
+        {
+            documents = documents.Where(d => d.Status == query.Status.Value);
+        }
+
+        if (query.WarehouseId.HasValue)
+        {
+            var warehouseId = query.WarehouseId.Value;
+            documents = documents.Where(d => d.SourceWarehouseId == warehouseId || d.TargetWarehouseId == warehouseId);
+        }
+
+        if (query.CreatedFrom.HasValue)
+        {
+            documents = documents.Where(d => d.CreatedAt >= query.CreatedFrom.Value);
+        }
+
+        if (query.CreatedTo.HasValue)
+        {
+            documents = documents.Where(d => d.CreatedAt < query.CreatedTo.Value.AddDays(1));
+        }
+
+        return documents;
+    }
+
+    private static IQueryable<DocumentListQueryRow> ApplyDocumentListSorting(
+        IQueryable<DocumentListQueryRow> documents,
+        string? sortBy,
+        string? sortDirection)
+    {
+        var descending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+        var sortKey = sortBy?.Trim().ToLowerInvariant();
+
+        return sortKey switch
+        {
+            "documentnumber" => descending
+                ? documents.OrderByDescending(d => d.DocumentNumber).ThenByDescending(d => d.CreatedAt)
+                : documents.OrderBy(d => d.DocumentNumber).ThenByDescending(d => d.CreatedAt),
+            "type" => descending
+                ? documents.OrderByDescending(d => d.Type).ThenByDescending(d => d.CreatedAt)
+                : documents.OrderBy(d => d.Type).ThenByDescending(d => d.CreatedAt),
+            "status" => descending
+                ? documents.OrderByDescending(d => d.Status).ThenByDescending(d => d.CreatedAt)
+                : documents.OrderBy(d => d.Status).ThenByDescending(d => d.CreatedAt),
+            "createdby" => descending
+                ? documents.OrderByDescending(d => d.CreatedBy).ThenByDescending(d => d.CreatedAt)
+                : documents.OrderBy(d => d.CreatedBy).ThenByDescending(d => d.CreatedAt),
+            "approvedby" => descending
+                ? documents.OrderByDescending(d => d.ApprovedBy).ThenByDescending(d => d.CreatedAt)
+                : documents.OrderBy(d => d.ApprovedBy).ThenByDescending(d => d.CreatedAt),
+            "approvedat" => descending
+                ? documents.OrderByDescending(d => d.ApprovedAt).ThenByDescending(d => d.CreatedAt)
+                : documents.OrderBy(d => d.ApprovedAt).ThenByDescending(d => d.CreatedAt),
+            _ => descending
+                ? documents.OrderByDescending(d => d.CreatedAt)
+                : documents.OrderBy(d => d.CreatedAt)
+        };
+    }
+
+    private sealed class DocumentListQueryRow
+    {
+        public Guid Id { get; init; }
+        public string? DocumentNumber { get; init; }
+        public DocumentType Type { get; init; }
+        public DocumentStatus Status { get; init; }
+        public Guid? SourceWarehouseId { get; init; }
+        public Guid? TargetWarehouseId { get; init; }
+        public string? CreatedBy { get; init; }
+        public string? ApprovedBy { get; init; }
+        public DateTimeOffset CreatedAt { get; init; }
+        public DateTimeOffset? ApprovedAt { get; init; }
+    }
 
 }
