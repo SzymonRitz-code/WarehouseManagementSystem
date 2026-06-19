@@ -23,7 +23,7 @@ public class AuditLogsController : ControllerBase
 
     // GET: api/auditlogs
     [HttpGet]
-    [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)] // Dodanie cache dla endpointu zwracającego logi audytu, ponieważ logi audytu nie zmieniają się często i mogą być przechowywane w pamięci podręcznej przez określony czas.
     public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetAuditLogs(
         [FromQuery] string? entityName,
         [FromQuery] Guid? entityId,
