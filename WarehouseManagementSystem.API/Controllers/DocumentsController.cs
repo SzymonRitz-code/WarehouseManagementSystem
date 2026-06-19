@@ -48,19 +48,21 @@ public class DocumentsController : ControllerBase
     /// Pobranie isty dokumentów
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<DocumentListDto>> GetDocuments()
+    public async Task<ActionResult<PagedResult<DocumentListDto>>> GetDocuments([FromQuery] DocumentListQuery query, CancellationToken ct)
     {
-        var documents = await _queryService.GetDocumentsAsync();
-        return Ok(_mapper.Map<List<DocumentListDto>>(documents));
+        var documents = await _queryService.GetDocumentsPageAsync(query, ct);
+        return Ok(documents);
     }
     /// <summary>
     /// Pobranie oczekujących dokumentów
     /// </summary>
     [HttpGet("pending")]
-    public async Task<ActionResult<IEnumerable<DocumentListDto>>> GetPendingDocuments()
+    public async Task<ActionResult<PagedResult<DocumentListDto>>> GetPendingDocuments([FromQuery] DocumentListQuery query, CancellationToken ct)
     {
-        var pending = await _queryService.GetPendingDocumentsAsync();
-        return Ok(_mapper.Map<IEnumerable<DocumentListDto>>(pending));
+        query.Status = Domain.Enums.DocumentStatus.Draft;
+
+        var pending = await _queryService.GetDocumentsPageAsync(query, ct);
+        return Ok(pending);
     }
     /// <summary>
     /// Pobranie dokumentu po Id

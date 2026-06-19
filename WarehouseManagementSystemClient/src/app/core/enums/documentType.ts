@@ -2,5 +2,6 @@
 export enum DocumentType {
     PZ = 'PZ',
     WZ = 'WZ',
-    MM = 'MM'
+    MM = 'MM',
+    ADJ = 'ADJ'
 }

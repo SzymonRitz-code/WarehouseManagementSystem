@@ -7,6 +7,54 @@
       Add Document
     </button>
 
+    <form class="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5" (ngSubmit)="applyFilters()">
+      <input
+        type="search"
+        name="search"
+        [(ngModel)]="filters.search"
+        placeholder="Search number or user"
+        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+
+      <select
+        name="type"
+        [(ngModel)]="filters.type"
+        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+        <option value="">All types</option>
+        <option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option>
+      </select>
+
+      <select
+        name="warehouseId"
+        [(ngModel)]="filters.warehouseId"
+        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+        <option value="">All warehouses</option>
+        <option *ngFor="let warehouse of warehouses$ | async" [value]="warehouse.id">
+          {{ warehouse.code }} - {{ warehouse.name }}
+        </option>
+      </select>
+
+      <input
+        type="date"
+        name="createdFrom"
+        [(ngModel)]="filters.createdFrom"
+        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+
+      <input
+        type="date"
+        name="createdTo"
+        [(ngModel)]="filters.createdTo"
+        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+
+      <div class="flex gap-2 md:col-span-2 xl:col-span-5">
+        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+          Apply filters
+        </button>
+        <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800" (click)="resetFilters()">
+          Reset
+        </button>
+      </div>
+    </form>
+
     <div *ngIf="isLoading" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
       Loading pending documents...
     </div>
@@ -19,8 +67,15 @@
       <app-table
         [columns]="columns"
         [data]="documents$ | async"
-        [pageSize]="5"
+        [pageSize]="pageSize"
+        [currentPage]="page"
+        [totalItems]="totalItems"
+        [serverSide]="true"
+        [filterable]="false"
         [rowActions]="documentActions"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+        (sortChange)="onSortChange($event)"
         (rowAction)="onDocumentAction($event)">
       </app-table>
     </div>
