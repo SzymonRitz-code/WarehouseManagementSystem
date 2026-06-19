@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -48,6 +49,7 @@ public class DocumentsController : ControllerBase
     /// Pobranie isty dokumentów
     /// </summary>
     [HttpGet]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<PagedResult<DocumentListDto>>> GetDocuments([FromQuery] DocumentListQuery query, CancellationToken ct)
     {
         var documents = await _queryService.GetDocumentsPageAsync(query, ct);
@@ -57,6 +59,7 @@ public class DocumentsController : ControllerBase
     /// Pobranie oczekujących dokumentów
     /// </summary>
     [HttpGet("pending")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<PagedResult<DocumentListDto>>> GetPendingDocuments([FromQuery] DocumentListQuery query, CancellationToken ct)
     {
         query.Status = Domain.Enums.DocumentStatus.Draft;
@@ -68,6 +71,7 @@ public class DocumentsController : ControllerBase
     /// Pobranie dokumentu po Id
     /// </summary>
     [HttpGet("{documentId}")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<DocumentDto>> GetDocumentById(Guid documentId)
     {
         var document = await _queryService.GetByIdAsync(documentId);
@@ -207,6 +211,7 @@ public class DocumentsController : ControllerBase
     /// Pobranie dokumentów wg typu i statusu
     /// </summary>
     [HttpGet("byTypeAndStatus")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetByTypeAndStatus(
         [FromQuery] string type,
         [FromQuery] string status)
@@ -223,6 +228,7 @@ public class DocumentsController : ControllerBase
     /// Pobranie dokumentów w statusie Draft
     /// </summary>
     [HttpGet("drafts")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDrafts()
     {
         var drafts = await _queryService.GetDraftsAsync();
@@ -234,6 +240,7 @@ public class DocumentsController : ControllerBase
     /// Pobranie ostatnich dokumentów (np. dashboard)
     /// </summary>
     [HttpGet("recent")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecent([FromQuery] int take = 10)
     {
         var recent = await _queryService.GetRecentAsync(take);

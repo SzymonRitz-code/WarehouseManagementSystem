@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -39,6 +40,7 @@ public class ProductBatchesController : ControllerBase
 
 
     [HttpGet("/api/products/{productId:guid}/batches")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductBatchListDto>>> GetBatchesByProduct([FromRoute] Guid productId, CancellationToken ct)
     {
         var batches = await _productBatchQueryService.GetProductBatchList(pb => pb.ProductId == productId, ct);
@@ -46,6 +48,7 @@ public class ProductBatchesController : ControllerBase
     }
 
     [HttpGet("/api/products/{productId:guid}/batches/{batchId:guid}")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<ProductBatchDto>> GetBatchByProduct([FromRoute] Guid productId, [FromRoute] Guid batchId, CancellationToken ct)
     {
         var batch = await _productBatchQueryService.GetProductBatchDetails(batchId, ct);
@@ -60,6 +63,7 @@ public class ProductBatchesController : ControllerBase
     // ===========================
 
     [HttpGet("/api/batches")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductBatchListDto>>> GetAllBatches(CancellationToken ct)
     {
         var batches = await _productBatchQueryService.GetProductBatchList(ct: ct);
@@ -67,6 +71,7 @@ public class ProductBatchesController : ControllerBase
     }
 
     [HttpGet("/api/batches/{batchId:guid}")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<ProductBatchListDto>> GetBatch([FromRoute] Guid batchId, CancellationToken ct)
     {
         var batch = await _productBatchQueryService.GetProductBatchList(

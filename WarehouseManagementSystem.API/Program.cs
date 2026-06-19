@@ -1,10 +1,12 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using Duende.IdentityModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.Extensions;
 using WarehouseManagementSystem.API.Extensions.Middleware;
 using WarehouseManagementSystem.API.Services.AuditLogs;
@@ -25,7 +27,34 @@ JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 // Add services to the container.
 // Dodałem NewtonssoftJson bo obługuje patchDocument. Serializacja Enumów z tego powodu powinna być w nim dodana inaczej dojdzie do zgrzytu między dwoma konwerterami
 // Dodanie konwertera przy polu(w klasyczny sposób) nie jest wtedy obsługiwane.
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
+builder.Services.AddControllers(options =>
+{
+    options.ReturnHttpNotAcceptable = true;
+    options.CacheProfiles.Add(HttpCacheProfiles.ReferenceData, new CacheProfile
+    {
+        Duration = HttpCacheProfiles.ReferenceDataDuration,
+        Location = ResponseCacheLocation.Client,
+        VaryByQueryKeys = ["*"]
+    });
+    options.CacheProfiles.Add(HttpCacheProfiles.OperationalData, new CacheProfile
+    {
+        Duration = HttpCacheProfiles.OperationalDataDuration,
+        Location = ResponseCacheLocation.Client,
+        VaryByQueryKeys = ["*"]
+    });
+    options.CacheProfiles.Add(HttpCacheProfiles.VolatileData, new CacheProfile
+    {
+        Duration = HttpCacheProfiles.VolatileDataDuration,
+        Location = ResponseCacheLocation.Client,
+        VaryByQueryKeys = ["*"]
+    });
+    options.CacheProfiles.Add(HttpCacheProfiles.AuditData, new CacheProfile
+    {
+        Duration = HttpCacheProfiles.AuditDataDuration,
+        Location = ResponseCacheLocation.Client,
+        VaryByQueryKeys = ["*"]
+    });
+}).AddNewtonsoftJson(options =>
 {
     //options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
@@ -171,6 +200,7 @@ builder.Services.AddAuthorization(o =>
     //o.AddPolicy("isadmin", p => p.RequireClaim(JwtClaimTypes.Role, "admin")); // Możliwe dodanie ról 
     //o.AddPolicy("isemployee", p => p.RequireClaim("employeeno"));
 });
+builder.Services.AddResponseCaching();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

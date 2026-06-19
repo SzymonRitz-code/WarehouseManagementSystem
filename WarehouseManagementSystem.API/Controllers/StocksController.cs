@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Queries;
 
@@ -18,6 +19,7 @@ public class StocksController : ControllerBase
     }
 
     [HttpGet]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<PagedResult<StockDto>>> GetStocks([FromQuery] StockListQuery query, CancellationToken ct)
     {
         var stocks = await _stockQuery.GetStocksAsync(query, ct);
@@ -26,6 +28,7 @@ public class StocksController : ControllerBase
     }
 
     [HttpGet("availability")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStockAvailability(CancellationToken ct)
     {
         var stocks = await _stockQuery.GetStockAvailabilityAsync(ct);
@@ -34,6 +37,7 @@ public class StocksController : ControllerBase
     }
 
     [HttpGet("{stockId:guid}")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<StockDto>> GetStock(Guid stockId, CancellationToken ct)
     {
         var stock = await _stockQuery.GetStockDetailsAsync(stockId, ct);

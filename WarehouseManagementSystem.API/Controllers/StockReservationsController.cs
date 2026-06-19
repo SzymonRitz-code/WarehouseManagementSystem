@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
 
@@ -24,6 +25,7 @@ namespace WarehouseManagementSystem.API.Controllers
         /// Pobiera wszystkie rezerwacje dla danego stocka
         /// </summary>
         [HttpGet]
+        [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
         public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations(Guid stockId)
         {
             var reservations = await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId);
@@ -35,6 +37,7 @@ namespace WarehouseManagementSystem.API.Controllers
         /// Pobiera konkretną rezerwację dla danego stocka
         /// </summary>
         [HttpGet("{reservationId}")]
+        [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
         public async Task<ActionResult<StockReservationDto>> GetStockReservation(
             Guid stockId,
             Guid reservationId)

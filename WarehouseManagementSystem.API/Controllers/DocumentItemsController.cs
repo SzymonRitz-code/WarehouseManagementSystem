@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Queries;
 
@@ -24,6 +25,7 @@ public class DocumentItemsController : ControllerBase
     /// Pobiera wszystkie pozycje dokumentu.
     /// </summary>
     [HttpGet]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<IEnumerable<DocumentItemDto>>> GetAllItems(Guid documentId)
     {
         var document = await _documentQueryService.GetByIdAsync(documentId);
@@ -40,6 +42,7 @@ public class DocumentItemsController : ControllerBase
     /// Pobiera konkretną pozycję dokumentu po Id.
     /// </summary>
     [HttpGet("{itemId}")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<DocumentItemDto>> GetItemById(Guid documentId, Guid itemId)
     {
         var document = await _documentQueryService.GetByIdAsync(documentId);

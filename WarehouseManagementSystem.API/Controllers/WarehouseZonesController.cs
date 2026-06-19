@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -40,6 +41,7 @@ public class WarehouseZonesController : ControllerBase
     }
 
     [HttpGet]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<WarehouseZoneListDto>>> GetWarehouseZones(CancellationToken ct)
     {
         var zones = await _warehouseQueryService.GetWarehouseZonesAsync(ct);
@@ -47,6 +49,7 @@ public class WarehouseZonesController : ControllerBase
     }
 
     [HttpGet("{warehouseZoneId}")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<WarehouseZoneDetailsDto>> GetWarehouseZone(Guid warehouseZoneId, CancellationToken ct)
     {
         var zone = await _warehouseQueryService.GetWarehouseZoneAsync(warehouseZoneId, ct);

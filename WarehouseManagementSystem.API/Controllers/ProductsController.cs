@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -41,6 +42,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductListDto>>> GetProducts(CancellationToken ct)
     {
         var products = await _productQueryService.GetProductsAsync(ct);
@@ -48,6 +50,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("paged")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<PagedResult<ProductListDto>>> GetProductsPage([FromQuery] ProductListQuery query, CancellationToken ct)
     {
         var products = await _productQueryService.GetProductsPageAsync(query, ct);
@@ -56,6 +59,7 @@ public class ProductsController : ControllerBase
 
     [HttpGet("{productId:guid}")] // wcześniej było [HttpGet("{productId}")] ale po dodaniu [HttpGet("paged")] api rzucało 409 co oznacza kolizję routingu,
                                   // bo nie wiedziało czy to ma być paged czy productId. Dlatego dodałem constraint :guid
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<ProductDetailsDto>> GetProduct(Guid productId, CancellationToken ct)
     {
         var product = await _productQueryService.GetProductAsync(productId, ct);
@@ -199,6 +203,7 @@ public class ProductsController : ControllerBase
     private bool ProductExists(Guid id) => _unitOfWork.Products.Any(p => p.Id == id);
 
     [HttpGet("{productId:guid}/stocks")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksForProduct(Guid productId)
     {
         var stocks = await _stockQueryService.GetByProductAsync(productId);
@@ -206,6 +211,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{productId:guid}/stocks/available")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<decimal>> GetAvailableQuantityForProduct(Guid productId, [FromQuery] Guid warehouseId)
     {
         var available = await _stockQueryService.GetAvailableQuantityAsync(productId, null, warehouseId, null);

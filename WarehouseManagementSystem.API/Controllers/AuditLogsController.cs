@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Interfaces;
 
@@ -22,6 +23,7 @@ public class AuditLogsController : ControllerBase
 
     // GET: api/auditlogs
     [HttpGet]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)]
     public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetAuditLogs(
         [FromQuery] string? entityName,
         [FromQuery] Guid? entityId,
@@ -37,6 +39,7 @@ public class AuditLogsController : ControllerBase
 
     // GET: api/auditlogs/{id}
     [HttpGet("{id}", Name = "GetAuditLog")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)]
     public async Task<ActionResult<AuditLogDto>> GetAuditLog(Guid id)
     {
         var log = await _unitOfWork.AuditLogs.FindAsync(id);

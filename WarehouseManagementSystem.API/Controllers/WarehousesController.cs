@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -46,6 +47,7 @@ public class WarehousesController : ControllerBase
     /// Pobranie wszystkich stocków w magazynie
     /// </summary>
     [HttpGet("{warehouseId}/stocks")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksInWarehouse(Guid warehouseId)
     {
         var stocks = await _stockQueryService.GetByWarehouseAsync(warehouseId);
@@ -56,6 +58,7 @@ public class WarehousesController : ControllerBase
     /// Pobranie stocków dostępnych do kompletacji w magazynie
     /// </summary>
     [HttpGet("{warehouseId}/stocks/available-for-picking")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetAvailableForPicking(Guid warehouseId)
     {
         var stocks = await _stockQueryService.GetAvailableForPickingAsync(warehouseId);
@@ -63,6 +66,7 @@ public class WarehousesController : ControllerBase
     }
 
     [HttpGet]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<WarehouseListDto>>> GetWarehouses(CancellationToken ct)
     {
         var warehouses = await _warehouseQueryService.GetWarehousesAsync(ct);
@@ -70,6 +74,7 @@ public class WarehousesController : ControllerBase
     }
 
     [HttpGet("{warehouseId}")]
+    [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<WarehouseDetailsDto>> GetWarehouse(Guid warehouseId, CancellationToken ct)
     {
         var warehouse = await _warehouseQueryService.GetWarehouseAsync(warehouseId, ct);
