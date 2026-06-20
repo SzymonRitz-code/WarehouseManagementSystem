@@ -5,7 +5,7 @@ import { ComponentCardComponent } from "../../../../shared/components/common/com
 import { TableComponent } from "../../../../shared/components/table/table.component";
 import { Router } from '@angular/router';
 import { DocumentList } from '../../model/document';
-import { catchError, finalize, map, Observable, of } from 'rxjs';
+import { catchError, finalize, map, Observable, of, shareReplay, startWith, Subject, switchMap, take } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DocumentStatus } from '../../../../core/enums/documentStatus';
@@ -21,8 +21,8 @@ import { WarehouseService } from '../../../warehouses/services/warehouse-service
 })
 export class DocumentListComponent implements OnInit {
 
-  documents$: Observable<DocumentList[]> = of([]);
-  warehouses$: Observable<WarehouseList[]> = of([]);
+  documents$!: Observable<DocumentList[]>;
+  warehouses$!: Observable<WarehouseList[]>;
   isLoading = false;
   errorMessage = '';
   page = 1;
@@ -42,6 +42,7 @@ export class DocumentListComponent implements OnInit {
 
   readonly documentTypes = Object.values(DocumentType);
   readonly documentStatuses = Object.values(DocumentStatus);
+  private readonly reloadDocuments$ = new Subject<void>();
 
   columns = [
     { key: 'documentNumber', label: 'Document Number', sortable: true },        // numer nadany w systemie
@@ -69,10 +70,38 @@ export class DocumentListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    // RxJS insight: HttpClient observables are cold, so each subscription would normally start
+    // a new request. shareReplay(1) turns the warehouse lookup into a shared view dependency:
+    // the template can resubscribe through async pipe without duplicating the HTTP call.
     this.warehouses$ = this.warehouseService.getWarehouses().pipe(
-      catchError(() => of([]))
+      catchError(() => of([])),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
-    this.loadDocuments();
+
+    // RxJS insight: the old approach was "call loadDocuments() and replace the observable/state".
+    // Here UI events only emit into reloadDocuments$, while one pipeline owns loading, errors,
+    // query building and result mapping. switchMap is important because it cancels an older
+    // request when the user quickly changes filters/page/sort, so a stale response cannot
+    // overwrite the newest table state.
+    this.documents$ = this.reloadDocuments$.pipe(
+      startWith(void 0),
+      switchMap(() => {
+        // Keep loading inside switchMap. When switchMap cancels an old inner request, that old
+        // request's finalize runs first; setting loading here keeps the newest request authoritative.
+        this.isLoading = true;
+        this.errorMessage = '';
+        return this.documentService.getDocuments(this.buildQuery()).pipe(
+          catchError(() => {
+            this.errorMessage = 'Documents could not be loaded. Please try again.';
+            this.totalItems = 0;
+            return of({ items: [], page: this.page, pageSize: this.pageSize, totalItems: 0, totalPages: 0 });
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      map(result => this.setPageResult(result)),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   retry(): void {
@@ -80,18 +109,9 @@ export class DocumentListComponent implements OnInit {
   }
 
   private loadDocuments(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.documents$ = this.documentService.getDocuments(this.buildQuery()).pipe(
-      catchError((err) => {
-        this.errorMessage = 'Documents could not be loaded. Please try again.';
-        this.totalItems = 0;
-        return of({ items: [], page: this.page, pageSize: this.pageSize, totalItems: 0, totalPages: 0 });
-      }),
-      map(result => this.setPageResult(result)),
-      finalize(() => this.isLoading = false)
-    );
+    // This is intentionally tiny: commands such as retry, filtering and pagination do not know
+    // how data is loaded. They only declare that the current query should be re-run.
+    this.reloadDocuments$.next();
   }
 
   applyFilters(): void {
@@ -133,6 +153,8 @@ export class DocumentListComponent implements OnInit {
   }
 
   private buildQuery(): DocumentListQuery {
+    // The backend owns paging/filtering/sorting for documents. The frontend only serializes the
+    // current table state into a query object, which keeps the heavy work away from the browser.
     return {
       page: this.page,
       pageSize: this.pageSize,
@@ -153,6 +175,8 @@ export class DocumentListComponent implements OnInit {
   }
 
   private setPageResult(result: { items: DocumentList[]; page: number; pageSize: number; totalItems: number }): DocumentList[] {
+    // The table receives only the current page items, while pagination metadata stays as component
+    // state because the shared table component expects totalItems/page/pageSize as inputs.
     this.page = result.page;
     this.pageSize = result.pageSize;
     this.totalItems = result.totalItems;
@@ -178,7 +202,10 @@ export class DocumentListComponent implements OnInit {
     }
   }
   onCancel(row: DocumentList) {
-    this.documentService.cancelDocument(row).subscribe({
+    // RxJS insight: this is a command, not view data. A direct subscribe is acceptable here because
+    // the side effect is the point of the method. take(1) makes the one-response contract explicit
+    // and protects us if the service implementation ever becomes long-lived.
+    this.documentService.cancelDocument(row).pipe(take(1)).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
         console.log(`Document ${updatedDoc.id} cancelled.`);
@@ -190,7 +217,8 @@ export class DocumentListComponent implements OnInit {
     });
   }
   onConfirm(row: DocumentList) {
-    this.documentService.confirmDocument(row).subscribe({
+    // Same command pattern as cancel: execute once, then refresh the table through the reload stream.
+    this.documentService.confirmDocument(row).pipe(take(1)).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
         console.log(`Document ${updatedDoc.id} confirmed.`);

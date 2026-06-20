@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { catchError, finalize, map, Observable, of } from 'rxjs';
+import { catchError, finalize, map, Observable, of, shareReplay, startWith, Subject, switchMap, take } from 'rxjs';
 import { DocumentType } from '../../../../core/enums/documentType';
 import { DocumentList } from '../../model/document';
 import { DocumentListQuery, DocumentService } from '../../services/document-service';
@@ -20,8 +20,8 @@ import { WarehouseService } from '../../../warehouses/services/warehouse-service
   templateUrl: './document-pending-list.component.html'
 })
 export class DocumentPendingListComponent implements OnInit {
-  documents$: Observable<DocumentList[]> = of([]);
-  warehouses$: Observable<WarehouseList[]> = of([]);
+  documents$!: Observable<DocumentList[]>;
+  warehouses$!: Observable<WarehouseList[]>;
   isLoading = false;
   errorMessage = '';
   page = 1;
@@ -41,6 +41,7 @@ export class DocumentPendingListComponent implements OnInit {
   isActionPending = false;
   actionError: string | null = null;
   readonly documentTypes = Object.values(DocumentType);
+  private readonly reloadDocuments$ = new Subject<void>();
 
   columns = [
     { key: 'documentNumber', label: 'Document Number', sortable: true },
@@ -73,10 +74,36 @@ export class DocumentPendingListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // RxJS insight: warehouse options are read-only lookup data for this view. shareReplay(1)
+    // caches the latest successful emission for all async-pipe subscribers and avoids repeated
+    // HTTP calls caused by template re-rendering or conditional DOM changes.
     this.warehouses$ = this.warehouseService.getWarehouses().pipe(
-      catchError(() => of([]))
+      catchError(() => of([])),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
-    this.loadPendingDocuments();
+
+    // RxJS insight: every table event only emits "reload". Compared to manually assigning data
+    // in every handler, one stream centralizes loading/error/request behavior. switchMap also
+    // cancels the previous HTTP request when a newer table query is requested.
+    this.documents$ = this.reloadDocuments$.pipe(
+      startWith(void 0),
+      switchMap(() => {
+        // Put loading inside switchMap. On a new reload, switchMap disposes the old request first;
+        // then this block marks the new request as loading, so the old finalize cannot hide it.
+        this.isLoading = true;
+        this.errorMessage = '';
+        return this.documentService.getPendingDocuments(this.buildQuery()).pipe(
+          catchError(() => {
+            this.errorMessage = 'Pending documents could not be loaded. Please try again.';
+            this.totalItems = 0;
+            return of({ items: [], page: this.page, pageSize: this.pageSize, totalItems: 0, totalPages: 0 });
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      map(result => this.setPageResult(result)),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   retry(): void {
@@ -121,21 +148,14 @@ export class DocumentPendingListComponent implements OnInit {
   }
 
   private loadPendingDocuments(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.documents$ = this.documentService.getPendingDocuments(this.buildQuery()).pipe(
-      catchError(() => {
-        this.errorMessage = 'Pending documents could not be loaded. Please try again.';
-        this.totalItems = 0;
-        return of({ items: [], page: this.page, pageSize: this.pageSize, totalItems: 0, totalPages: 0 });
-      }),
-      map(result => this.setPageResult(result)),
-      finalize(() => this.isLoading = false)
-    );
+    // Handlers do not fetch data directly. They only signal that the current query should be
+    // executed again, and the observable pipeline decides how to do that safely.
+    this.reloadDocuments$.next();
   }
 
   private buildQuery(): DocumentListQuery {
+    // Pending documents use the same server-side table contract as the main list: page, filters
+    // and sort are sent to the API so the browser never has to load the whole document table.
     return {
       page: this.page,
       pageSize: this.pageSize,
@@ -155,6 +175,8 @@ export class DocumentPendingListComponent implements OnInit {
   }
 
   private setPageResult(result: { items: DocumentList[]; page: number; pageSize: number; totalItems: number }): DocumentList[] {
+    // Keep the paged response normalized: items go to the table stream, metadata updates the
+    // pagination controls.
     this.page = result.page;
     this.pageSize = result.pageSize;
     this.totalItems = result.totalItems;
@@ -207,16 +229,22 @@ export class DocumentPendingListComponent implements OnInit {
       ? this.documentService.confirmDocument(this.selectedDocument)
       : this.documentService.cancelDocument(this.selectedDocument);
 
-    request$.subscribe({
+    // RxJS insight: confirm/cancel is a command stream, not a view stream. We subscribe here
+    // because the operation has side effects. take(1) makes it a one-response command, while
+    // finalize guarantees the modal button is unlocked on both success and error.
+    request$.pipe(
+      take(1),
+      finalize(() => this.isActionPending = false)
+    ).subscribe({
       next: () => {
         this.loadPendingDocuments();
-        this.closeActionModal();
+        this.selectedDocument = null;
+        this.actionMode = null;
+        this.actionError = null;
       },
       error: (err) => {
         this.actionError = this.resolveServerError(err);
       }
-    }).add(() => {
-      this.isActionPending = false;
     });
   }
 

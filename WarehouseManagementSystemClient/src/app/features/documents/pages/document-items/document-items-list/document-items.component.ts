@@ -4,8 +4,8 @@ import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Va
 import { ZoneService } from '../../../../zones/services/zone-service';
 import { InputSelectComponent } from '../../../../../shared/components/form/input/input-select/input-select.component';
 import { InputFieldComponent } from "../../../../../shared/components/form/input/input-field.component";
-import { Product } from '../../../../products/model/product';
 import { ProductService } from '../../../../products/services/product-service';
+import { forkJoin, take } from 'rxjs';
 
 @Component({
   selector: 'app-document-items',
@@ -27,20 +27,20 @@ export class DocumentItemsComponent implements OnInit {
   constructor(private fb: FormBuilder, private zoneService: ZoneService, private productService: ProductService) { }
 
   ngOnInit(): void {
-    // przygotowanie list stref
-    this.productService.getProducts().subscribe({
-      next: (resopnce) => {
-        this.productOptions = resopnce.map(p => ({ value: p.id, label: p.name }))
-      }
-    });
-    this.zoneService.getZones().subscribe({
-      next: (zones) => {
-        this.sourceZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
-      }
-    });
-    this.zoneService.getZones().subscribe({
-      next: (zones) => {
-        this.targetZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+    // RxJS insight: product and zone lookups are independent one-shot reads for select options.
+    // forkJoin runs them in parallel and emits once when both complete. This is better than nested
+    // subscribes because there is one deterministic initialization point and no duplicated zones
+    // request for source/target selects. Do not use forkJoin for streams that should keep emitting.
+    forkJoin({
+      products: this.productService.getProducts(),
+      zones: this.zoneService.getZones()
+    }).pipe(take(1)).subscribe({
+      next: ({ products, zones }) => {
+        const zoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+
+        this.productOptions = products.map(p => ({ value: p.id, label: p.name }));
+        this.sourceZoneOptions = zoneOptions;
+        this.targetZoneOptions = zoneOptions;
       }
     });
   }
