@@ -2,6 +2,7 @@
 using Duende.IdentityModel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -23,13 +24,16 @@ using WarehouseManagementSystem.Infrastructure.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // wyłączenie mapowania claimów JWT na standardowe nazwy claimów w .NET, dzięki temu nazwy claimów w tokenie JWT będą takie same jak w aplikacji, bez tego np. "sub" byłby mapowany na ClaimTypes.NameIdentifier, a "role" na ClaimTypes.Role, co może powodować problemy z autoryzacją jeśli w tokenie są niestandardowe nazwy claimów.
 // Add services to the container.
 // Dodałem NewtonssoftJson bo obługuje patchDocument. Serializacja Enumów z tego powodu powinna być w nim dodana inaczej dojdzie do zgrzytu między dwoma konwerterami
 // Dodanie konwertera przy polu(w klasyczny sposób) nie jest wtedy obsługiwane.
 builder.Services.AddControllers(options =>
 {
+    options.Filters.Add(new AuthorizeFilter()); // dodanie globalnego filtra autoryzacji, który wymaga uwierzytelnienia dla wszystkich endpointów, chyba że zostanie to nadpisane przez atrybut [AllowAnonymous] na poziomie kontrolera lub akcji.
+    
     options.ReturnHttpNotAcceptable = true;
+
     options.CacheProfiles.Add(HttpCacheProfiles.ReferenceData, new CacheProfile
     {
         Duration = HttpCacheProfiles.ReferenceDataDuration,
@@ -37,7 +41,7 @@ builder.Services.AddControllers(options =>
         VaryByQueryKeys = ["*"]
     });
     options.CacheProfiles.Add(HttpCacheProfiles.OperationalData, new CacheProfile
-    {
+    { 
         Duration = HttpCacheProfiles.OperationalDataDuration,
         Location = ResponseCacheLocation.Client,
         VaryByQueryKeys = ["*"]
@@ -53,8 +57,8 @@ builder.Services.AddControllers(options =>
         Duration = HttpCacheProfiles.AuditDataDuration,
         Location = ResponseCacheLocation.Client,
         VaryByQueryKeys = ["*"]
-    });
-}).AddNewtonsoftJson(options =>
+    }); // dodanie cache dla wszystkich endpointów które nie zmieniają się często i mogą być przechowywane w pamięci podręcznej przez określony czas.
+}).AddNewtonsoftJson(options => // dodałem NewtonsoftJson bo obługuje patchDocument. Serializacja Enumów z tego powodu powinna być w nim dodana inaczej dojdzie do zgrzytu między dwoma konwerterami
 {
     //options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
@@ -64,14 +68,14 @@ builder.Services.AddSwaggerGen(o =>
 {
     o.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()  // JWT token dla serwera
     {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
+        Name = "Authorization", // nazwa nagłówka, w którym klient będzie przesyłał token JWT
+        Type = SecuritySchemeType.ApiKey, // określa, że token będzie przesyłany jako klucz API (w nagłówku)
+        Scheme = "Bearer", // nazwa schematu uwierzytelniania, używana w nagłówku (np. "Bearer")
+        BearerFormat = "JWT", // format tokenu, informacja dla klienta, że jest to token JWT
+        In = ParameterLocation.Header, // określa, że token będzie przesyłany w nagłówku HTTP
         Description = "JWT Authorization header using the Bearer scheme."
     });
-    o.AddSecurityRequirement(new OpenApiSecurityRequirement
+    o.AddSecurityRequirement(new OpenApiSecurityRequirement // wymóg uwierzytelniania dla wszystkich endpointów, klient musi przesłać token JWT w nagłówku
     {
         {
             new OpenApiSecurityScheme
@@ -126,7 +130,7 @@ builder.Services.AddSingleton<IUserService, UserService>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
-    cfg.AddWmsMappings();
+    cfg.AddWmsMappings(); // extension method to add all mappings for the WMS application
 });
 
 
@@ -147,8 +151,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         o.Authority = "https://localhost:44380";
         o.MetadataAddress = "https://localhost:44380/.well-known/openid-configuration";
         o.RequireHttpsMetadata = true; // tymczasowo można na falce
-        o.Audience = "wmsApi";
-        o.MapInboundClaims = false; //
+        o.Audience = "wmsApi"; // musi być zgodne z aud w tokenie JWT, który jest generowany przez IdentityServer, jeśli nie jest zgodne to będzie błąd 401 Unauthorized
+        o.MapInboundClaims = false; // wyłączenie mapowania claimów, dzięki temu nazwy claimów w tokenie JWT będą takie same jak w aplikacji,
+                                    // bez tego np. "sub" byłby mapowany na ClaimTypes.NameIdentifier, a "role" na ClaimTypes.Role,
+                                    // co może powodować problemy z autoryzacją jeśli w tokenie są niestandardowe nazwy claimów
 
         o.TokenValidationParameters = new TokenValidationParameters
         {
@@ -161,13 +167,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
             {
                 // Konflikt między System.IdentityModel a Duende IdentityModel
-                Console.WriteLine($"=== KEY RESOLVER called, kid: {kid}");
+
+                // Dodałem własny resolver kluczy, który pobiera klucze z endpointu JWKS IdentityServer,
+                // ponieważ domyślny resolver nie działa poprawnie z Duende IdentityModel i nie znajduje kluczy podpisujących,
+                // co powoduje błąd 401 Unauthorized przy próbie uwierzytelnienia tokenu JWT.
                 var client = new HttpClient(new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = (m, c, ch, e) => true
                 });
                 var json = client.GetStringAsync("https://localhost:44380/.well-known/openid-configuration/jwks").Result;
-                Console.WriteLine($"=== JWKS: {json}");
                 var keys = new JsonWebKeySet(json);
                 return keys.GetSigningKeys();
             }
@@ -177,22 +185,32 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         //    ServerCertificateCustomValidationCallback =
         //        HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
         //};
-        o.BackchannelHttpHandler = new HttpClientHandler
+        // dodane na potrzeby sprawdzenia certyfikatu podczas developmentu, ponieważ IdentityServer jest hostowany na localhost z self-signed certyfikatem,
+        // który nie jest zaufany przez system operacyjny, więc trzeba go zaakceptować ręcznie w kodzie, żeby móc testować uwierzytelnianie JWT podczas developmentu.
+        // W produkcji ten kod powinien być usunięty, a certyfikat powinien być wystawiony przez zaufany urząd certyfikacji.
+
+        if (builder.Environment.IsDevelopment())
         {
-            ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) =>
-             {
-                 Console.WriteLine($"=== CERT VALIDATION: {cert?.Subject}, errors: {errors}");
-                 return true;
-             }
-        };
-        o.Events = new JwtBearerEvents
-        {
-            OnAuthenticationFailed = ctx =>
+            o.BackchannelHttpHandler = new HttpClientHandler
             {
-                Console.WriteLine($"=== AUTH FAILED: {ctx.Exception}");
-                return Task.CompletedTask;
-            }
-        };
+                ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) =>
+                {
+                    Console.WriteLine($"=== CERT VALIDATION: {cert?.Subject}, errors: {errors}");
+                    return true;
+                }
+            };
+            // Dodałem logowanie błędów uwierzytelniania JWT, ponieważ podczas developmentu często pojawiają się problemy z konfiguracją IdentityServer i tokenami JWT,
+            // więc dodatkowe logi pomagają zdiagnozować co jest nie tak, np. czy problemem jest certyfikat, czy konfiguracja tokena, czy coś innego.
+            o.Events = new JwtBearerEvents
+            {
+                OnAuthenticationFailed = ctx =>
+                {
+                    Console.WriteLine($"=== AUTH FAILED: {ctx.Exception}");
+                    return Task.CompletedTask;
+                }
+            };
+        }
+
     });
 builder.Services.AddAuthorization(o =>
 {

@@ -11,7 +11,13 @@ using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
+// Wymaga uwierzytelnienia dla wszystkich akcji w tym kontrolerze, jest to ustawione na poziomie kontrolera,
+// więc wszystkie akcje dziedziczą to ustawienie. Można je nadpisać na poziomie akcji, jeśli jest to konieczne.
+// Jest dodany filtr globalny w klasie Program.cs, który obsługuje uwierzytelnianie i autoryzację,
+// więc nie trzeba dodawać [Authorize] do każdej akcji. Wystarczy dodać [AllowAnonymous] do akcji,
+// które mają być dostępne bez uwierzytelnienia.
 [Authorize]
+
 [ApiController]
 [Route("api/[controller]")]
 public class DocumentsController : ControllerBase
@@ -128,6 +134,22 @@ public class DocumentsController : ControllerBase
 
         return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, createdDto);
     }
+
+    /// <summary>
+    /// Aktualizuje dokument wraz z pozycjami (DocumentItemDraft → DocumentItem)
+    /// </summary>
+    /// <remarks>
+    /// Ta metoda wykonuje asynchroniczne zapytanie do bazy danych. 
+    /// W przypadku braku zamówienia zwraca wartość <c>null</c> zamiast zgłaszać wyjątek.
+    /// </remarks>
+    /// <param name="documentId">Unikalny identyfikator zamówienia (GUID).</param>
+    /// <param name="documentDto">body dokumentu </param>
+    /// <returns>
+    /// Zadanie (Task) reprezentujące operację asynchroniczną. 
+    /// Zwraca obiekt <see cref="OrderDetailsDto"/>, jeśli zamówienie istnieje; w przeciwnym razie <c>null</c>.
+    /// </returns>
+    /// <exception cref="ArgumentException">Gdy <paramref name="orderId"/> jest pustym GUIDem.</exception>
+    /// <exception cref="TimeoutException">Gdy połączenie z bazą danych przekroczy limit czasu.</exception>
     [HttpPut("{documentId}")]
     public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] UpdateDocumentDto documentDto)
     {
@@ -172,8 +194,10 @@ public class DocumentsController : ControllerBase
         return NoContent();
     }
     /// <summary>
-    /// Rozpoczyna transwer dokument
+    /// Potwierdza dokument
     /// </summary>
+    /// <param name="documentId"></param>
+    /// <returns></returns>
     [HttpPut("{documentId}/confirm")]
     public async Task<IActionResult> ConfirmDocument(Guid documentId)
     {
@@ -194,6 +218,8 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Anuluje dokument
     /// </summary>
+    /// <param name="documentId"></param>
+    /// <returns></returns>
     [HttpPut("{documentId}/cancel")]
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
@@ -211,8 +237,11 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
-    /// Pobranie dokumentów wg typu i statusu
+    /// Pobranie dokumentów po typie i statusie
     /// </summary>
+    /// <param name="type"></param>
+    /// <param name="status"></param>
+    /// <returns></returns>
     [HttpHead("byTypeAndStatus")]
     [HttpGet("byTypeAndStatus")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
@@ -231,6 +260,7 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Pobranie dokumentów w statusie Draft
     /// </summary>
+    /// <returns></returns>
     [HttpHead("drafts")]
     [HttpGet("drafts")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -242,8 +272,10 @@ public class DocumentsController : ControllerBase
 
 
     /// <summary>
-    /// Pobranie ostatnich dokumentów (np. dashboard)
+    /// Pobranie ostatnich dokumentów
     /// </summary>
+    /// <param name="take"></param>
+    /// <returns></returns>
     [HttpHead("recent")]
     [HttpGet("recent")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -253,6 +285,10 @@ public class DocumentsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(recent));
     }
 
+    /// <summary>
+    /// Pobranie dostępnych metod HTTP dla tego kontrolera
+    /// </summary>
+    /// <returns></returns>
     [HttpOptions]
     public IActionResult GetOptions()
     {

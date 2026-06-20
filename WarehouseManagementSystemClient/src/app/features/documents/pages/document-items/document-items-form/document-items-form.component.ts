@@ -7,6 +7,7 @@ import { LabelComponent } from "../../../../../shared/components/form/label/labe
 import { InputFieldComponent } from "../../../../../shared/components/form/input/input-field.component";
 import { ModalComponent } from "../../../../../shared/components/common/modal/modal.component";
 import { ProductService } from '../../../../products/services/product-service';
+import { forkJoin, take } from 'rxjs';
 
 @Component({
   selector: 'app-document-items-form',
@@ -29,7 +30,6 @@ export class DocumentItemsFormComponent implements OnChanges, OnInit {
   constructor(private fb: FormBuilder,
     private zoneService: ZoneService,
     private productService: ProductService) {
-    this.initOptions();
   }
   ngOnInit(): void {
     this.itemForm = this.fb.group({
@@ -43,21 +43,27 @@ export class DocumentItemsFormComponent implements OnChanges, OnInit {
       id: [this.item?.id ?? null],
       index: [this.item?.index ?? null] // do rozpoznania edycji
     });
+    this.initOptions();
   }
 
   /** Inicjalizacja list produktów i stref */
   private initOptions() {
-    this.productService.getProducts().subscribe({
-      next: (resopnce) => {
-        this.productOptions = resopnce.map(p => ({ value: p.id, label: p.name }));
+    // RxJS insight: constructors should stay side-effect light. Loading options in ngOnInit keeps
+    // component creation cheap and gives one deterministic init point for dropdown data.
+    // forkJoin is appropriate here because products and zones are independent HTTP calls and the
+    // modal needs both lists before the selects are fully useful.
+    forkJoin({
+      products: this.productService.getProducts(),
+      zones: this.zoneService.getZones()
+    }).pipe(take(1)).subscribe({
+      next: ({ products, zones }) => {
+        const zoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
+
+        this.productOptions = products.map(p => ({ value: p.id, label: p.name }));
+        this.sourceZoneOptions = zoneOptions;
+        this.targetZoneOptions = zoneOptions;
       }
     });
-    this.zoneService.getZones().subscribe({next: (zones) => {
-      this.sourceZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
-    }});
-    this.zoneService.getZones().subscribe({next: (zones) => {
-      this.targetZoneOptions = zones.map(z => ({ value: z.id, label: `${z.code}_${z.name}` }));
-    }});
   }
 
   /** Aktualizacja formularza przy zmianie wejściowego item */

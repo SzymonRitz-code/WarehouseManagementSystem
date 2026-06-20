@@ -19,6 +19,7 @@ import { DocumentItemsComponent } from "../document-items/document-items-list/do
 import { minFormArrayLength } from '../../../../core/guards/vaildators';
 import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
+import { map, take } from 'rxjs';
 
 @Component({
   selector: 'app-document-form',
@@ -42,9 +43,9 @@ export class DocumentFormComponent implements OnInit {
   id!: string;
   document!: Document | CreateDocument;
   documentForm!: FormGroup;
-  sourceOptions!: any[];
-  targetOptions!: any[];
-  documentTypeOptions!: any[];
+  sourceOptions: any[] = [];
+  targetOptions: any[] = [];
+  documentTypeOptions: any[] = [];
   documentItemFormArray!: FormArray;
 
   constructor(
@@ -69,7 +70,11 @@ export class DocumentFormComponent implements OnInit {
       items: this.fb.array([], [minFormArrayLength(1)])
     })
     if (this.id) {
-      this.documentService.getDocument(this.id).subscribe
+      // RxJS insight: this is form initialization, so a finite subscribe is acceptable.
+      // In the list/detail views the observable itself is the view state and the template owns
+      // subscription via async pipe. Here we intentionally patch a Reactive Form once.
+      // take(1) makes that one-shot contract explicit.
+      this.documentService.getDocument(this.id).pipe(take(1)).subscribe
         ({
           next: (response) => {
             this.document = response;
@@ -98,19 +103,16 @@ export class DocumentFormComponent implements OnInit {
           }
         });
     }
-    console.log('Fetching warehouses for source options...');
-    this.warehouseService.getWarehouses().subscribe({
-      next: (responce) => {
-        this.sourceOptions = responce.map(w => ({ value: w.id, label: w.name }));
-      },
-      error: (err) => {
-        console.error('Error fetching warehouses:', err);
-      }
-    });
-    console.log('Fetching warehouses for target options...');
-    this.warehouseService.getWarehouses().subscribe({
-      next: (responce) => {
-        this.targetOptions = responce.map(w => ({ value: w.id, label: w.name }));
+    // RxJS insight: source and target use the same lookup data. The previous style would often
+    // call the same endpoint twice for two selects. Mapping once and assigning the same option
+    // snapshot to both controls removes duplicate HTTP work and keeps both selects consistent.
+    this.warehouseService.getWarehouses().pipe(
+      take(1),
+      map(warehouses => warehouses.map(w => ({ value: w.id, label: w.name })))
+    ).subscribe({
+      next: (options) => {
+        this.sourceOptions = options;
+        this.targetOptions = options;
       },
       error: (err) => {
         console.error('Error fetching warehouses:', err);
@@ -139,7 +141,10 @@ export class DocumentFormComponent implements OnInit {
       ? this.documentService.updateDocument(this.id, payload)
       : this.documentService.addDocument(payload);
 
-    responce$.subscribe({
+    // RxJS insight: save is a command with a side effect: navigate or show validation errors.
+    // That is a good place for subscribe. The important part is that it stays finite and local,
+    // instead of leaking a long-lived subscription from the component.
+    responce$.pipe(take(1)).subscribe({
       next: (responce) => {
         const id = responce.id ?? this.id;
         this.router.navigateByUrl(`/documents/detail/${id}`);
