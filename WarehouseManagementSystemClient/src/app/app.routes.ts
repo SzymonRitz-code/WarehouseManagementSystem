@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './layout/app-layout/app-layout.component';
 import { SigninFormComponent } from './shared/components/auth/signin-form/signin-form.component';
-import { authGuard } from './core/guards/auth-guard';
+import { authChildGuard, authGuard } from './core/guards/auth-guard';
 import { SignoutCallbackComponent } from './shared/components/auth/signout-callback/signout-callback.component';
 
 
@@ -10,6 +10,7 @@ export const routes: Routes = [
     path: '',
     component: AppLayoutComponent,
     canActivate: [authGuard],
+    canActivateChild: [authChildGuard],
     children: [
       //Home
       { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -247,6 +248,11 @@ export const routes: Routes = [
     path: 'signin',
     loadComponent: () => SigninFormComponent,
     title: 'WMS | Sign In'
+  },
+  {
+    path: 'signin-oidc',
+    loadComponent: () => import('./shared/components/auth/signin-callback/signin-callback.component')
+      .then(m => m.SigninCallbackComponent)
   },
   {
     path: 'signout-callback-oidc',
