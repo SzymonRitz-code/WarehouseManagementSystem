@@ -128,6 +128,21 @@ public class DocumentsController : ControllerBase
 
         return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, createdDto);
     }
+    /// <summary>
+    /// Aktualizuje dokument wraz z pozycjami (DocumentItemDraft → DocumentItem)
+    /// </summary>
+    /// <remarks>
+    /// Ta metoda wykonuje asynchroniczne zapytanie do bazy danych. 
+    /// W przypadku braku zamówienia zwraca wartość <c>null</c> zamiast zgłaszać wyjątek.
+    /// </remarks>
+    /// <param name="documentId">Unikalny identyfikator zamówienia (GUID).</param>
+    /// <param name="documentDto">body dokumentu </param>
+    /// <returns>
+    /// Zadanie (Task) reprezentujące operację asynchroniczną. 
+    /// Zwraca obiekt <see cref="OrderDetailsDto"/>, jeśli zamówienie istnieje; w przeciwnym razie <c>null</c>.
+    /// </returns>
+    /// <exception cref="ArgumentException">Gdy <paramref name="orderId"/> jest pustym GUIDem.</exception>
+    /// <exception cref="TimeoutException">Gdy połączenie z bazą danych przekroczy limit czasu.</exception>
     [HttpPut("{documentId}")]
     public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] UpdateDocumentDto documentDto)
     {
