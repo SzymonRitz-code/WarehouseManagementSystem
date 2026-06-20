@@ -22,6 +22,7 @@ public class AuditLogsController : ControllerBase
     }
 
     // GET: api/auditlogs
+    [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)] // Dodanie cache dla endpointu zwracającego logi audytu, ponieważ logi audytu nie zmieniają się często i mogą być przechowywane w pamięci podręcznej przez określony czas.
     public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetAuditLogs(
@@ -38,6 +39,7 @@ public class AuditLogsController : ControllerBase
     }
 
     // GET: api/auditlogs/{id}
+    [HttpHead("{id}")]
     [HttpGet("{id}", Name = "GetAuditLog")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)]
     public async Task<ActionResult<AuditLogDto>> GetAuditLog(Guid id)
@@ -48,6 +50,13 @@ public class AuditLogsController : ControllerBase
             return NotFound();
 
         return Ok(_mapper.Map<AuditLogDto>(log));
+    }
+
+    [HttpOptions]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, OPTIONS");
+        return Ok();
     }
 }
 

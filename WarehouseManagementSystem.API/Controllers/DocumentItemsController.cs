@@ -24,6 +24,7 @@ public class DocumentItemsController : ControllerBase
     /// <summary>
     /// Pobiera wszystkie pozycje dokumentu.
     /// </summary>
+    [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<IEnumerable<DocumentItemDto>>> GetAllItems(Guid documentId)
@@ -41,6 +42,7 @@ public class DocumentItemsController : ControllerBase
     /// <summary>
     /// Pobiera konkretną pozycję dokumentu po Id.
     /// </summary>
+    [HttpHead("{itemId}")]
     [HttpGet("{itemId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<DocumentItemDto>> GetItemById(Guid documentId, Guid itemId)
@@ -55,6 +57,13 @@ public class DocumentItemsController : ControllerBase
 
         var itemDto = _mapper.Map<DocumentItemDto>(item);
         return Ok(itemDto);
+    }
+
+    [HttpOptions]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, OPTIONS");
+        return Ok();
     }
 }
 

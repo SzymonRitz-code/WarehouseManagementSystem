@@ -24,6 +24,7 @@ namespace WarehouseManagementSystem.API.Controllers
         /// <summary>
         /// Pobiera wszystkie rezerwacje dla danego stocka
         /// </summary>
+        [HttpHead]
         [HttpGet]
         [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
         public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations(Guid stockId)
@@ -36,6 +37,7 @@ namespace WarehouseManagementSystem.API.Controllers
         /// <summary>
         /// Pobiera konkretną rezerwację dla danego stocka
         /// </summary>
+        [HttpHead("{reservationId}")]
         [HttpGet("{reservationId}")]
         [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
         public async Task<ActionResult<StockReservationDto>> GetStockReservation(
@@ -49,6 +51,13 @@ namespace WarehouseManagementSystem.API.Controllers
                 return NotFound();
 
             return Ok(_mapper.Map<StockReservationDto>(reservation));
+        }
+
+        [HttpOptions]
+        public IActionResult GetOptions()
+        {
+            Response.Headers.Append("Allow", "GET, HEAD, OPTIONS");
+            return Ok();
         }
     }
 }

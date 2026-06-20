@@ -40,6 +40,7 @@ public class WarehouseZonesController : ControllerBase
         _userService = userService;
     }
 
+    [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<WarehouseZoneListDto>>> GetWarehouseZones(CancellationToken ct)
@@ -48,6 +49,7 @@ public class WarehouseZonesController : ControllerBase
         return Ok(zones);
     }
 
+    [HttpHead("{warehouseZoneId}")]
     [HttpGet("{warehouseZoneId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<WarehouseZoneDetailsDto>> GetWarehouseZone(Guid warehouseZoneId, CancellationToken ct)
@@ -173,5 +175,12 @@ public class WarehouseZonesController : ControllerBase
     private bool WarehouseZoneExists(Guid warehouseZoneId)
     {
         return _unitOfWork.WarehouseZones.Any(z => z.Id == warehouseZoneId);
+    }
+
+    [HttpOptions]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
+        return Ok();
     }
 }

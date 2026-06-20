@@ -48,6 +48,7 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Pobranie isty dokumentów
     /// </summary>
+    [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<PagedResult<DocumentListDto>>> GetDocuments([FromQuery] DocumentListQuery query, CancellationToken ct)
@@ -58,6 +59,7 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Pobranie oczekujących dokumentów
     /// </summary>
+    [HttpHead("pending")]
     [HttpGet("pending")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<PagedResult<DocumentListDto>>> GetPendingDocuments([FromQuery] DocumentListQuery query, CancellationToken ct)
@@ -70,6 +72,7 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Pobranie dokumentu po Id
     /// </summary>
+    [HttpHead("{documentId}")]
     [HttpGet("{documentId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<DocumentDto>> GetDocumentById(Guid documentId)
@@ -210,6 +213,7 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Pobranie dokumentów wg typu i statusu
     /// </summary>
+    [HttpHead("byTypeAndStatus")]
     [HttpGet("byTypeAndStatus")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetByTypeAndStatus(
@@ -227,6 +231,7 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Pobranie dokumentów w statusie Draft
     /// </summary>
+    [HttpHead("drafts")]
     [HttpGet("drafts")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDrafts()
@@ -239,11 +244,19 @@ public class DocumentsController : ControllerBase
     /// <summary>
     /// Pobranie ostatnich dokumentów (np. dashboard)
     /// </summary>
+    [HttpHead("recent")]
     [HttpGet("recent")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecent([FromQuery] int take = 10)
     {
         var recent = await _queryService.GetRecentAsync(take);
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(recent));
+    }
+
+    [HttpOptions]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, OPTIONS");
+        return Ok();
     }
 }

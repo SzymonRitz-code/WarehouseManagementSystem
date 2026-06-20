@@ -18,6 +18,7 @@ public class StocksController : ControllerBase
         _stockQuery = stockQuery;
     }
 
+    [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<PagedResult<StockDto>>> GetStocks([FromQuery] StockListQuery query, CancellationToken ct)
@@ -27,6 +28,7 @@ public class StocksController : ControllerBase
         return Ok(stocks);
     }
 
+    [HttpHead("availability")]
     [HttpGet("availability")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStockAvailability(CancellationToken ct)
@@ -36,6 +38,7 @@ public class StocksController : ControllerBase
         return Ok(stocks);
     }
 
+    [HttpHead("{stockId:guid}")]
     [HttpGet("{stockId:guid}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<StockDto>> GetStock(Guid stockId, CancellationToken ct)
@@ -45,5 +48,12 @@ public class StocksController : ControllerBase
             return NotFound();
 
         return Ok(stock);
+    }
+
+    [HttpOptions]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, OPTIONS");
+        return Ok();
     }
 }

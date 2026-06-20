@@ -41,6 +41,7 @@ public class ProductsController : ControllerBase
         _userService = userService;
     }
 
+    [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductListDto>>> GetProducts(CancellationToken ct)
@@ -48,7 +49,7 @@ public class ProductsController : ControllerBase
         var products = await _productQueryService.GetProductsAsync(ct);
         return Ok(products);
     }
-
+    [HttpHead("paged")]
     [HttpGet("paged")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<PagedResult<ProductListDto>>> GetProductsPage([FromQuery] ProductListQuery query, CancellationToken ct)
@@ -57,6 +58,7 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpHead("{productId:guid}")]
     [HttpGet("{productId:guid}")] // wcześniej było [HttpGet("{productId}")] ale po dodaniu [HttpGet("paged")] api rzucało 409 co oznacza kolizję routingu,
                                   // bo nie wiedziało czy to ma być paged czy productId. Dlatego dodałem constraint :guid
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -202,6 +204,7 @@ public class ProductsController : ControllerBase
 
     private bool ProductExists(Guid id) => _unitOfWork.Products.Any(p => p.Id == id);
 
+    [HttpHead("{productId:guid}/stocks")]
     [HttpGet("{productId:guid}/stocks")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksForProduct(Guid productId)
@@ -210,6 +213,7 @@ public class ProductsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
+    [HttpHead("{productId:guid}/stocks/available")]
     [HttpGet("{productId:guid}/stocks/available")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<decimal>> GetAvailableQuantityForProduct(Guid productId, [FromQuery] Guid warehouseId)
@@ -218,4 +222,10 @@ public class ProductsController : ControllerBase
         return Ok(available);
     }
 
+    [HttpOptions]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
+        return Ok();
+    }
 }

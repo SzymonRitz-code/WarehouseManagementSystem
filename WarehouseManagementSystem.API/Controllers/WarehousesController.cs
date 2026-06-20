@@ -46,6 +46,7 @@ public class WarehousesController : ControllerBase
     /// <summary>
     /// Pobranie wszystkich stocków w magazynie
     /// </summary>
+    [HttpHead("{warehouseId}/stocks")]
     [HttpGet("{warehouseId}/stocks")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksInWarehouse(Guid warehouseId)
@@ -57,6 +58,7 @@ public class WarehousesController : ControllerBase
     /// <summary>
     /// Pobranie stocków dostępnych do kompletacji w magazynie
     /// </summary>
+    [HttpHead("{warehouseId}/stocks/available-for-picking")]
     [HttpGet("{warehouseId}/stocks/available-for-picking")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetAvailableForPicking(Guid warehouseId)
@@ -65,6 +67,7 @@ public class WarehousesController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
+    [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<WarehouseListDto>>> GetWarehouses(CancellationToken ct)
@@ -73,6 +76,7 @@ public class WarehousesController : ControllerBase
         return Ok(warehouses);
     }
 
+    [HttpHead("{warehouseId}")]
     [HttpGet("{warehouseId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<WarehouseDetailsDto>> GetWarehouse(Guid warehouseId, CancellationToken ct)
@@ -204,5 +208,12 @@ public class WarehousesController : ControllerBase
     private bool WarehouseExists(Guid warehouseId)
     {
         return _unitOfWork.Warehouses.Any(w => w.Id == warehouseId);
+    }
+
+    [HttpOptions]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
+        return Ok();
     }
 }

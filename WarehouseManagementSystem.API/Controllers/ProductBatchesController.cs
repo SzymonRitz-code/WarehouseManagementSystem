@@ -39,6 +39,7 @@ public class ProductBatchesController : ControllerBase
     }
 
 
+    [HttpHead("/api/products/{productId:guid}/batches")]
     [HttpGet("/api/products/{productId:guid}/batches")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductBatchListDto>>> GetBatchesByProduct([FromRoute] Guid productId, CancellationToken ct)
@@ -47,6 +48,7 @@ public class ProductBatchesController : ControllerBase
         return Ok(batches);
     }
 
+    [HttpHead("/api/products/{productId:guid}/batches/{batchId:guid}")]
     [HttpGet("/api/products/{productId:guid}/batches/{batchId:guid}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<ProductBatchDto>> GetBatchByProduct([FromRoute] Guid productId, [FromRoute] Guid batchId, CancellationToken ct)
@@ -62,6 +64,7 @@ public class ProductBatchesController : ControllerBase
     // MODE 2 — Global
     // ===========================
 
+    [HttpHead("/api/batches")]
     [HttpGet("/api/batches")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductBatchListDto>>> GetAllBatches(CancellationToken ct)
@@ -70,6 +73,7 @@ public class ProductBatchesController : ControllerBase
         return Ok(batches);
     }
 
+    [HttpHead("/api/batches/{batchId:guid}")]
     [HttpGet("/api/batches/{batchId:guid}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<ProductBatchListDto>> GetBatch([FromRoute] Guid batchId, CancellationToken ct)
@@ -209,5 +213,15 @@ public class ProductBatchesController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    [HttpOptions]
+    [HttpOptions("{batchId:guid}")]
+    [HttpOptions("/api/products/{productId:guid}/batches")]
+    [HttpOptions("/api/products/{productId:guid}/batches/{batchId:guid}")]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
+        return Ok();
     }
 }
