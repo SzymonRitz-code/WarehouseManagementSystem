@@ -20,7 +20,6 @@ export class ZoneService {
     return this.http.post<Zone>(`${this.apiUrl}/zones`, zone)
   }
   updateZone(warehouseZoneId: string, zone: Partial<Zone>): Observable<Zone> {
-    console.log('Updating zone with ID:', warehouseZoneId, 'Data:', zone);
     return this.http.put<Zone>(`${this.apiUrl}/zones/${warehouseZoneId}`, { ...zone, id: warehouseZoneId })
   }
   getZone(warehouseZoneId: string): Observable<Zone> {

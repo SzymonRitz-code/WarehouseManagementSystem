@@ -38,7 +38,8 @@ export class SigninFormComponent implements OnInit {
   }
 
   onSignIn() {
-    console.log('Email:', this.signInForm.get('email')?.value);
-    console.log('Password:', this.signInForm.get('password')?.value);
+    if (this.signInForm.invalid) {
+      this.signInForm.markAllAsTouched();
+    }
   }
 }

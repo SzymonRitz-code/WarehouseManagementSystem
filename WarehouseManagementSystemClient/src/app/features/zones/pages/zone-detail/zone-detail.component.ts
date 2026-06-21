@@ -30,7 +30,6 @@ export class ZoneDetailComponent implements OnInit {
     this.zoneService.getZone(this.id).subscribe({
       next: (result: Zone) => {
         this.zone = result;
-        console.log(this.zone)
         this.warehouseService.getWarehouse(this.zone.warehouseId).subscribe({
           next: (responce) => {
             this.zone!.warehouseName = responce.name

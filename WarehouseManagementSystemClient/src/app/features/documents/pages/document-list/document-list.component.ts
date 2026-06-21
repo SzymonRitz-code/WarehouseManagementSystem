@@ -190,7 +190,6 @@ export class DocumentListComponent implements OnInit {
   }
   onDocumentAction(event: { row: DocumentList; action: string }) {
     const { row, action } = event;
-    console.log(`Action "${action}" triggered for document:`, row);
     switch (action) {
       case 'edit':
         this.onEdit(row);
@@ -208,7 +207,6 @@ export class DocumentListComponent implements OnInit {
     this.documentService.cancelDocument(row).pipe(take(1)).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
-        console.log(`Document ${updatedDoc.id} cancelled.`);
         this.loadDocuments();
       },
       error: (err) => {
@@ -221,7 +219,6 @@ export class DocumentListComponent implements OnInit {
     this.documentService.confirmDocument(row).pipe(take(1)).subscribe({
       next: (updatedDoc) => {
         // Aktualizuj widok lub pokaż powiadomienie
-        console.log(`Document ${updatedDoc.id} confirmed.`);
         this.loadDocuments();
       },
       error: (err) => {
@@ -233,7 +230,6 @@ export class DocumentListComponent implements OnInit {
     this.router.navigateByUrl(`/documents/detail/${row.id}`)
   }
   onEdit(document: DocumentList) {
-    console.log(`Edit: ${document.id}`)
     this.router.navigateByUrl(`/documents/form/${document.id}`)
   }
 }

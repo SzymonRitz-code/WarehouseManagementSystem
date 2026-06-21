@@ -65,7 +65,6 @@ export class ProductBatchFormComponent implements OnInit {
       this.batchService.getBatch(this.productId, this.batchId).subscribe({
         next: (batch: Batch) => {
           this.batch = batch;
-          console.log(this.batch);
           this.batchForm.patchValue({
             id: (this.batch as Batch).id,
             batchNumber: this.batch.batchNumber,

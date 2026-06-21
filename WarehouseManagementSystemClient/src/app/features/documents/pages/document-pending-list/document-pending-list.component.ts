@@ -190,7 +190,6 @@ export class DocumentPendingListComponent implements OnInit {
 
   onDocumentAction(event: { row: DocumentList; action: string }) {
     const { row, action } = event;
-    console.log(`Action "${action}" triggered for document:`, row);
 
     switch (action) {
       case 'edit':
@@ -220,8 +219,7 @@ export class DocumentPendingListComponent implements OnInit {
 
   confirmAction() {
     if (!this.selectedDocument || !this.actionMode) return;
-    console.log(this.selectedDocument);
-    
+
     this.isActionPending = true;
     this.actionError = null;
 

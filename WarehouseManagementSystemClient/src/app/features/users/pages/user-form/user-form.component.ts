@@ -80,10 +80,8 @@ export class UserFormComponent implements OnInit {
 
   onSave() {
     this.user = this.userForm.value
-    console.log(this.user)
     if(this.id === null){
     this.user = this.userService.addUser(this.user) as User;
-    console.log("UserAdded")
     }
     this.router.navigateByUrl(`/users/detail/${(this.user as User).id}`);
   }

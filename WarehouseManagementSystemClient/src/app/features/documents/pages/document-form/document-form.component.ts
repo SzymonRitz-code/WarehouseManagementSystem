@@ -58,9 +58,7 @@ export class DocumentFormComponent implements OnInit {
 
 
   ngOnInit(): void {
-    console.log('Initializing DocumentFormComponent...');
     this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    console.log('Document ID from route:', this.id);
     this.documentForm = this.fb.group({
       documentDate: [null, Validators.required],
       type: [null, Validators.required],

@@ -87,7 +87,6 @@ export class DocumentItemsFormComponent implements OnChanges, OnInit {
   /** Zatwierdzenie modala */
   onSave() {
     if (this.itemForm.valid) {
-      console.log(this.itemForm.value)
       this.save.emit(this.itemForm.value);
       this.resetForm();
       this.isOpen = false;

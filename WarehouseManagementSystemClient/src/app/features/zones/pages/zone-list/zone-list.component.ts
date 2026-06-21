@@ -66,7 +66,6 @@ export class ZoneListComponent implements OnInit {
 
   onZoneAction(event: { row: ZoneList; action: string }) {
     const { row, action } = event;
-    console.log(`Action "${action}" triggered for zone:`, row);
     switch (action) {
       case 'edit':
         this.onEdit(row);

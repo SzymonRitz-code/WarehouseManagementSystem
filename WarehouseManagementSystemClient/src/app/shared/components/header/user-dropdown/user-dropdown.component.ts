@@ -23,8 +23,6 @@ export class UserDropdownComponent {
     this.isOpen = false;
   }
   signOut() {
-    // Implement your sign-out logic here
     this.oidcSecurityService.logoffAndRevokeTokens().subscribe();
-    console.log('User signed out');
   }
 }
