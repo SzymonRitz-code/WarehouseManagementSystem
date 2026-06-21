@@ -17,7 +17,6 @@ namespace WarehouseManagementSystem.API.Controllers;
 // więc nie trzeba dodawać [Authorize] do każdej akcji. Wystarczy dodać [AllowAnonymous] do akcji,
 // które mają być dostępne bez uwierzytelnienia.
 [Authorize]
-
 [ApiController]
 [Route("api/[controller]")]
 public class DocumentsController : ControllerBase
@@ -42,18 +41,11 @@ public class DocumentsController : ControllerBase
         _logger = logger;
     }
     /// <summary>
-    /// Pobranie dokumentu po Id
+    /// Gets a paginated list of documents using the provided filters.
     /// </summary>
-    //[HttpGet("paginated")]
-    //public async Task<ActionResult<DocumentDto>> GetDocuments([FromQuery]int page,[FromQuery] int pagesize)
-    //{
-    //    var documents = await _queryService.GetPagedAsync(page, pagesize);
-    //    return Ok(_mapper.Map<DocumentDto>(documents));
-    //}
-
-    /// <summary>
-    /// Pobranie isty dokumentów
-    /// </summary>
+    /// <param name="query">Filtering, sorting, and pagination parameters for the document list.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Paginated document list.</returns>
     [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
@@ -63,8 +55,11 @@ public class DocumentsController : ControllerBase
         return Ok(documents);
     }
     /// <summary>
-    /// Pobranie oczekujących dokumentów
+    /// Gets a paginated list of pending documents, meaning documents in draft status.
     /// </summary>
+    /// <param name="query">Filtering, sorting, and pagination parameters for the document list.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Paginated pending document list.</returns>
     [HttpHead("pending")]
     [HttpGet("pending")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -76,8 +71,10 @@ public class DocumentsController : ControllerBase
         return Ok(pending);
     }
     /// <summary>
-    /// Pobranie dokumentu po Id
+    /// Gets document details by identifier.
     /// </summary>
+    /// <param name="documentId">Unique document identifier.</param>
+    /// <returns>The document with the specified identifier, or a 404 response if it does not exist.</returns>
     [HttpHead("{documentId}")]
     [HttpGet("{documentId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
@@ -90,8 +87,14 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
-    /// Tworzy dokument wraz z pozycjami (DocumentItemDraft → DocumentItem)
+    /// Creates a new document with its items.
     /// </summary>
+    /// <remarks>
+    /// Items provided in the request are converted to document item drafts,
+    /// and then passed to the domain service responsible for creating the document.
+    /// </remarks>
+    /// <param name="documentDto">Document data and the list of items to create.</param>
+    /// <returns>The created document with the URL for retrieving its details.</returns>
     [HttpPost]
     public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto documentDto)
     {
@@ -135,20 +138,15 @@ public class DocumentsController : ControllerBase
         return CreatedAtAction(nameof(GetDocumentById), new { documentId = document.Id }, createdDto);
     }
     /// <summary>
-    /// Aktualizuje dokument wraz z pozycjami (DocumentItemDraft → DocumentItem)
+    /// Updates an existing document with its items.
     /// </summary>
     /// <remarks>
-    /// Ta metoda wykonuje asynchroniczne zapytanie do bazy danych. 
-    /// W przypadku braku zamówienia zwraca wartość <c>null</c> zamiast zgłaszać wyjątek.
+    /// The route identifier must match the identifier provided in the request body.
+    /// Document items are passed to the domain service as document item drafts.
     /// </remarks>
-    /// <param name="documentId">Unikalny identyfikator zamówienia (GUID).</param>
-    /// <param name="documentDto">body dokumentu </param>
-    /// <returns>
-    /// Zadanie (Task) reprezentujące operację asynchroniczną. 
-    /// Zwraca obiekt <see cref="OrderDetailsDto"/>, jeśli zamówienie istnieje; w przeciwnym razie <c>null</c>.
-    /// </returns>
-    /// <exception cref="ArgumentException">Gdy <paramref name="orderId"/> jest pustym GUIDem.</exception>
-    /// <exception cref="TimeoutException">Gdy połączenie z bazą danych przekroczy limit czasu.</exception>
+    /// <param name="documentId">Unique document identifier from the request route.</param>
+    /// <param name="documentDto">Document data and the list of items to update.</param>
+    /// <returns>A 204 response after a successful update, or a validation response when the data is invalid.</returns>
     [HttpPut("{documentId}")]
     public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] UpdateDocumentDto documentDto)
     {
@@ -193,10 +191,10 @@ public class DocumentsController : ControllerBase
         return NoContent();
     }
     /// <summary>
-    /// Potwierdza dokument
+    /// Confirms the document and triggers the resulting domain changes.
     /// </summary>
-    /// <param name="documentId"></param>
-    /// <returns></returns>
+    /// <param name="documentId">Unique identifier of the document to confirm.</param>
+    /// <returns>A 204 response after the document is successfully confirmed.</returns>
     [HttpPut("{documentId}/confirm")]
     public async Task<IActionResult> ConfirmDocument(Guid documentId)
     {
@@ -215,10 +213,10 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
-    /// Anuluje dokument
+    /// Cancels the document.
     /// </summary>
-    /// <param name="documentId"></param>
-    /// <returns></returns>
+    /// <param name="documentId">Unique identifier of the document to cancel.</param>
+    /// <returns>A 204 response after the document is successfully canceled.</returns>
     [HttpPut("{documentId}/cancel")]
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
@@ -236,11 +234,11 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
-    /// Pobranie dokumentów po typie i statusie
+    /// Gets documents matching the specified type and status.
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="status"></param>
-    /// <returns></returns>
+    /// <param name="type">Document type as text matching the values of <see cref="Domain.Enums.DocumentType"/>.</param>
+    /// <param name="status">Document status as text matching the values of <see cref="Domain.Enums.DocumentStatus"/>.</param>
+    /// <returns>List of documents matching the specified type and status, or a 400 response if the parameters are invalid.</returns>
     [HttpHead("byTypeAndStatus")]
     [HttpGet("byTypeAndStatus")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
@@ -257,9 +255,9 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
-    /// Pobranie dokumentów w statusie Draft
+    /// Gets documents in draft status.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>List of documents in Draft status.</returns>
     [HttpHead("drafts")]
     [HttpGet("drafts")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -271,10 +269,10 @@ public class DocumentsController : ControllerBase
 
 
     /// <summary>
-    /// Pobranie ostatnich dokumentów
+    /// Gets recently created or modified documents.
     /// </summary>
-    /// <param name="take"></param>
-    /// <returns></returns>
+    /// <param name="take">Maximum number of documents to retrieve.</param>
+    /// <returns>List of recent documents limited by the <paramref name="take"/> parameter.</returns>
     [HttpHead("recent")]
     [HttpGet("recent")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -285,9 +283,9 @@ public class DocumentsController : ControllerBase
     }
 
     /// <summary>
-    /// Pobranie dostępnych metod HTTP dla tego kontrolera
+    /// Returns the available HTTP methods supported by the documents controller.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>Response with the Allow header containing the list of available HTTP methods.</returns>
     [HttpOptions]
     public IActionResult GetOptions()
     {

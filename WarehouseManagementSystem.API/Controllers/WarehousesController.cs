@@ -44,8 +44,10 @@ public class WarehousesController : ControllerBase
     }
 
     /// <summary>
-    /// Pobranie wszystkich stocków w magazynie
+    /// Gets all stock records in the selected warehouse.
     /// </summary>
+    /// <param name="warehouseId">Unique warehouse identifier.</param>
+    /// <returns>List of stock records located in the warehouse.</returns>
     [HttpHead("{warehouseId}/stocks")]
     [HttpGet("{warehouseId}/stocks")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -56,8 +58,10 @@ public class WarehousesController : ControllerBase
     }
 
     /// <summary>
-    /// Pobranie stocków dostępnych do kompletacji w magazynie
+    /// Gets stock records available for picking in the selected warehouse.
     /// </summary>
+    /// <param name="warehouseId">Unique warehouse identifier.</param>
+    /// <returns>List of stock records available for picking.</returns>
     [HttpHead("{warehouseId}/stocks/available-for-picking")]
     [HttpGet("{warehouseId}/stocks/available-for-picking")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -67,6 +71,11 @@ public class WarehousesController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
+    /// <summary>
+    /// Gets the warehouse list.
+    /// </summary>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Warehouse list.</returns>
     [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -76,6 +85,12 @@ public class WarehousesController : ControllerBase
         return Ok(warehouses);
     }
 
+    /// <summary>
+    /// Gets warehouse details by identifier.
+    /// </summary>
+    /// <param name="warehouseId">Unique warehouse identifier.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>The warehouse with the specified identifier, or a 404 response if it does not exist.</returns>
     [HttpHead("{warehouseId}")]
     [HttpGet("{warehouseId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -86,6 +101,14 @@ public class WarehousesController : ControllerBase
 
         return Ok(warehouse);
     }
+    /// <summary>
+    /// Creates a new warehouse.
+    /// </summary>
+    /// <remarks>
+    /// The warehouse code must be unique. An audit log entry is saved after the warehouse is created.
+    /// </remarks>
+    /// <param name="warehouseDto">Warehouse data to create.</param>
+    /// <returns>The created warehouse with the URL for retrieving its details.</returns>
     [HttpPost]
     public async Task<ActionResult<WarehouseDetailsDto>> CreateWarehouse(CreateWarehouseDto warehouseDto)
     {
@@ -126,6 +149,16 @@ public class WarehousesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Updates an existing warehouse.
+    /// </summary>
+    /// <remarks>
+    /// The route identifier must match the identifier provided in the request body.
+    /// An audit log entry is saved after the warehouse is updated.
+    /// </remarks>
+    /// <param name="warehouseId">Unique warehouse identifier from the request route.</param>
+    /// <param name="warehouseDto">Warehouse data to update.</param>
+    /// <returns>A 204 response after a successful update, or a 404 response if the warehouse does not exist.</returns>
     [HttpPut("{warehouseId}")]
     public async Task<IActionResult> UpdateWarehouse([FromRoute] Guid warehouseId, UpdateWarehouseDto warehouseDto)
     {
@@ -174,6 +207,14 @@ public class WarehousesController : ControllerBase
 
 
 
+    /// <summary>
+    /// Deletes a warehouse.
+    /// </summary>
+    /// <remarks>
+    /// An audit log entry is saved after the warehouse is deleted.
+    /// </remarks>
+    /// <param name="warehouseId">Unique identifier of the warehouse to delete.</param>
+    /// <returns>A 204 response after a successful delete, or a 404 response if the warehouse does not exist.</returns>
     [HttpDelete("{warehouseId}")]
     public async Task<IActionResult> DeleteWarehouse(Guid warehouseId)
     {
@@ -210,6 +251,10 @@ public class WarehousesController : ControllerBase
         return _unitOfWork.Warehouses.Any(w => w.Id == warehouseId);
     }
 
+    /// <summary>
+    /// Returns the available HTTP methods supported by the warehouses controller.
+    /// </summary>
+    /// <returns>Response with the Allow header containing the list of available HTTP methods.</returns>
     [HttpOptions]
     public IActionResult GetOptions()
     {

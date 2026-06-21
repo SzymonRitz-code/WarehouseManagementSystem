@@ -39,6 +39,12 @@ public class ProductBatchesController : ControllerBase
     }
 
 
+    /// <summary>
+    /// Gets batches assigned to the specified product.
+    /// </summary>
+    /// <param name="productId">Unique product identifier.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Product batch list.</returns>
     [HttpHead("/api/products/{productId:guid}/batches")]
     [HttpGet("/api/products/{productId:guid}/batches")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -48,6 +54,13 @@ public class ProductBatchesController : ControllerBase
         return Ok(batches);
     }
 
+    /// <summary>
+    /// Gets batch details in the context of the specified product.
+    /// </summary>
+    /// <param name="productId">Unique product identifier.</param>
+    /// <param name="batchId">Unique product batch identifier.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>The product batch, or a 404 response if the batch does not exist or does not belong to the product.</returns>
     [HttpHead("/api/products/{productId:guid}/batches/{batchId:guid}")]
     [HttpGet("/api/products/{productId:guid}/batches/{batchId:guid}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -64,6 +77,11 @@ public class ProductBatchesController : ControllerBase
     // MODE 2 — Global
     // ===========================
 
+    /// <summary>
+    /// Gets the list of all product batches.
+    /// </summary>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Product batch list.</returns>
     [HttpHead("/api/batches")]
     [HttpGet("/api/batches")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -73,6 +91,12 @@ public class ProductBatchesController : ControllerBase
         return Ok(batches);
     }
 
+    /// <summary>
+    /// Gets a product batch by identifier.
+    /// </summary>
+    /// <param name="batchId">Unique product batch identifier.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>The product batch, or a 404 response if it does not exist.</returns>
     [HttpHead("/api/batches/{batchId:guid}")]
     [HttpGet("/api/batches/{batchId:guid}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -88,6 +112,14 @@ public class ProductBatchesController : ControllerBase
     }
     // przy wielu trybach HttpPost musi odpowiadać URL GET zwaracnemu w return inaczej aplikacja zwraca 405 not allowed
     //[HttpPost]
+    /// <summary>
+    /// Creates a new product batch.
+    /// </summary>
+    /// <remarks>
+    /// The batch number must be unique. An audit log entry is saved after the batch is created.
+    /// </remarks>
+    /// <param name="batchDto">Product batch data to create.</param>
+    /// <returns>The created product batch with the URL for retrieving its details.</returns>
     [HttpPost("/api/products/{productId:guid}/batches")]
     public async Task<ActionResult<ProductBatchDto>> CreateProductBatch(CreateProductBatchDto batchDto)
     {
@@ -140,6 +172,17 @@ public class ProductBatchesController : ControllerBase
         return CreatedAtAction(nameof(GetBatchByProduct), new { productId = batch.ProductId, batchId = batch.Id }, createdDto);
     }
 
+    /// <summary>
+    /// Updates an existing product batch.
+    /// </summary>
+    /// <remarks>
+    /// The batch identifier from the route must match the identifier provided in the request body.
+    /// The batch must belong to the product specified in the route.
+    /// </remarks>
+    /// <param name="productId">Unique product identifier from the request route.</param>
+    /// <param name="batchId">Unique batch identifier from the request route.</param>
+    /// <param name="batchDto">Product batch data to update.</param>
+    /// <returns>The updated product batch, or a validation response if the data is invalid.</returns>
     [HttpPut("/api/products/{productId:guid}/batches/{batchId:guid}")]
     public async Task<ActionResult<ProductBatchDto>> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto)
     {
@@ -184,6 +227,14 @@ public class ProductBatchesController : ControllerBase
         return Ok(updatedBatch);
     }
 
+    /// <summary>
+    /// Deletes a product batch.
+    /// </summary>
+    /// <remarks>
+    /// An audit log entry is saved after the product batch is deleted.
+    /// </remarks>
+    /// <param name="batchId">Unique identifier of the product batch to delete.</param>
+    /// <returns>A 204 response after a successful delete, or a 404 response if the batch does not exist.</returns>
     [HttpDelete("{batchId}")]
     public async Task<IActionResult> DeleteProductBatch(Guid batchId)
     {
@@ -215,6 +266,10 @@ public class ProductBatchesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Returns the available HTTP methods supported by the product batches controller.
+    /// </summary>
+    /// <returns>Response with the Allow header containing the list of available HTTP methods.</returns>
     [HttpOptions]
     [HttpOptions("{batchId:guid}")]
     [HttpOptions("/api/products/{productId:guid}/batches")]

@@ -22,8 +22,10 @@ public class DocumentItemsController : ControllerBase
     }
 
     /// <summary>
-    /// Pobiera wszystkie pozycje dokumentu.
+    /// Gets all document items.
     /// </summary>
+    /// <param name="documentId">Unique document identifier.</param>
+    /// <returns>List of document items, or a 404 response if the document does not exist.</returns>
     [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
@@ -40,8 +42,11 @@ public class DocumentItemsController : ControllerBase
     }
 
     /// <summary>
-    /// Pobiera konkretną pozycję dokumentu po Id.
+    /// Gets a specific document item by identifier.
     /// </summary>
+    /// <param name="documentId">Unique document identifier.</param>
+    /// <param name="itemId">Unique document item identifier.</param>
+    /// <returns>The document item with the specified identifier, or a 404 response if the document or item does not exist.</returns>
     [HttpHead("{itemId}")]
     [HttpGet("{itemId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
@@ -59,6 +64,10 @@ public class DocumentItemsController : ControllerBase
         return Ok(itemDto);
     }
 
+    /// <summary>
+    /// Returns the available HTTP methods supported by the document items controller.
+    /// </summary>
+    /// <returns>Response with the Allow header containing the list of available HTTP methods.</returns>
     [HttpOptions]
     public IActionResult GetOptions()
     {

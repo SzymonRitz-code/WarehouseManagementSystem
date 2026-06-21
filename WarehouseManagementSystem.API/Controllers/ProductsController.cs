@@ -41,6 +41,11 @@ public class ProductsController : ControllerBase
         _userService = userService;
     }
 
+    /// <summary>
+    /// Gets the product list.
+    /// </summary>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Product list.</returns>
     [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -49,6 +54,12 @@ public class ProductsController : ControllerBase
         var products = await _productQueryService.GetProductsAsync(ct);
         return Ok(products);
     }
+    /// <summary>
+    /// Gets a paginated list of products using the provided filters.
+    /// </summary>
+    /// <param name="query">Filtering, sorting, and pagination parameters for the product list.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Paginated product list.</returns>
     [HttpHead("paged")]
     [HttpGet("paged")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -58,6 +69,12 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    /// <summary>
+    /// Gets product details by identifier.
+    /// </summary>
+    /// <param name="productId">Unique product identifier.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>The product with the specified identifier, or a 404 response if it does not exist.</returns>
     [HttpHead("{productId:guid}")]
     [HttpGet("{productId:guid}")] // wcześniej było [HttpGet("{productId}")] ale po dodaniu [HttpGet("paged")] api rzucało 409 co oznacza kolizję routingu,
                                   // bo nie wiedziało czy to ma być paged czy productId. Dlatego dodałem constraint :guid
@@ -70,6 +87,14 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
+    /// <summary>
+    /// Creates a new product.
+    /// </summary>
+    /// <remarks>
+    /// The product SKU must be unique. An audit log entry is saved after the product is created.
+    /// </remarks>
+    /// <param name="productDto">Product data to create.</param>
+    /// <returns>The created product with the URL for retrieving its details.</returns>
     [HttpPost]
     public async Task<ActionResult<ProductDetailsDto>> CreateProduct(CreateProductDto productDto)
     {
@@ -115,6 +140,16 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, createdDto);
     }
 
+    /// <summary>
+    /// Updates an existing product.
+    /// </summary>
+    /// <remarks>
+    /// The route identifier must match the identifier provided in the request body.
+    /// An audit log entry is saved after the product is updated.
+    /// </remarks>
+    /// <param name="productId">Unique product identifier from the request route.</param>
+    /// <param name="productDto">Product data to update.</param>
+    /// <returns>A 204 response after a successful update, or a 404 response if the product does not exist.</returns>
     [HttpPut("{productId:guid}")]
     public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, UpdateProductDto productDto)
     {
@@ -171,6 +206,14 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Deletes a product.
+    /// </summary>
+    /// <remarks>
+    /// An audit log entry is saved after the product is deleted.
+    /// </remarks>
+    /// <param name="productId">Unique identifier of the product to delete.</param>
+    /// <returns>A 204 response after a successful delete, or a 404 response if the product does not exist.</returns>
     [HttpDelete("{productId:guid}")]
     public async Task<IActionResult> DeleteProduct(Guid productId)
     {
@@ -204,6 +247,11 @@ public class ProductsController : ControllerBase
 
     private bool ProductExists(Guid id) => _unitOfWork.Products.Any(p => p.Id == id);
 
+    /// <summary>
+    /// Gets stock records for the specified product.
+    /// </summary>
+    /// <param name="productId">Unique product identifier.</param>
+    /// <returns>List of stock records assigned to the product.</returns>
     [HttpHead("{productId:guid}/stocks")]
     [HttpGet("{productId:guid}/stocks")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -213,6 +261,12 @@ public class ProductsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
     }
 
+    /// <summary>
+    /// Gets the available product quantity in the selected warehouse.
+    /// </summary>
+    /// <param name="productId">Unique product identifier.</param>
+    /// <param name="warehouseId">Unique warehouse identifier.</param>
+    /// <returns>Available product quantity in the warehouse.</returns>
     [HttpHead("{productId:guid}/stocks/available")]
     [HttpGet("{productId:guid}/stocks/available")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
@@ -222,6 +276,10 @@ public class ProductsController : ControllerBase
         return Ok(available);
     }
 
+    /// <summary>
+    /// Returns the available HTTP methods supported by the products controller.
+    /// </summary>
+    /// <returns>Response with the Allow header containing the list of available HTTP methods.</returns>
     [HttpOptions]
     public IActionResult GetOptions()
     {

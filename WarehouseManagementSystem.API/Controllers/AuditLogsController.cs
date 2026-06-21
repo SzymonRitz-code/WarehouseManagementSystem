@@ -21,7 +21,13 @@ public class AuditLogsController : ControllerBase
         _mapper = mapper;
     }
 
-    // GET: api/auditlogs
+    /// <summary>
+    /// Gets a list of audit log entries with optional filtering.
+    /// </summary>
+    /// <param name="entityName">Optional entity name for which audit log entries should be retrieved.</param>
+    /// <param name="entityId">Optional entity identifier for which audit log entries should be retrieved.</param>
+    /// <param name="performedById">Optional identifier of the user who performed the operation.</param>
+    /// <returns>List of audit log entries matching the provided criteria.</returns>
     [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)] // Dodanie cache dla endpointu zwracającego logi audytu, ponieważ logi audytu nie zmieniają się często i mogą być przechowywane w pamięci podręcznej przez określony czas.
@@ -38,7 +44,11 @@ public class AuditLogsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<AuditLogDto>>(logs));
     }
 
-    // GET: api/auditlogs/{id}
+    /// <summary>
+    /// Gets a single audit log entry by identifier.
+    /// </summary>
+    /// <param name="id">Unique audit log entry identifier.</param>
+    /// <returns>The audit log entry with the specified identifier, or a 404 response if it does not exist.</returns>
     [HttpHead("{id}")]
     [HttpGet("{id}", Name = "GetAuditLog")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)]
@@ -52,6 +62,10 @@ public class AuditLogsController : ControllerBase
         return Ok(_mapper.Map<AuditLogDto>(log));
     }
 
+    /// <summary>
+    /// Returns the available HTTP methods supported by the audit controller.
+    /// </summary>
+    /// <returns>Response with the Allow header containing the list of available HTTP methods.</returns>
     [HttpOptions]
     public IActionResult GetOptions()
     {

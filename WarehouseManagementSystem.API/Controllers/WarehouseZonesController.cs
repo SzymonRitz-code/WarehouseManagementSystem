@@ -40,6 +40,11 @@ public class WarehouseZonesController : ControllerBase
         _userService = userService;
     }
 
+    /// <summary>
+    /// Gets the warehouse zone list.
+    /// </summary>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>Warehouse zone list.</returns>
     [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -49,6 +54,12 @@ public class WarehouseZonesController : ControllerBase
         return Ok(zones);
     }
 
+    /// <summary>
+    /// Gets warehouse zone details by identifier.
+    /// </summary>
+    /// <param name="warehouseZoneId">Unique warehouse zone identifier.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>The warehouse zone with the specified identifier, or a 404 response if it does not exist.</returns>
     [HttpHead("{warehouseZoneId}")]
     [HttpGet("{warehouseZoneId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
@@ -60,6 +71,16 @@ public class WarehouseZonesController : ControllerBase
         return Ok(zone);
     }
 
+    /// <summary>
+    /// Updates an existing warehouse zone.
+    /// </summary>
+    /// <remarks>
+    /// The route identifier must match the identifier provided in the request body.
+    /// An audit log entry is saved after the warehouse zone is updated.
+    /// </remarks>
+    /// <param name="warehouseZoneId">Unique warehouse zone identifier from the request route.</param>
+    /// <param name="zoneDto">Warehouse zone data to update.</param>
+    /// <returns>A 204 response after a successful update, or a 404 response if the zone does not exist.</returns>
     [HttpPut("{warehouseZoneId}")]
     public async Task<IActionResult> UpdateWarehouseZone(Guid warehouseZoneId, UpdateWarehouseZoneDto zoneDto)
     {
@@ -106,6 +127,14 @@ public class WarehouseZonesController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Creates a new warehouse zone.
+    /// </summary>
+    /// <remarks>
+    /// The warehouse zone code must be unique. An audit log entry is saved after the zone is created.
+    /// </remarks>
+    /// <param name="zoneDto">Warehouse zone data to create.</param>
+    /// <returns>The created warehouse zone with the URL for retrieving its details.</returns>
     [HttpPost]
     public async Task<ActionResult<WarehouseZoneDetailsDto>> CreateWarehouseZone(CreateWarehouseZoneDto zoneDto)
     {
@@ -141,6 +170,14 @@ public class WarehouseZonesController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Deletes a warehouse zone.
+    /// </summary>
+    /// <remarks>
+    /// An audit log entry is saved after the warehouse zone is deleted.
+    /// </remarks>
+    /// <param name="warehouseZoneId">Unique identifier of the warehouse zone to delete.</param>
+    /// <returns>A 204 response after a successful delete, or a 404 response if the zone does not exist.</returns>
     [HttpDelete("{warehouseZoneId}")]
     public async Task<IActionResult> DeleteWarehouseZone(Guid warehouseZoneId)
     {
@@ -177,6 +214,10 @@ public class WarehouseZonesController : ControllerBase
         return _unitOfWork.WarehouseZones.Any(z => z.Id == warehouseZoneId);
     }
 
+    /// <summary>
+    /// Returns the available HTTP methods supported by the warehouse zones controller.
+    /// </summary>
+    /// <returns>Response with the Allow header containing the list of available HTTP methods.</returns>
     [HttpOptions]
     public IActionResult GetOptions()
     {
