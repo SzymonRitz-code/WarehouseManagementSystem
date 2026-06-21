@@ -2,8 +2,17 @@
 
 namespace WarehouseManagementSystem.API.Services.User
 {
+    /// <summary>
+    /// Defines operations for reading data of the currently authenticated user.
+    /// </summary>
     public interface IUserService
     {
+        /// <summary>
+        /// Gets a user snapshot from the HTTP context.
+        /// </summary>
+        /// <param name="context">HTTP context containing authenticated user data.</param>
+        /// <returns>User snapshot with identifier, name, and email address.</returns>
+        /// <exception cref="UnauthorizedAccessException">Thrown when the token does not contain a user identifier or the identifier has an invalid format.</exception>
         UserSnapshot GetUser(HttpContext context);
     }
     public class UserService : IUserService

@@ -10,6 +10,10 @@
 
     public static class AutoMapperExtensions
     {
+        /// <summary>
+        /// Adds all the necessary mappings for the WMS application to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddWmsMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.AddAuditLogMappings();
@@ -23,14 +27,20 @@
             cfg.AddDocumentItemMappings();
  
         }
-
+        /// <summary>
+        /// Adds the mappings for the AuditLog entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddAuditLogMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<AuditLog, AuditLogDto>()
                 .ForMember(dto => dto.PerformedByName, opt => opt.MapFrom(_ => string.Empty))
                 .ForMember(dto => dto.PerformedByEmail, opt => opt.MapFrom(_ => string.Empty));
         }
-
+        /// <summary>
+        /// Adds the mappings for the Stock entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddStockMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<Stock, StockDto>()
@@ -39,35 +49,53 @@
                 .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(s => s.Warehouse.Name))
                 .ForMember(dto => dto.ZoneName, opt => opt.MapFrom(s => s.WarehouseZone.Name));
         }
-
+        /// <summary>
+        /// Adds the mappings for the StockReservation entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddStockReservationMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<StockReservation, StockReservationDto>();
         }
-
+        /// <summary>
+        /// Adds the mappings for the Product entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddProductMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<Product, ProductDetailsDto>()
                 .ForMember(dto => dto.Sku, opt => opt.MapFrom(p => p.SKU));
         }
-
+        /// <summary>
+        /// Adds the mappings for the Warehouse entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddWarehouseMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<Warehouse, WarehouseDetailsDto>();
         }
-
+        /// <summary>
+        /// Adds the mappings for the WarehouseZone entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddWarehouseZoneMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<WarehouseZone, WarehouseZoneDetailsDto>()
                 .ForMember(dto => dto.WarehouseName, opt => opt.MapFrom(z => z.Warehouse != null ? z.Warehouse.Name : null));
         }
-
+        /// <summary>
+        /// Adds the mappings for the ProductBatch entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddProductBatchMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<ProductBatch, ProductBatchDto>()
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name));
         }
-
+        /// <summary>
+        /// Adds the mappings for the Document entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddDocumentMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<Document, DocumentDto>()
@@ -80,7 +108,10 @@
                 .ForMember(dto => dto.ConfirmedByEmail, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Email : null))
                 .ForMember(dto => dto.ConfirmedByName, opt => opt.MapFrom(d => d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null));
         }
-
+        /// <summary>
+        /// Adds the mappings for the DocumentItem entity to the AutoMapper configuration.
+        /// </summary>
+        /// <param name="cfg"></param>
         public static void AddDocumentItemMappings(this IMapperConfigurationExpression cfg)
         {
             cfg.CreateMap<DocumentItem, DocumentItemDto>()

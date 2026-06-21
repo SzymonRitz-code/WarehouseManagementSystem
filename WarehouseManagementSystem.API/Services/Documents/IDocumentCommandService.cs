@@ -1,32 +1,33 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
 using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
-using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.API.Services.Documents;
 
 /// <summary>
-/// Service responsible for handling document commands such as creating, updating, confirming and canceling documents.
+/// Defines operations that change warehouse document state.
 /// </summary>
 public interface IDocumentCommandService
 {
     /// <summary>
-    /// Creates a new document in Draft status. 
-    /// The document can be later updated, confirmed or cancelled.
+    /// Creates a new document in draft status.
     /// </summary>
-    /// <param name="type">Document type</param>
-    /// <param name="createdBy">User who created the document</param>
-    /// <param name="sourceWarehouseId">Source warehouse ID</param>
-    /// <param name="items">Document items</param>
-    /// <param name="documentDate">Document date</param>
-    /// <param name="targetWarehouseId">Target warehouse ID</param>
-    /// <param name="notes">Document notes</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Returns the created document</returns>
+    /// <param name="type">Document type.</param>
+    /// <param name="createdBy">User creating the document.</param>
+    /// <param name="sourceWarehouseId">Source warehouse identifier.</param>
+    /// <param name="items">Document items.</param>
+    /// <param name="documentDate">Document date.</param>
+    /// <param name="targetWarehouseId">Optional target warehouse identifier.</param>
+    /// <param name="notes">Optional document notes.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>The created document.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="items"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when the document has no items.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task<Document> CreateDocumentAsync(
          DocumentType type,
-         Domain.ValueObjects.UserSnapshot createdBy,
+         UserSnapshot createdBy,
          Guid sourceWarehouseId,
          IEnumerable<DocumentItemDraft> items,
          DateTime documentDate,
@@ -35,18 +36,23 @@ public interface IDocumentCommandService
         CancellationToken ct = default);
 
     /// <summary>
-    /// Updates an existing document. Only documents in Draft status can be updated.
+    /// Updates an existing draft document with its items.
     /// </summary>
-    /// <param name="documentId">document ID</param>
-    /// <param name="updatedbyBy">user who updated the document</param>
-    /// <param name="type">document type</param>
-    /// <param name="sourceWarehouseId">source warehouse ID</param>
-    /// <param name="items">document items</param>
-    /// <param name="documentDate">document date</param>
-    /// <param name="targetWarehouseId">target warehouse ID</param>
-    /// <param name="notes">document notes</param>
-    /// <param name="ct">cancellation token</param>
-    /// <returns>Returns updated document</returns>
+    /// <param name="documentId">Identifier of the document to update.</param>
+    /// <param name="updatedbyBy">User updating the document.</param>
+    /// <param name="type">New document type.</param>
+    /// <param name="sourceWarehouseId">Source warehouse identifier.</param>
+    /// <param name="items">New document item list.</param>
+    /// <param name="documentDate">Document date.</param>
+    /// <param name="targetWarehouseId">Optional target warehouse identifier.</param>
+    /// <param name="notes">Optional document notes.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>The updated document.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="items"/> is <c>null</c>.</exception>
+    /// <exception cref="ArgumentException">Thrown when the document has no items.</exception>
+    /// <exception cref="DocumentNotFoundException">Thrown when the document with the specified identifier does not exist.</exception>
+    /// <exception cref="DocumentNotInDraftStateException">Thrown when the document is not in draft status and cannot be changed.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task<Document> UpdateDocumentAsync(
         Guid documentId,
         UserSnapshot updatedbyBy,
@@ -59,23 +65,34 @@ public interface IDocumentCommandService
         CancellationToken ct = default);
 
     /// <summary>
-    /// Confirms the document. Only documents in Draft status can be confirmed. 
-    /// Confirmation changes the document status to Confirmed and triggers inventory updates.
+    /// Confirms a document and performs the resulting stock operations.
     /// </summary>
-    /// <param name="documentId">Document ID</param>
-    /// <param name="confirmedBy">User who confirmed the document</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns></returns>
+    /// <param name="documentId">Identifier of the document to confirm.</param>
+    /// <param name="confirmedBy">User confirming the document.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>A task representing the document confirmation operation.</returns>
+    /// <exception cref="DocumentNotFoundException">Thrown when the document with the specified identifier does not exist.</exception>
+    /// <exception cref="DocumentNotInDraftStateException">Thrown when the document is not in draft status.</exception>
+    /// <exception cref="CannotConfirmEmptyDocumentException">Thrown when the document has no items.</exception>
+    /// <exception cref="MissingSourceWarehouseForDocumentException">Thrown when the document requires a source warehouse but does not have one.</exception>
+    /// <exception cref="MissingSourceZoneForDocumentException">Thrown when a document item requires a source zone but does not have one.</exception>
+    /// <exception cref="MissingTargetWarehouseForMmDocumentException">Thrown when an MM document has no target warehouse.</exception>
+    /// <exception cref="MissingTargetZoneForDocumentException">Thrown when an MM document item has no target zone.</exception>
+    /// <exception cref="InsufficientStockException">Thrown when the document requires removing or moving more stock than is available.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task ConfirmDocumentAsync(Guid documentId, UserSnapshot confirmedBy, CancellationToken ct = default);
 
     /// <summary>
-    /// Cancels the document. Only documents in Draft status can be canceled. 
-    /// Cancellation changes the document status to Canceled and prevents any further operations on the document.
+    /// Cancels a document and releases related active reservations when required by the document type.
     /// </summary>
-    /// <param name="documentId">Document ID</param>
-    /// <param name="canceledBy">User who canceled the document</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns></returns>
+    /// <param name="documentId">Identifier of the document to cancel.</param>
+    /// <param name="canceledBy">User canceling the document.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>A task representing the document cancellation operation.</returns>
+    /// <exception cref="DocumentNotFoundException">Thrown when the document with the specified identifier does not exist.</exception>
+    /// <exception cref="DocumentAlreadyCancelledException">Thrown when the document has already been canceled.</exception>
+    /// <exception cref="DocumentNotInDraftStateException">Thrown when the document is not in draft status and cannot be canceled.</exception>
+    /// <exception cref="ReservationNotFoundException">Thrown when a related reservation does not exist during release.</exception>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default);
-
 }

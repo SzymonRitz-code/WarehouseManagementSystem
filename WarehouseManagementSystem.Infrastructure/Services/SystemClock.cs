@@ -9,12 +9,14 @@ public class SystemClock : ISystemClock
 public interface ISystemClock
 {
     /// <summary>
-    /// Zwraca aktualny czas UTC
+    /// Gets the current UTC time.
     /// </summary>
+    /// <value>Current UTC date and time.</value>
     DateTimeOffset UtcNow { get; }
 
     /// <summary>
-    /// Zwraca aktualny czas lokalny
+    /// Gets the current local system time.
     /// </summary>
+    /// <value>Current local system date and time.</value>
     DateTime Now { get; }
 }

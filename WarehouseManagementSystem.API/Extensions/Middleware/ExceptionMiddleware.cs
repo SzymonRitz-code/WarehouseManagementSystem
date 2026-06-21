@@ -4,8 +4,18 @@ using WarehouseManagementSystem.Domain.Exceptions;
 namespace WarehouseManagementSystem.API.Extensions.Middleware
 {
     // API/Middleware/ExceptionMiddleware.cs
+    /// <summary>
+    /// Middleware for handling exceptions in the WMS application.
+    /// </summary>
+    /// <param name="next"></param>
+    /// <param name="logger"></param>
     public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
     {
+        /// <summary>
+        /// Invokes the middleware to handle exceptions that occur during the processing of HTTP requests.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -18,7 +28,12 @@ namespace WarehouseManagementSystem.API.Extensions.Middleware
                 await HandleExceptionAsync(context, ex);
             }
         }
-
+        /// <summary>
+        /// Handles the exception and generates an appropriate HTTP response based on the type of exception.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="ex"></param>
+        /// <returns></returns>
         private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
             var (statusCode, title) = ex switch
