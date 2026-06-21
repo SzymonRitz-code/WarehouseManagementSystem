@@ -21,7 +21,7 @@ public sealed class DatabaseSeedingHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_configuration.GetValue<bool>("SeedingEnabled"))
+        if (!IsSeedingEnabled())
         {
             _logger.LogInformation("Database seeding is disabled.");
             return;
@@ -49,11 +49,20 @@ public sealed class DatabaseSeedingHostedService : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<WarehouseManagementSystemDbContext>();
+        var seedProfile = GetSeedProfile();
+        var masterOptions = GetProfileOptions<DbSeeder.Options>(seedProfile, "MasterData") ?? new DbSeeder.Options();
+        var operationalOptions = GetProfileOptions<DbSeeder.OperationalOptions>(seedProfile, "OperationalData")
+                                 ?? new DbSeeder.OperationalOptions();
 
         try
         {
-            _logger.LogInformation("Database seeding is enabled. Starting master data seed.");
-            var masterResult = await DbSeeder.SeedMasterDataAsync(dbContext, cancellationToken: cancellationToken);
+            _logger.LogInformation(
+                "Database seeding is enabled. Starting master data seed with profile {SeedProfile}.",
+                seedProfile);
+            var masterResult = await DbSeeder.SeedMasterDataAsync(
+                dbContext,
+                masterOptions,
+                cancellationToken);
             _logger.LogInformation(
                 "Master data seed finished. Warehouses: {Warehouses}, Zones: {Zones}, Products: {Products}, ProductBatches: {ProductBatches}, Stocks: {Stocks}, Skipped: {Skipped}",
                 masterResult.Warehouses,
@@ -75,8 +84,14 @@ public sealed class DatabaseSeedingHostedService : BackgroundService
 
         try
         {
-            _logger.LogInformation("Starting operational data seed.");
-            var operationalResult = await DbSeeder.SeedOperationalDataAsync(dbContext, cancellationToken: cancellationToken);
+            _logger.LogInformation(
+                "Starting operational data seed with profile {SeedProfile}. Movement items: {MovementItemCount}.",
+                seedProfile,
+                operationalOptions.MovementItemCount);
+            var operationalResult = await DbSeeder.SeedOperationalDataAsync(
+                dbContext,
+                operationalOptions,
+                cancellationToken);
             _logger.LogInformation(
                 "Operational data seed finished. Documents: {Documents}, DocumentItems: {DocumentItems}, DocumentSequences: {DocumentSequences}, Skipped: {Skipped}",
                 operationalResult.Documents,
@@ -93,5 +108,28 @@ public sealed class DatabaseSeedingHostedService : BackgroundService
             _logger.LogError(ex, "Operational data seed failed.");
             throw;
         }
+    }
+
+    private bool IsSeedingEnabled()
+    {
+        return _configuration.GetValue<bool?>("Seeding:Enabled")
+               ?? _configuration.GetValue<bool>("SeedingEnabled");
+    }
+
+    private string GetSeedProfile()
+    {
+        return _configuration.GetValue<string>("Seeding:Profile")
+               ?? _configuration.GetValue<string>("SeedingProfile")
+               ?? "Extreme";
+    }
+
+    private TOptions? GetProfileOptions<TOptions>(string profileName, string sectionName)
+    {
+        return _configuration
+                   .GetSection($"Seeding:Profiles:{profileName}:{sectionName}")
+                   .Get<TOptions>()
+               ?? _configuration
+                   .GetSection($"Seeding:{sectionName}")
+                   .Get<TOptions>();
     }
 }
