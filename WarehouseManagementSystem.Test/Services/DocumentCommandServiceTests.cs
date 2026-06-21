@@ -26,6 +26,7 @@ public class DocumentIntegrationTests
     private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
     private readonly Mock<IAuditLogService> _auditLogService = new();
     private readonly Mock<IUserService> _userServiceMock = new();
+    private readonly Mock<IUnitOfWorkTransaction> _transactionMock = new();
 
     private readonly DocumentCommandService _service;
 
@@ -38,15 +39,14 @@ public class DocumentIntegrationTests
             _clockMock.Object,
             _logger.Object,
             _auditLogService.Object);
-        var transactionMock = new Mock<IUnitOfWorkTransaction>();
-        transactionMock
+        _transactionMock
             .Setup(x => x.CommitAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _unitOfWorkMock
             .Setup(x => x.BeginTransactionAsync(
                 It.IsAny<System.Data.IsolationLevel>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(transactionMock.Object);
+            .ReturnsAsync(_transactionMock.Object);
         _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
@@ -127,6 +127,10 @@ public class DocumentIntegrationTests
         doc.Number.Should().Be("DOC-001");
         _unitOfWorkMock.Verify(x => x.Documents.Update(doc), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(
+            x => x.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _transactionMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldThrowException_WhenDocumentIsEmpty()
@@ -332,5 +336,9 @@ public class DocumentIntegrationTests
             Times.Never);
 
         _unitOfWorkMock.Verify(x => x.Documents.Update(doc), Times.Once);
+        _unitOfWorkMock.Verify(
+            x => x.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, It.IsAny<CancellationToken>()),
+            Times.Once);
+        _transactionMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }
