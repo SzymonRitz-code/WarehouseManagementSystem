@@ -230,6 +230,8 @@ public class DocumentCommandService : IDocumentCommandService
         _logger.LogInformation("Canceling document {DocumentId} by {UserId}", documentId, canceledBy.Id);
         var oldDocument = AuditSnapshots.Document(document);
 
+        await using var transaction = await _unitOfWork.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+
         switch (document.Type)
         {
             case DocumentType.WZ:
@@ -264,7 +266,8 @@ public class DocumentCommandService : IDocumentCommandService
             oldSnapshot: oldDocument,
             newSnapshot: AuditSnapshots.Document(document),
             ct: ct);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
         _logger.LogInformation("Document {DocumentId} canceled by {UserId}", documentId, canceledBy.Id);
     }
 
