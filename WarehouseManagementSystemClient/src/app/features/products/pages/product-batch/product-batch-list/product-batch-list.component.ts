@@ -3,7 +3,7 @@ import { PageBreadcrumbComponent } from "../../../../../shared/components/common
 import { ComponentCardComponent } from "../../../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../../../shared/components/table/table.component";
 import { BatchList } from '../../../model/product-batch';
-import { catchError, finalize, Observable, of } from 'rxjs';
+import { catchError, finalize, map, Observable, of, shareReplay, startWith, Subject, switchMap, tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ProductBatchService } from '../../../services/product-batch-service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,11 +28,12 @@ import { TextAreaComponent } from "../../../../../shared/components/form/input/t
 })
 export class ProductBatchListComponent implements OnInit {
   id!: string;
-  batches$: Observable<BatchList[]> = of([]);
+  batches$!: Observable<BatchList[]>;
+  product$!: Observable<Product | undefined>;
   isLoading = false;
   errorMessage = '';
-  product!: Product | undefined;
   productId!: string;
+  private readonly reloadBatches$ = new Subject<void>();
 
   columns = [
     { key: 'batchNumber', label: 'Batch Number', sortable: true },
@@ -59,11 +60,39 @@ export class ProductBatchListComponent implements OnInit {
 
 
   ngOnInit(): void {
-    this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.productService.getProduct(this.id).subscribe({
-      next: (product) => this.product = product
-    }).unsubscribe();
-    this.loadBatches();
+    const productId$ = this.activatedRoute.paramMap.pipe(
+      map(params => params.get('id')!),
+      tap(id => {
+        this.id = id;
+        this.productId = id;
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.product$ = productId$.pipe(
+      switchMap(id => this.productService.getProduct(id).pipe(
+        catchError(() => of(undefined))
+      )),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.batches$ = this.reloadBatches$.pipe(
+      startWith(void 0),
+      switchMap(() => productId$),
+      switchMap(productId => {
+        this.isLoading = true;
+        this.errorMessage = '';
+
+        return this.productBatchService.getBatches(productId).pipe(
+          catchError(() => {
+            this.errorMessage = 'Product batches could not be loaded. Please try again.';
+            return of([]);
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   retry(): void {
@@ -71,16 +100,7 @@ export class ProductBatchListComponent implements OnInit {
   }
 
   private loadBatches(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.batches$ = this.productBatchService.getBatches(this.id).pipe(
-      catchError(() => {
-        this.errorMessage = 'Product batches could not be loaded. Please try again.';
-        return of([]);
-      }),
-      finalize(() => this.isLoading = false)
-    );
+    this.reloadBatches$.next();
   }
   onBatchAction($event: { row: BatchList; action: string; }) {
     const { row, action } = $event;

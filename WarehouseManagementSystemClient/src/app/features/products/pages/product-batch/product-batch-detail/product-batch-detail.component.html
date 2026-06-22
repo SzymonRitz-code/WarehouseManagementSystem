@@ -3,6 +3,7 @@
 
     <app-component-card title="Batch Information">
 
+        <ng-container *ngIf="batch$ | async as batch">
         <div class="space-y-6">
             <div>
                 <app-label for="batchNumber">Batch Number</app-label>
@@ -22,5 +23,6 @@
             </div>
         </div>
         <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()"/>
+        </ng-container>
     </app-component-card>
 </div>

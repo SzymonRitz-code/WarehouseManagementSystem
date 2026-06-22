@@ -16,6 +16,7 @@ import { CheckboxComponent } from "../../../../shared/components/form/input/chec
 import { TextAreaComponent } from '../../../../shared/components/form/input/text-area.component';
 import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-product-form',
@@ -64,7 +65,7 @@ export class ProductFormComponent implements OnInit {
     })
 
     if (this.id) {
-      this.productService.getProduct(this.id).subscribe({
+      this.productService.getProduct(this.id).pipe(take(1)).subscribe({
         next: (res: Product) => {
           this.product = res;
           this.productForm.patchValue({
@@ -111,7 +112,7 @@ export class ProductFormComponent implements OnInit {
         volume: formValue.volume
       });
 
-    request$.subscribe({
+    request$.pipe(take(1)).subscribe({
       next: (response: Product) => {
         // Trzeba dodać response.id, bo w przypadku tworzenia produktu id jest generowane po stronie serwera
         // a w przypadku aktualizacji produktu id jest już dostępne w productForm.getRawValue()

@@ -44,11 +44,11 @@
             </div>
         </form>
 
-        <div *ngIf="isLoading" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+        <div *ngIf="isLoading()" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
             Loading stocks...
         </div>
-        <div *ngIf="errorMessage" class="mb-3 rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-900/40 dark:bg-error-950/30 dark:text-error-300">
-            <span>{{ errorMessage }}</span>
+        <div *ngIf="errorMessage()" class="mb-3 rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-900/40 dark:bg-error-950/30 dark:text-error-300">
+            <span>{{ errorMessage() }}</span>
             <button type="button" class="ml-3 underline" (click)="retry()">Retry</button>
         </div>
         <div
@@ -56,9 +56,9 @@
             <app-table
                 [columns]="columns"
                 [data]="stocks$ | async"
-                [pageSize]="pageSize"
-                [currentPage]="page"
-                [totalItems]="totalItems"
+                [pageSize]="pageSize()"
+                [currentPage]="page()"
+                [totalItems]="totalItems()"
                 [serverSide]="true"
                 [filterable]="false"
                 (pageChange)="onPageChange($event)"

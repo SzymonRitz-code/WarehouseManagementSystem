@@ -5,7 +5,7 @@ import { TableComponent } from "../../../../shared/components/table/table.compon
 import { ZoneService } from '../../services/zone-service';
 import { ZoneList } from '../../model/zone';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
-import { catchError, finalize, Observable, of } from 'rxjs';
+import { catchError, finalize, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -16,9 +16,10 @@ import { CommonModule } from '@angular/common';
 })
 export class ZoneListComponent implements OnInit {
 
-  zones$: Observable<ZoneList[]> = of([]);
+  zones$!: Observable<ZoneList[]>;
   isLoading = false;
   errorMessage = '';
+  private readonly reloadZones$ = new Subject<void>();
 
   columns = [
     { key: 'code', label: 'Code', sortable: true },
@@ -39,7 +40,22 @@ export class ZoneListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadZones();
+    this.zones$ = this.reloadZones$.pipe(
+      startWith(void 0),
+      switchMap(() => {
+        this.isLoading = true;
+        this.errorMessage = '';
+
+        return this.zoneService.getZones().pipe(
+          catchError(() => {
+            this.errorMessage = 'Zones could not be loaded. Please try again.';
+            return of([]);
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   retry(): void {
@@ -47,16 +63,7 @@ export class ZoneListComponent implements OnInit {
   }
 
   private loadZones(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.zones$ = this.zoneService.getZones().pipe(
-      catchError(() => {
-        this.errorMessage = 'Zones could not be loaded. Please try again.';
-        return of([]);
-      }),
-      finalize(() => this.isLoading = false)
-    );
+    this.reloadZones$.next();
   }
 
 

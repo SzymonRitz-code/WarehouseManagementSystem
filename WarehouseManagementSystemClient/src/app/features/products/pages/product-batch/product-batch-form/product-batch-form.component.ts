@@ -15,6 +15,7 @@ import { InputSelectComponent } from '../../../../../shared/components/form/inpu
 import { CommonModule } from '@angular/common';
 import { InputFieldComponent } from '../../../../../shared/components/form/input/input-field.component';
 import { ValidationSummaryComponent } from '../../../../../shared/components/form/validation-summary/validation-summary.component';
+import { map, take } from 'rxjs';
 
 @Component({
   selector: 'app-product-batch-form',
@@ -38,7 +39,7 @@ export class ProductBatchFormComponent implements OnInit {
   productId!: string;
   batchForm!: FormGroup;
   batch!: Batch | CreateBatch;
-  productOptions!: any[];
+  productOptions: any[] = [];
   constructor(
     private router: Router,
     private activatedRoute: ActivatedRoute,
@@ -50,8 +51,11 @@ export class ProductBatchFormComponent implements OnInit {
   ngOnInit(): void {
     this.productId = this.activatedRoute.snapshot.paramMap.get('id')!;
     this.batchId = this.activatedRoute.snapshot.paramMap.get('batchId')!;
-    this.productService.getProducts().subscribe({
-      next: (products) => { this.productOptions = products.filter(p => p.id === this.productId).map(p => ({ value: p.id, label: p.name })) }
+    this.productService.getProduct(this.productId).pipe(
+      take(1),
+      map(product => [{ value: product.id, label: product.name }])
+    ).subscribe({
+      next: (options) => this.productOptions = options
     });
 
     this.batchForm = this.fb.group({
@@ -62,7 +66,7 @@ export class ProductBatchFormComponent implements OnInit {
       manufacturedDate: [null]
     });
     if (this.batchId) {
-      this.batchService.getBatch(this.productId, this.batchId).subscribe({
+      this.batchService.getBatch(this.productId, this.batchId).pipe(take(1)).subscribe({
         next: (batch: Batch) => {
           this.batch = batch;
           this.batchForm.patchValue({
@@ -99,7 +103,7 @@ export class ProductBatchFormComponent implements OnInit {
       ? this.batchService.updateBatch(this.productId, this.batchId, batch)
       : this.batchService.createBatch(this.productId, batch);
 
-    request$.subscribe({
+    request$.pipe(take(1)).subscribe({
       next: (responce: Batch) => {
         const id = responce?.id ?? this.batchId;
         this.router.navigateByUrl(`/products/${this.productId}/batches/detail/${id}`)

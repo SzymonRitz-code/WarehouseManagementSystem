@@ -55,11 +55,11 @@
       </div>
     </form>
 
-    <div *ngIf="isLoading" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+    <div *ngIf="isLoading()" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
       Loading pending documents...
     </div>
-    <div *ngIf="errorMessage" class="mb-3 rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-900/40 dark:bg-error-950/30 dark:text-error-300">
-      <span>{{ errorMessage }}</span>
+    <div *ngIf="errorMessage()" class="mb-3 rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-900/40 dark:bg-error-950/30 dark:text-error-300">
+      <span>{{ errorMessage() }}</span>
       <button type="button" class="ml-3 underline" (click)="retry()">Retry</button>
     </div>
 
@@ -67,9 +67,9 @@
       <app-table
         [columns]="columns"
         [data]="documents$ | async"
-        [pageSize]="pageSize"
-        [currentPage]="page"
-        [totalItems]="totalItems"
+        [pageSize]="pageSize()"
+        [currentPage]="page()"
+        [totalItems]="totalItems()"
         [serverSide]="true"
         [filterable]="false"
         [rowActions]="documentActions"
@@ -81,28 +81,28 @@
     </div>
   </app-component-card>
 
-  @if (selectedDocument) {
+  @if (selectedDocument(); as selectedDocument) {
     <app-modal [isOpen]="true" (close)="closeActionModal()" className="max-w-2xl mx-auto my-8">
       <div class="p-6 sm:p-8">
         <div class="flex items-start justify-between gap-4">
           <div>
             <p class="text-sm uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
-              {{ actionMode === 'confirm' ? 'Confirm document' : 'Cancel document' }}
+              {{ actionMode() === 'confirm' ? 'Confirm document' : 'Cancel document' }}
             </p>
             <h2 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">
               {{ selectedDocument.documentNumber }}
             </h2>
             <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-              {{ actionMode === 'confirm'
+              {{ actionMode() === 'confirm'
                 ? 'This action will finalize the pending document and move it to the next workflow step.'
                 : 'This will cancel the selected document. Please confirm this action carefully.' }}
             </p>
           </div>
         </div>
 
-        @if (actionError) {
+        @if (actionError()) {
           <div class="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
-            {{ actionError }}
+            {{ actionError() }}
           </div>
         }
 
@@ -129,17 +129,17 @@
           <button
             type="button"
             (click)="closeActionModal()"
-            [disabled]="isActionPending"
+            [disabled]="isActionPending()"
             class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">
             Back
           </button>
           <button
             type="button"
             (click)="confirmAction()"
-            [disabled]="isActionPending"
+            [disabled]="isActionPending()"
             class="rounded-lg px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
-            [ngClass]="actionMode === 'confirm' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'">
-            {{ isActionPending ? 'Processing...' : (actionMode === 'confirm' ? 'Confirm document' : 'Cancel document') }}
+            [ngClass]="actionMode() === 'confirm' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'">
+            {{ isActionPending() ? 'Processing...' : (actionMode() === 'confirm' ? 'Confirm document' : 'Cancel document') }}
           </button>
         </div>
       </div>

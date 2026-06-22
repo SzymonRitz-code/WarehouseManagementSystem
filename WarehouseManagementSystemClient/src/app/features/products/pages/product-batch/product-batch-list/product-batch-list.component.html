@@ -2,30 +2,32 @@
     <app-page-breadcrumb pageTitle="Product Batch List" />
 
     <app-component-card title="Product Information">
+        <ng-container *ngIf="product$ | async as product">
         <div class="space-y-6">
             <div>
                 <!-- TODO sprawdzić jak rozwiązać problem z ?. gdy product jest undefined. 
                  Chodzi mi o to że przy obsevable dane mogą spłynąć później niż element się pojawi-->
                 <app-label for="productName">Name</app-label>
-                <app-input-detail id="productName" [value]="product?.name">
+                <app-input-detail id="productName" [value]="product.name">
                 </app-input-detail>
             </div>
 
             <div>
                 <app-label for="productSku">SKU</app-label>
-                <app-input-detail id="productSku" [value]="product?.sku">
+                <app-input-detail id="productSku" [value]="product.sku">
                 </app-input-detail>
             </div>
         </div>
         <div>
             <app-label for="inputUnit">Unit</app-label>
-            <app-input-detail id="inputUnit" name="unit" [value]="product?.unit"></app-input-detail>
+            <app-input-detail id="inputUnit" name="unit" [value]="product.unit"></app-input-detail>
         </div>
         <div>
             <app-label for="description">Description</app-label>
-            <app-text-area id="InputDescription" [value]="product?.description ??''" [disabled]="true">
+            <app-text-area id="InputDescription" [value]="product.description" [disabled]="true">
             </app-text-area>
         </div>
+        </ng-container>
     </app-component-card>
 
     <app-component-card title="Product Batch List">

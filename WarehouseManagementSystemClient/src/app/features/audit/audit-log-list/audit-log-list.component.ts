@@ -4,7 +4,7 @@ import { PageBreadcrumbComponent } from "../../../shared/components/common/page-
 import { ComponentCardComponent } from "../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../shared/components/table/table.component";
 import { AuditLog } from '../model/audtLog';
-import { catchError, finalize, Observable, of } from 'rxjs';
+import { catchError, finalize, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
 import { AuditLogService } from '../services/audit-log-service';
 
 @Component({
@@ -14,14 +14,30 @@ import { AuditLogService } from '../services/audit-log-service';
 })
 export class AuditLogListComponent implements OnInit {
 
-  auditLogs$: Observable<AuditLog[]> = of([]);
+  auditLogs$!: Observable<AuditLog[]>;
   isLoading = false;
   errorMessage = '';
+  private readonly reloadAuditLogs$ = new Subject<void>();
 
   constructor(private auditLogService: AuditLogService) { }
 
   ngOnInit(): void {
-    this.loadAuditLogs();
+    this.auditLogs$ = this.reloadAuditLogs$.pipe(
+      startWith(void 0),
+      switchMap(() => {
+        this.isLoading = true;
+        this.errorMessage = '';
+
+        return this.auditLogService.getAuditLogs().pipe(
+          catchError(() => {
+            this.errorMessage = 'Audit logs could not be loaded. Please try again.';
+            return of([]);
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   retry(): void {
@@ -29,16 +45,7 @@ export class AuditLogListComponent implements OnInit {
   }
 
   private loadAuditLogs(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.auditLogs$ = this.auditLogService.getAuditLogs().pipe(
-      catchError(() => {
-        this.errorMessage = 'Audit logs could not be loaded. Please try again.';
-        return of([]);
-      }),
-      finalize(() => this.isLoading = false)
-    );
+    this.reloadAuditLogs$.next();
   }
 
   columns = [

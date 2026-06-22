@@ -2,6 +2,7 @@
     <app-page-breadcrumb pageTitle="Zone Details" />
 
     <app-component-card title="Zone Information">
+        <ng-container *ngIf="zone$ | async as zone">
         <div class="space-y-6">
             <div>
                 <app-label for="code">Code</app-label>
@@ -35,6 +36,7 @@
         <!-- sekcja akcji -->
         <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
         </app-detail-actions>
+        </ng-container>
 
     </app-component-card>
 </div>

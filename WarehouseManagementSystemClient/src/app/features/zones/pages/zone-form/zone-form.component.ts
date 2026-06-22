@@ -8,7 +8,6 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Zone } from '../../model/zone';
 import { CreateZone } from '../../model/create-zone';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Warehouse } from '../../../warehouses/model/warehouse';
 import { ZoneService } from '../../services/zone-service';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { CommonModule } from '@angular/common';
@@ -17,6 +16,7 @@ import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.hel
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { TemperatureType } from '../../../../core/enums/temperatureType';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
+import { map, take } from 'rxjs';
 
 @Component({
   selector: 'app-zone-form',
@@ -41,9 +41,8 @@ export class ZoneFormComponent implements OnInit {
   id: string | null = '';
   zone!: Zone | CreateZone;
   zoneForm!: FormGroup;
-  options!: any[];
-  warehouseOptions!: any[];
-  temperatureTypeOptions!: any[];
+  warehouseOptions: any[] = [];
+  temperatureTypeOptions: any[] = [];
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -62,42 +61,28 @@ export class ZoneFormComponent implements OnInit {
       isPickingZone: [false],
       warehouseId: ['', Validators.required]
     });
-    this.warehouseService.getWarehouses().subscribe({
-      next: (responce) => {
-        this.options = responce.map(w => ({ value: w.id, label: w.name }));
-      }
-    }).unsubscribe();
+    this.warehouseService.getWarehouses().pipe(
+      take(1),
+      map(result => result.map(w => ({ value: w.id, label: w.name })))
+    ).subscribe({
+      next: (options) => this.warehouseOptions = options
+    });
 
     if (this.id) {
-      this.zoneService.getZone(this.id).subscribe({
+      this.zoneService.getZone(this.id).pipe(take(1)).subscribe({
         next: (responce: Zone) => {
           this.zone = responce;
-          let warehouse: Warehouse;
-
-          this.warehouseService.getWarehouse(this.zone.warehouseId).subscribe({
-            next: (responce) => {
-              warehouse = responce
-              this.zoneForm.patchValue({
-                id: (this.zone as Zone).id,
-                code: this.zone.code,
-                name: this.zone.name,
-                temperatureType: this.zone.temperatureType,
-                isPickingZone: this.zone.isPickingZone,
-                warehouseName: warehouse.name,
-                warehouseId: this.zone.warehouseId
-              })
-            }
-          })
+          this.zoneForm.patchValue({
+            id: (this.zone as Zone).id,
+            code: this.zone.code,
+            name: this.zone.name,
+            temperatureType: this.zone.temperatureType,
+            isPickingZone: this.zone.isPickingZone,
+            warehouseId: this.zone.warehouseId
+          });
         }
       });
-
-
     }
-    this.warehouseService.getWarehouses().subscribe({
-      next: (result) => {
-        this.warehouseOptions = result.map(w => ({ value: w.id, label: w.name }))
-      }
-    })
     this.temperatureTypeOptions = Object.values(TemperatureType).map(t => ({ value: t, label: t }))
   }
 
@@ -121,7 +106,7 @@ export class ZoneFormComponent implements OnInit {
         warehouseId: formValue.warehouseId
       });
 
-    request$.subscribe({
+    request$.pipe(take(1)).subscribe({
       next: (responce: Zone) => {
         const id = responce?.id ?? this.id; // Użyj ID z odpowiedzi lub istniejącego ID
         this.router.navigateByUrl(`/zones/detail/${id}`);

@@ -5,7 +5,7 @@ import { TableComponent } from "../../../../shared/components/table/table.compon
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { Stock } from '../../model/stock';
 import { StockService } from '../../services/stock-service';
-import { catchError, finalize, map, Observable, of } from 'rxjs';
+import { catchError, finalize, map, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
 
 type StockAvailabilityRow = Stock & {
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
@@ -19,14 +19,34 @@ type StockAvailabilityRow = Stock & {
 })
 export class StockAvailabilityComponent implements OnInit {
 
-  stockAvailabilities$: Observable<StockAvailabilityRow[]> = of([]);
+  stockAvailabilities$!: Observable<StockAvailabilityRow[]>;
   isLoading = false;
   errorMessage = '';
+  private readonly reloadStockAvailability$ = new Subject<void>();
 
   constructor(private stockService: StockService) { }
 
   ngOnInit(): void {
-    this.loadStockAvailability();
+    this.stockAvailabilities$ = this.reloadStockAvailability$.pipe(
+      startWith(void 0),
+      switchMap(() => {
+        this.isLoading = true;
+        this.errorMessage = '';
+
+        return this.stockService.getAvailableStocks().pipe(
+          map(stocks => stocks.map(stock => ({
+            ...stock,
+            status: this.getStatus(stock)
+          }))),
+          catchError(() => {
+            this.errorMessage = 'Stock availability could not be loaded. Please try again.';
+            return of([]);
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   columns = [
@@ -47,20 +67,7 @@ export class StockAvailabilityComponent implements OnInit {
   }
 
   private loadStockAvailability(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.stockAvailabilities$ = this.stockService.getAvailableStocks().pipe(
-      map(stocks => stocks.map(stock => ({
-        ...stock,
-        status: this.getStatus(stock)
-      }))),
-      catchError(() => {
-        this.errorMessage = 'Stock availability could not be loaded. Please try again.';
-        return of([]);
-      }),
-      finalize(() => this.isLoading = false)
-    );
+    this.reloadStockAvailability$.next();
   }
 
   private getStatus(stock: Stock): StockAvailabilityRow['status'] {

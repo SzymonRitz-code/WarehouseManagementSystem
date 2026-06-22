@@ -10,6 +10,7 @@ import { UserService } from '../../../services/user-service';
 import { CommonModule } from '@angular/common';
 import { User } from '../../model/user';
 import { CreateUser } from '../../model/create-user';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-user-form',
@@ -53,7 +54,7 @@ export class UserFormComponent implements OnInit {
         return;
       }
 
-      this.userService.getUsers().subscribe(users => {
+      this.userService.getUsers().pipe(take(1)).subscribe(users => {
         const loadedUser = users.find(user => user.id === this.id);
         if (!loadedUser) {
           this.router.navigateByUrl('/users');

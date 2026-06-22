@@ -8,10 +8,13 @@ import { Zone } from '../../model/zone';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { ZoneService } from '../../services/zone-service';
+import { CommonModule } from '@angular/common';
+import { catchError, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 @Component({
   selector: 'app-zone-detail',
   standalone: true,
   imports: [
+    CommonModule,
     PageBreadcrumbComponent, 
     ComponentCardComponent, 
     LabelComponent, 
@@ -22,21 +25,21 @@ import { ZoneService } from '../../services/zone-service';
 export class ZoneDetailComponent implements OnInit {
 
   id!: string;
-  zone!: Zone | undefined;
+  zone$!: Observable<Zone | undefined>;
 
   constructor(private zoneService: ZoneService, private warehouseService: WarehouseService, private activatedRoute: ActivatedRoute, private router: Router) { }
   ngOnInit(): void {
-    this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.zoneService.getZone(this.id).subscribe({
-      next: (result: Zone) => {
-        this.zone = result;
-        this.warehouseService.getWarehouse(this.zone.warehouseId).subscribe({
-          next: (responce) => {
-            this.zone!.warehouseName = responce.name
-          }
-        })
-      }
-    })
+    this.zone$ = this.activatedRoute.paramMap.pipe(
+      map(params => params.get('id')!),
+      tap(id => this.id = id),
+      switchMap(id => this.zoneService.getZone(id)),
+      switchMap(zone => this.warehouseService.getWarehouse(zone.warehouseId).pipe(
+        map(warehouse => ({ ...zone, warehouseName: warehouse.name })),
+        catchError(() => of(zone))
+      )),
+      catchError(() => of(undefined)),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
 
   }
   onBack() {

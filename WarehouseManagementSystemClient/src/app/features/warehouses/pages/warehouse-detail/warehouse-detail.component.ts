@@ -8,6 +8,7 @@ import { DetailActionsComponent } from "../../../../shared/components/form/detai
 import { Warehouse } from '../../model/warehouse';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WarehouseService } from '../../services/warehouse-service';
+import { catchError, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-warehouse-detail',
@@ -18,18 +19,21 @@ import { WarehouseService } from '../../services/warehouse-service';
 export class WarehouseDetailComponent implements OnInit {
 
   id!: string;
-  warehouse!: Warehouse;
+  warehouse$!: Observable<Warehouse | undefined>;
   constructor(private router: Router, private activatedRoute: ActivatedRoute, private warehouseService: WarehouseService) { }
+
   ngOnInit(): void {
-    this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-    this.warehouseService.getWarehouse(this.id).subscribe({
-      next: (responce: Warehouse) => {
-        this.warehouse = responce
-      }
-    })
+    this.warehouse$ = this.activatedRoute.paramMap.pipe(
+      map(params => params.get('id')!),
+      tap(id => this.id = id),
+      switchMap(id => this.warehouseService.getWarehouse(id).pipe(
+        catchError(() => of(undefined))
+      )),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
   onEdit() {
-    this.router.navigateByUrl(`/warehouses/form/${(this.warehouse as Warehouse).id}`)
+    this.router.navigateByUrl(`/warehouses/form/${this.id}`)
   }
   onBack() {
     this.router.navigateByUrl('/warehouses')

@@ -8,6 +8,7 @@ import { DetailActionsComponent } from "../../../../shared/components/form/detai
 import { User } from '../../model/user';
 import { ActivatedRoute, Router } from '@angular/router';
 import { UserService } from '../../../services/user-service';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-user-detail',
@@ -30,7 +31,7 @@ export class UserDetailComponent implements OnInit {
       return;
     }
 
-    this.userService.getUsers().subscribe(users => {
+    this.userService.getUsers().pipe(take(1)).subscribe(users => {
       const loadedUser = users.find(user => user.id === this.id);
       if (!loadedUser) {
         this.router.navigateByUrl('/users');

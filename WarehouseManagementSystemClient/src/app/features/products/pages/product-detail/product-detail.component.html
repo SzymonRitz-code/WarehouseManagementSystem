@@ -2,6 +2,7 @@
   <app-page-breadcrumb pageTitle="Product Details" />
 
   <app-component-card title="Product Information">
+    <ng-container *ngIf="product$ | async as product">
     <div class="space-y-6">
       <div>
         <app-label for="productName">Name</app-label>
@@ -44,6 +45,7 @@
 
     <!-- sekcja akcji -->
     <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()"> </app-detail-actions>
+    </ng-container>
 
   </app-component-card>
 </div>

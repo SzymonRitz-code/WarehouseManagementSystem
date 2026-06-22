@@ -6,7 +6,7 @@ import { WarehouseList } from '../../model/warehouse';
 import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { CommonModule } from '@angular/common';
-import { catchError, finalize, Observable, of } from 'rxjs';
+import { catchError, finalize, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-warehouse-list',
@@ -16,14 +16,30 @@ import { catchError, finalize, Observable, of } from 'rxjs';
 })
 export class WarehouseListComponent implements OnInit { 
 
-  warehouses$: Observable<WarehouseList[]> = of([]);
+  warehouses$!: Observable<WarehouseList[]>;
   isLoading = false;
   errorMessage = '';
+  private readonly reloadWarehouses$ = new Subject<void>();
 
   constructor(private warehouseService: WarehouseService, private router: Router) { }
 
   ngOnInit(): void {
-    this.loadWarehouses();
+    this.warehouses$ = this.reloadWarehouses$.pipe(
+      startWith(void 0),
+      switchMap(() => {
+        this.isLoading = true;
+        this.errorMessage = '';
+
+        return this.warehouseService.getWarehouses().pipe(
+          catchError(() => {
+            this.errorMessage = 'Warehouses could not be loaded. Please try again.';
+            return of([]);
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   retry(): void {
@@ -31,16 +47,7 @@ export class WarehouseListComponent implements OnInit {
   }
 
   private loadWarehouses(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.warehouses$ = this.warehouseService.getWarehouses().pipe(
-      catchError(() => {
-        this.errorMessage = 'Warehouses could not be loaded. Please try again.';
-        return of([]);
-      }),
-      finalize(() => this.isLoading = false)
-    );
+    this.reloadWarehouses$.next();
   }
 
   columns = [

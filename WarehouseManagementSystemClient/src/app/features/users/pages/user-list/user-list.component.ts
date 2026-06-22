@@ -6,7 +6,7 @@ import { TableComponent } from "../../../../shared/components/table/table.compon
 import { ComponentCardComponent } from "../../../../shared/components/common/component-card/component-card.component";
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { UserService } from '../../../services/user-service';
-import { catchError, finalize, Observable, of } from 'rxjs';
+import { catchError, finalize, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-user-list',
@@ -16,15 +16,31 @@ import { catchError, finalize, Observable, of } from 'rxjs';
 })
 export class UserListComponent implements OnInit {
 
-  users$: Observable<User[]> = of([]);
+  users$!: Observable<User[]>;
   isLoading = false;
   errorMessage = '';
+  private readonly reloadUsers$ = new Subject<void>();
 
   constructor(private router: Router, private userService: UserService) { }
 
 
   ngOnInit(): void {
-    this.loadUsers();
+    this.users$ = this.reloadUsers$.pipe(
+      startWith(void 0),
+      switchMap(() => {
+        this.isLoading = true;
+        this.errorMessage = '';
+
+        return this.userService.getUsers().pipe(
+          catchError(() => {
+            this.errorMessage = 'Users could not be loaded. Please try again.';
+            return of([]);
+          }),
+          finalize(() => this.isLoading = false)
+        );
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
 
   retry(): void {
@@ -32,16 +48,7 @@ export class UserListComponent implements OnInit {
   }
 
   private loadUsers(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.users$ = this.userService.getUsers().pipe(
-      catchError(() => {
-        this.errorMessage = 'Users could not be loaded. Please try again.';
-        return of([]);
-      }),
-      finalize(() => this.isLoading = false)
-    );
+    this.reloadUsers$.next();
   }
 
 

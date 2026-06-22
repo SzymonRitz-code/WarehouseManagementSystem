@@ -8,25 +8,30 @@ import { PageBreadcrumbComponent } from '../../../../shared/components/common/pa
 import { InputDetailComponent } from "../../../../shared/components/form/input/input-detail.component";
 import { DetailActionsComponent } from "../../../../shared/components/form/detail-actions/detail-actions.component";
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
+import { CommonModule } from '@angular/common';
+import { catchError, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 
 
 @Component({
   selector: 'app-product-detail',
-  imports: [LabelComponent, ComponentCardComponent, PageBreadcrumbComponent, InputDetailComponent, DetailActionsComponent, TextAreaComponent],
+  imports: [CommonModule, LabelComponent, ComponentCardComponent, PageBreadcrumbComponent, InputDetailComponent, DetailActionsComponent, TextAreaComponent],
   templateUrl: './product-detail.component.html'
 })
 export class ProductDetailComponent implements OnInit {
 
   constructor(private activatedRoute: ActivatedRoute, private router: Router, private productService: ProductService) { }
   id!: string;
-  product!: Product | undefined;
+  product$!: Observable<Product | undefined>;
+
   ngOnInit(): void {
-    this.id = this.activatedRoute.snapshot.paramMap.get('id')!;
-     this.productService.getProduct(this.id).subscribe({
-      next: (res) => {
-        this.product = res;
-      }
-    });
+    this.product$ = this.activatedRoute.paramMap.pipe(
+      map(params => params.get('id')!),
+      tap(id => this.id = id),
+      switchMap(id => this.productService.getProduct(id).pipe(
+        catchError(() => of(undefined))
+      )),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
   }
   onBack() {
     this.router.navigateByUrl('/products');

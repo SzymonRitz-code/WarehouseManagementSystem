@@ -13,6 +13,7 @@ import { ActivatedRoute, isActive, Router } from '@angular/router';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-warehouse-form',
@@ -56,7 +57,7 @@ export class WarehouseFormComponent implements OnInit {
       isActive: [true]
     });
     if (this.id) {
-      this.warehouseService.getWarehouse(this.id).subscribe({
+      this.warehouseService.getWarehouse(this.id).pipe(take(1)).subscribe({
         next: (responce) => {
           this.warehouse = responce;
           this.warehouseForm.patchValue({
@@ -96,7 +97,7 @@ export class WarehouseFormComponent implements OnInit {
         address: formValue.address
       });
 
-    request$.subscribe({
+    request$.pipe(take(1)).subscribe({
       next: (responce: Warehouse) => {
         const id = responce?.id ?? this.id;
         this.router.navigateByUrl(`/warehouses/detail/${id}`);
