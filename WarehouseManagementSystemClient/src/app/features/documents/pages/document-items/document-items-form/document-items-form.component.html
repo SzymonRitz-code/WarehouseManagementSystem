@@ -43,8 +43,8 @@
         </div>
 
         <div class="flex justify-end space-x-2">
-          <button type="button" (click)="onCancel()" class="btn-secondary">Cancel</button>
-          <button type="submit" [disabled]="itemForm.invalid" class="btn-primary">Save</button>
+          <app-button variant="outline" size="sm" (btnClick)="onCancel()">Cancel</app-button>
+          <app-button type="submit" size="sm" [disabled]="itemForm.invalid">Save</app-button>
         </div>
       </form>
     </app-modal>

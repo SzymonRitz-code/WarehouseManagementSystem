@@ -6,11 +6,12 @@ import { InputSelectComponent } from '../../../../../shared/components/form/inpu
 import { InputFieldComponent } from "../../../../../shared/components/form/input/input-field.component";
 import { ProductService } from '../../../../products/services/product-service';
 import { forkJoin, take } from 'rxjs';
+import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 
 @Component({
   selector: 'app-document-items',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, InputSelectComponent, InputFieldComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, InputSelectComponent, InputFieldComponent, ButtonComponent],
   templateUrl: './document-items.component.html',
 })
 export class DocumentItemsComponent implements OnInit {

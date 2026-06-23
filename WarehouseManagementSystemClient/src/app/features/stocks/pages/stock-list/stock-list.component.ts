@@ -16,6 +16,7 @@ import {
 import { ComponentCardComponent } from '../../../../shared/components/common/component-card/component-card.component';
 import { PageBreadcrumbComponent } from '../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { WarehouseList } from '../../../warehouses/model/warehouse';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { ZoneList } from '../../../zones/model/zone';
@@ -26,7 +27,7 @@ import { StockListQuery, StockService } from '../../services/stock-service';
 @Component({
   selector: 'app-stock-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, ComponentCardComponent, TableComponent, PageBreadcrumbComponent],
+  imports: [CommonModule, FormsModule, ComponentCardComponent, TableComponent, PageBreadcrumbComponent, ButtonComponent],
   templateUrl: './stock-list.component.html'
 })
 export class StockListComponent implements OnInit {

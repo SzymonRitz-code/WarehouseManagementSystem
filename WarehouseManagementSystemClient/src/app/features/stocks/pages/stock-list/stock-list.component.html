@@ -7,12 +7,12 @@
                 name="search"
                 [(ngModel)]="filters.search"
                 placeholder="Search SKU, product or batch"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                class="ui-control" />
 
             <select
                 name="warehouseId"
                 [(ngModel)]="filters.warehouseId"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                class="ui-control">
                 <option value="">All warehouses</option>
                 <option *ngFor="let warehouse of warehouses$ | async" [value]="warehouse.id">
                     {{ warehouse.code }} - {{ warehouse.name }}
@@ -22,25 +22,25 @@
             <select
                 name="zoneId"
                 [(ngModel)]="filters.zoneId"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                class="ui-control">
                 <option value="">All zones</option>
                 <option *ngFor="let zone of zones$ | async" [value]="zone.id">
                     {{ zone.code }} - {{ zone.name }}
                 </option>
             </select>
 
-            <label class="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-200">
+            <label class="ui-control flex items-center gap-2">
                 <input type="checkbox" name="availableOnly" [(ngModel)]="filters.availableOnly" />
                 Available only
             </label>
 
             <div class="flex gap-2 md:col-span-2 xl:col-span-4">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+                <app-button type="submit" size="sm">
                     Apply filters
-                </button>
-                <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800" (click)="resetFilters()">
+                </app-button>
+                <app-button variant="outline" size="sm" (btnClick)="resetFilters()">
                     Reset
-                </button>
+                </app-button>
             </div>
         </form>
 
@@ -51,20 +51,17 @@
             <span>{{ errorMessage() }}</span>
             <button type="button" class="ml-3 underline" (click)="retry()">Retry</button>
         </div>
-        <div
-            class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <app-table
-                [columns]="columns"
-                [data]="stocks$ | async"
-                [pageSize]="pageSize()"
-                [currentPage]="page()"
-                [totalItems]="totalItems()"
-                [serverSide]="true"
-                [filterable]="false"
-                (pageChange)="onPageChange($event)"
-                (pageSizeChange)="onPageSizeChange($event)"
-                (sortChange)="onSortChange($event)">
-            </app-table>
-        </div>
+        <app-table
+            [columns]="columns"
+            [data]="stocks$ | async"
+            [pageSize]="pageSize()"
+            [currentPage]="page()"
+            [totalItems]="totalItems()"
+            [serverSide]="true"
+            [filterable]="false"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+            (sortChange)="onSortChange($event)">
+        </app-table>
     </app-component-card>
 </div>

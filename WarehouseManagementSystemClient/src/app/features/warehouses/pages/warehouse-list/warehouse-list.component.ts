@@ -7,11 +7,12 @@ import { Router } from '@angular/router';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { CommonModule } from '@angular/common';
 import { catchError, finalize, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
+import { ButtonComponent } from "../../../../shared/ui/button/button.component";
 
 @Component({
   selector: 'app-warehouse-list',
   standalone: true,
-  imports: [CommonModule, ComponentCardComponent, TableComponent, PageBreadcrumbComponent],
+  imports: [CommonModule, ComponentCardComponent, TableComponent, PageBreadcrumbComponent, ButtonComponent],
   templateUrl: './warehouse-list.component.html'
 })
 export class WarehouseListComponent implements OnInit { 

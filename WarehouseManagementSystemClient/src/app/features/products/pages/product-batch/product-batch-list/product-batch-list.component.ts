@@ -12,6 +12,7 @@ import { InputDetailComponent } from "../../../../../shared/components/form/inpu
 import { Product } from '../../../model/product';
 import { ProductService } from '../../../services/product-service';
 import { TextAreaComponent } from "../../../../../shared/components/form/input/text-area.component";
+import { ButtonComponent } from "../../../../../shared/ui/button/button.component";
 
 @Component({
   selector: 'app-product-batch-list',
@@ -23,7 +24,8 @@ import { TextAreaComponent } from "../../../../../shared/components/form/input/t
     TableComponent,
     LabelComponent,
     InputDetailComponent,
-    TextAreaComponent],
+    TextAreaComponent,
+    ButtonComponent],
   templateUrl: './product-batch-list.component.html'
 })
 export class ProductBatchListComponent implements OnInit {

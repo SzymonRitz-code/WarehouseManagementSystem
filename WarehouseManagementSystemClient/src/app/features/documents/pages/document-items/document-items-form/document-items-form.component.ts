@@ -8,11 +8,12 @@ import { InputFieldComponent } from "../../../../../shared/components/form/input
 import { ModalComponent } from "../../../../../shared/components/common/modal/modal.component";
 import { ProductService } from '../../../../products/services/product-service';
 import { forkJoin, take } from 'rxjs';
+import { ButtonComponent } from '../../../../../shared/ui/button/button.component';
 
 @Component({
   selector: 'app-document-items-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputSelectComponent, LabelComponent, InputFieldComponent, ModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, InputSelectComponent, LabelComponent, InputFieldComponent, ModalComponent, ButtonComponent],
   templateUrl: './document-items-form.component.html'
 })
 export class DocumentItemsFormComponent implements OnChanges, OnInit {

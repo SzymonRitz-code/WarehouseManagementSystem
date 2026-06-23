@@ -2,22 +2,21 @@
     <app-page-breadcrumb pageTitle="Product List" />
 
     <app-component-card title="Product List">
-        <button card-actions (click)="goToForm()"
-            class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
+        <app-button card-actions size="sm" (btnClick)="goToForm()">
             Add Product
-        </button>
+        </app-button>
         <form class="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4" (ngSubmit)="applyFilters()">
             <input
                 type="search"
                 name="search"
                 [(ngModel)]="filters.search"
                 placeholder="Search SKU or name"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                class="ui-control" />
 
             <select
                 name="unit"
                 [(ngModel)]="filters.unit"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                class="ui-control">
                 <option value="">All units</option>
                 <option *ngFor="let unit of units" [value]="unit">{{ unit }}</option>
             </select>
@@ -25,7 +24,7 @@
             <select
                 name="requiresBatch"
                 [(ngModel)]="filters.requiresBatch"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                class="ui-control">
                 <option value="">All batch modes</option>
                 <option value="true">Requires batch</option>
                 <option value="false">No batch required</option>
@@ -34,19 +33,19 @@
             <select
                 name="isActive"
                 [(ngModel)]="filters.isActive"
-                class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                class="ui-control">
                 <option value="">All statuses</option>
                 <option value="true">Active</option>
                 <option value="false">Inactive</option>
             </select>
 
             <div class="flex gap-2 md:col-span-2 xl:col-span-4">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+                <app-button type="submit" size="sm">
                     Apply filters
-                </button>
-                <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800" (click)="resetFilters()">
+                </app-button>
+                <app-button variant="outline" size="sm" (btnClick)="resetFilters()">
                     Reset
-                </button>
+                </app-button>
             </div>
         </form>
 
@@ -57,22 +56,19 @@
             <span>{{ errorMessage() }}</span>
             <button type="button" class="ml-3 underline" (click)="retry()">Retry</button>
         </div>
-        <div
-            class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <app-table 
-                [columns]="columns" 
-                [data]="products$ | async" 
-                [pageSize]="pageSize()"
-                [currentPage]="page()"
-                [totalItems]="totalItems()"
-                [serverSide]="true"
-                [filterable]="false"
-                [rowActions]="productActions"
-                (pageChange)="onPageChange($event)"
-                (pageSizeChange)="onPageSizeChange($event)"
-                (sortChange)="onSortChange($event)"
-                (rowAction)="onProductAction($event)">
-            </app-table>
-        </div>
+        <app-table 
+            [columns]="columns" 
+            [data]="products$ | async" 
+            [pageSize]="pageSize()"
+            [currentPage]="page()"
+            [totalItems]="totalItems()"
+            [serverSide]="true"
+            [filterable]="false"
+            [rowActions]="productActions"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
+            (sortChange)="onSortChange($event)"
+            (rowAction)="onProductAction($event)">
+        </app-table>
     </app-component-card>
 </div>

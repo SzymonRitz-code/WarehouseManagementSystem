@@ -31,10 +31,9 @@
     </app-component-card>
 
     <app-component-card title="Product Batch List">
-        <button card-actions (click)="goToForm()"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <app-button card-actions size="sm" (btnClick)="goToForm()">
             Add Product Batch
-        </button>
+        </app-button>
         <div *ngIf="isLoading" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
             Loading product batches...
         </div>
@@ -42,11 +41,8 @@
             <span>{{ errorMessage }}</span>
             <button type="button" class="ml-3 underline" (click)="retry()">Retry</button>
         </div>
-        <div
-            class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-            <app-table [columns]="columns" [data]="batches$ | async" [pageSize]="5" [rowActions]="batchActions"
-                (rowAction)="onBatchAction($event)">
-            </app-table>
-        </div>
+        <app-table [columns]="columns" [data]="batches$ | async" [pageSize]="5" [rowActions]="batchActions"
+            (rowAction)="onBatchAction($event)">
+        </app-table>
     </app-component-card>
 </div>

@@ -20,6 +20,7 @@ import { ComponentCardComponent } from '../../../../shared/components/common/com
 import { ModalComponent } from '../../../../shared/components/common/modal/modal.component';
 import { PageBreadcrumbComponent } from '../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
 import { TableComponent } from '../../../../shared/components/table/table.component';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { WarehouseList } from '../../../warehouses/model/warehouse';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { DocumentList } from '../../model/document';
@@ -28,7 +29,7 @@ import { DocumentListQuery, DocumentService } from '../../services/document-serv
 @Component({
   selector: 'app-document-pending-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, PageBreadcrumbComponent, ComponentCardComponent, TableComponent, ModalComponent],
+  imports: [CommonModule, FormsModule, PageBreadcrumbComponent, ComponentCardComponent, TableComponent, ModalComponent, ButtonComponent],
   templateUrl: './document-pending-list.component.html'
 })
 export class DocumentPendingListComponent implements OnInit {

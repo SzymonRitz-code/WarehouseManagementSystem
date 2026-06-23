@@ -7,11 +7,12 @@ import { ZoneList } from '../../model/zone';
 import { PageBreadcrumbComponent } from "../../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { catchError, finalize, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { ButtonComponent } from "../../../../shared/ui/button/button.component";
 
 @Component({
   selector: 'app-zones',
   standalone: true,
-  imports: [CommonModule, PageBreadcrumbComponent, ComponentCardComponent, TableComponent],
+  imports: [CommonModule, PageBreadcrumbComponent, ComponentCardComponent, TableComponent, ButtonComponent],
   templateUrl: './zone-list.component.html'
 })
 export class ZoneListComponent implements OnInit {

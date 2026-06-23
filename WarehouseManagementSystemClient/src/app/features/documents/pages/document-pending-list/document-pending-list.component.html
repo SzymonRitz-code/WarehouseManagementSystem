@@ -2,10 +2,9 @@
   <app-page-breadcrumb pageTitle="Pending Documents List" />
 
   <app-component-card title="Pending Documents List">
-    <button card-actions type="button" (click)="goToForm()"
-      class="px-4 py-2 rounded-lg bg-blue-600 text-white transition hover:bg-blue-700">
+    <app-button card-actions size="sm" (btnClick)="goToForm()">
       Add Document
-    </button>
+    </app-button>
 
     <form class="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5" (ngSubmit)="applyFilters()">
       <input
@@ -13,12 +12,12 @@
         name="search"
         [(ngModel)]="filters.search"
         placeholder="Search number or user"
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+        class="ui-control" />
 
       <select
         name="type"
         [(ngModel)]="filters.type"
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+        class="ui-control">
         <option value="">All types</option>
         <option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option>
       </select>
@@ -26,7 +25,7 @@
       <select
         name="warehouseId"
         [(ngModel)]="filters.warehouseId"
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+        class="ui-control">
         <option value="">All warehouses</option>
         <option *ngFor="let warehouse of warehouses$ | async" [value]="warehouse.id">
           {{ warehouse.code }} - {{ warehouse.name }}
@@ -37,21 +36,21 @@
         type="date"
         name="createdFrom"
         [(ngModel)]="filters.createdFrom"
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+        class="ui-control" />
 
       <input
         type="date"
         name="createdTo"
         [(ngModel)]="filters.createdTo"
-        class="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+        class="ui-control" />
 
       <div class="flex gap-2 md:col-span-2 xl:col-span-5">
-        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+        <app-button type="submit" size="sm">
           Apply filters
-        </button>
-        <button type="button" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800" (click)="resetFilters()">
+        </app-button>
+        <app-button variant="outline" size="sm" (btnClick)="resetFilters()">
           Reset
-        </button>
+        </app-button>
       </div>
     </form>
 
@@ -63,22 +62,20 @@
       <button type="button" class="ml-3 underline" (click)="retry()">Retry</button>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <app-table
-        [columns]="columns"
-        [data]="documents$ | async"
-        [pageSize]="pageSize()"
-        [currentPage]="page()"
-        [totalItems]="totalItems()"
-        [serverSide]="true"
-        [filterable]="false"
-        [rowActions]="documentActions"
-        (pageChange)="onPageChange($event)"
-        (pageSizeChange)="onPageSizeChange($event)"
-        (sortChange)="onSortChange($event)"
-        (rowAction)="onDocumentAction($event)">
-      </app-table>
-    </div>
+    <app-table
+      [columns]="columns"
+      [data]="documents$ | async"
+      [pageSize]="pageSize()"
+      [currentPage]="page()"
+      [totalItems]="totalItems()"
+      [serverSide]="true"
+      [filterable]="false"
+      [rowActions]="documentActions"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      (sortChange)="onSortChange($event)"
+      (rowAction)="onDocumentAction($event)">
+    </app-table>
   </app-component-card>
 
   @if (selectedDocument(); as selectedDocument) {
