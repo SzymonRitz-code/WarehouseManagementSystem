@@ -1,15 +1,9 @@
-    <div class="flex justify-between mt-6">
-      <button
-        (click)="back.emit()"
-        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition"
-      >
-        {{ backLabel }}
-      </button>
+<div class="mt-6 flex justify-between gap-3">
+  <app-button variant="outline" size="sm" (btnClick)="back.emit()">
+    {{ backLabel }}
+  </app-button>
 
-      <button
-        type="submit" [disabled]="disabled" (click)="submit.emit()"
-        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-      >
-        {{ actionLabel }}
-      </button>
-    </div>
+  <app-button type="submit" size="sm" [disabled]="!!disabled" (btnClick)="submit.emit()">
+    {{ actionLabel }}
+  </app-button>
+</div>

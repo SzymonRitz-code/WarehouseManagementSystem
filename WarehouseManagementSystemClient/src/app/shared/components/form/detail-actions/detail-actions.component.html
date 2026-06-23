@@ -1,9 +1,9 @@
-<div class="flex justify-between mt-6">
-    <button (click)="back.emit()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition">
+<div class="mt-6 flex justify-between gap-3">
+    <app-button variant="outline" size="sm" (btnClick)="back.emit()">
         {{ backLabel }}
-    </button>
+    </app-button>
 
-    <button (click)="action.emit()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+    <app-button size="sm" [disabled]="!!disabled" (btnClick)="action.emit()">
         {{ actionLabel }}
-    </button>
+    </app-button>
 </div>

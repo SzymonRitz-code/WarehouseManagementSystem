@@ -20,4 +20,15 @@ describe('DetailActionsComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('renders shared buttons and keeps edit enabled by default', () => {
+    fixture.detectChanges();
+
+    const buttons = fixture.nativeElement.querySelectorAll('app-button');
+
+    expect(buttons).toHaveLength(2);
+    expect(component.disabled).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Back');
+    expect(fixture.nativeElement.textContent).toContain('Edit');
+  });
 });

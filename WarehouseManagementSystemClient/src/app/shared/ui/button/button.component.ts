@@ -16,8 +16,9 @@ import { SafeHtmlPipe } from '../../../pipe/safe-html.pipe';
 })
 export class ButtonComponent {
 
-  @Input() size: 'sm' | 'md' = 'md';
+  @Input() size: 'sm' | 'md' = 'sm';
   @Input() variant: 'primary' | 'outline' = 'primary';
+  @Input() type: 'button' | 'submit' | 'reset' = 'button';
   @Input() disabled = false;
   @Input() className = '';
   @Input() startIcon?: string; // SVG or icon class, or use ng-content for more flexibility
@@ -27,14 +28,14 @@ export class ButtonComponent {
 
   get sizeClasses(): string {
     return this.size === 'sm'
-      ? 'px-4 py-3 text-sm'
-      : 'px-5 py-3.5 text-sm';
+      ? 'px-3.5 py-2 text-sm'
+      : 'px-4 py-2.5 text-sm';
   }
 
   get variantClasses(): string {
     return this.variant === 'primary'
-      ? 'bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300'
-      : 'bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300';
+      ? 'border border-brand-500 bg-brand-500 text-white shadow-theme-xs shadow-brand-500/20 hover:border-brand-600 hover:bg-brand-600 focus:ring-3 focus:ring-brand-500/20 disabled:border-brand-300 disabled:bg-brand-300 dark:border-brand-500/80 dark:bg-brand-500 dark:hover:border-brand-400 dark:hover:bg-brand-500/90'
+      : 'border border-gray-300 bg-white text-gray-700 shadow-theme-xs hover:border-gray-400 hover:bg-gray-50 focus:ring-3 focus:ring-gray-500/10 dark:border-white/[0.08] dark:bg-white/[0.03] dark:text-gray-300 dark:hover:border-white/[0.14] dark:hover:bg-white/[0.06] dark:hover:text-white/90';
   }
 
   get disabledClasses(): string {

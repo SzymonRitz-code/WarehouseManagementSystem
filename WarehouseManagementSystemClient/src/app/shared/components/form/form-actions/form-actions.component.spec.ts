@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FormActionsComponent } from './form-actions.component';
-import { Input } from '@angular/core';
 
 describe('FormActionsComponent', () => {
   let component: FormActionsComponent;
@@ -19,5 +18,15 @@ describe('FormActionsComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('renders shared buttons for back and submit actions', () => {
+    fixture.detectChanges();
+
+    const buttons = fixture.nativeElement.querySelectorAll('app-button');
+
+    expect(buttons).toHaveLength(2);
+    expect(fixture.nativeElement.textContent).toContain('Back');
+    expect(fixture.nativeElement.textContent).toContain('Save');
   });
 });
