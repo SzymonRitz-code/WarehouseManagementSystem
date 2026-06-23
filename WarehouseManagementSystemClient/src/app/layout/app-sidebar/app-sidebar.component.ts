@@ -204,25 +204,34 @@ export class AppSidebarComponent {
   }
 
   private setActiveMenuFromRoute(currentUrl: string) {
-    this.navItems.forEach((nav, i) => {
+    const activeSubmenuKey = this.navItems.reduce<string | null>((bestMatch, nav, i) => {
       if (!nav.subItems) {
-        return;
+        return bestMatch;
       }
 
-      nav.subItems.forEach(subItem => {
-        if (currentUrl === subItem.path) {
-          const key = `main-${i}`;
-          this.openSubmenu = key;
+      const hasActiveSubItem = nav.subItems.some(subItem =>
+        currentUrl === subItem.path || currentUrl.startsWith(`${subItem.path}/`)
+      );
 
-          setTimeout(() => {
-            const el = document.getElementById(key);
-            if (el) {
-              this.subMenuHeights[key] = el.scrollHeight;
-              this.cdr.detectChanges();
-            }
-          });
-        }
-      });
+      return hasActiveSubItem ? `main-${i}` : bestMatch;
+    }, null);
+
+    if (this.openSubmenu && this.openSubmenu !== activeSubmenuKey) {
+      this.subMenuHeights[this.openSubmenu] = 0;
+    }
+
+    this.openSubmenu = activeSubmenuKey;
+
+    if (!activeSubmenuKey) {
+      return;
+    }
+
+    setTimeout(() => {
+      const el = document.getElementById(activeSubmenuKey);
+      if (el) {
+        this.subMenuHeights[activeSubmenuKey] = el.scrollHeight;
+        this.cdr.detectChanges();
+      }
     });
   }
 

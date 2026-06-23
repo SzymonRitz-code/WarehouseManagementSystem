@@ -1,5 +1,5 @@
 <aside
-  class="fixed flex flex-col top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200"
+  class="fixed flex flex-col top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 dark:text-gray-300 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200"
   [ngClass]="{
     'w-[290px]':
       (isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async),
@@ -121,7 +121,11 @@
               @else {
               @if (nav.path) {
               <a [routerLink]="nav.path" routerLinkActive="menu-item-active"
-                [routerLinkActiveOptions]="{ exact: false }" class="menu-item group">
+                [routerLinkActiveOptions]="{ exact: false }" class="menu-item group"
+                [ngClass]="{
+                  'menu-item-inactive': !isActive(nav.path),
+                  'menu-item-active': isActive(nav.path)
+                }">
                 <span class="menu-item-icon-size" [innerHTML]="nav.icon | safeHtml"
                   [class.menu-item-icon-active]="isActive(nav.path)"
                   [class.menu-item-icon-inactive]="!isActive(nav.path)">
