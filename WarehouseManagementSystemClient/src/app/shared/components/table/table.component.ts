@@ -42,26 +42,31 @@ export class TableComponent<T extends Record<string, any> = any> implements OnIn
     return (item as any).id ?? index;
   }
   get paginatedData() {
-    if (this.serverSide) return this.filteredData;
+    const pageSize = Number(this.pageSize);
 
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredData.slice(start, start + this.pageSize);
+    if (this.serverSide) return this.filteredData.slice(0, pageSize);
+
+    const start = (this.currentPage - 1) * pageSize;
+    return this.filteredData.slice(start, start + pageSize);
   }
   get pages(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
   get totalPages() {
+    const pageSize = Number(this.pageSize);
+
     if (this.serverSide) {
-      return Math.ceil(this.totalItems / this.pageSize);
+      return Math.ceil(this.totalItems / pageSize);
     }
 
-    return Math.ceil(this.filteredData.length / this.pageSize);
+    return Math.ceil(this.filteredData.length / pageSize);
   }
   onPageSizeChange() {
+    this.pageSize = Number(this.pageSize);
     this.currentPage = 1; // reset paginacji
     if (this.serverSide) {
-      this.pageSizeChange.emit(Number(this.pageSize));
+      this.pageSizeChange.emit(this.pageSize);
     }
   }
 
