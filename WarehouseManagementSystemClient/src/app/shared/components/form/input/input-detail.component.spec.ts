@@ -26,4 +26,12 @@ describe('InputDetailComponent', () => {
 
     expect(component.displayValue).toBe('');
   });
+
+  it('accepts extra classes while keeping the readonly control styling available', () => {
+    const component = new InputDetailComponent();
+
+    component.className = 'custom-detail-class';
+
+    expect(component.className).toBe('custom-detail-class');
+  });
 });

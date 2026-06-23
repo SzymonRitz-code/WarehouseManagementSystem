@@ -52,6 +52,20 @@ describe('TableComponent', () => {
     expect(renderedBodyText()).not.toContain('Item 5');
   });
 
+  it('marks only the current pagination button as active', () => {
+    component.goToPage(2);
+    fixture.detectChanges();
+
+    const pageButtons = paginationButtons();
+    const previousPageButton = pageButtons.find(button => button.textContent?.trim() === '1');
+    const currentPageButton = pageButtons.find(button => button.textContent?.trim() === '2');
+
+    expect(previousPageButton?.classList.contains('ui-button-page-active')).toBe(false);
+    expect(previousPageButton?.classList.contains('ui-button-page-default')).toBe(true);
+    expect(currentPageButton?.classList.contains('ui-button-page-active')).toBe(true);
+    expect(currentPageButton?.classList.contains('ui-button-page-default')).toBe(false);
+  });
+
   it('resets to first page and limits rows when page size changes on client-side table', () => {
     component.currentPage = 3;
     component.pageSize = 10;
@@ -174,6 +188,10 @@ describe('TableComponent', () => {
 
   function renderedBodyText(): string {
     return fixture.nativeElement.querySelector('tbody').textContent;
+  }
+
+  function paginationButtons(): HTMLButtonElement[] {
+    return Array.from(fixture.nativeElement.querySelectorAll('.ui-button-page'));
   }
 
   function setTableData(data: TestRow[]): void {

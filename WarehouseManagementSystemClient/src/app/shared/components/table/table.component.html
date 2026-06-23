@@ -1,117 +1,150 @@
-<div class="overflow-hidden rounded-xl border-t border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-    <div class="max-w-full overflow-x-auto custom-scrollbar">
-        <div class="bg-gray-50 flex items-center justify-between px-4 py-3">
+<div class="ui-table-shell">
+  <div class="max-w-full overflow-x-auto custom-scrollbar">
+    <div class="ui-table-toolbar">
+      <div class="flex items-center gap-3">
+        <span class="ui-muted">Show</span>
 
-            <!-- LEFT: Page size -->
-            <div class="flex items-center gap-3">
-                <span class="text-gray-500 dark:text-gray-400">Show</span>
+        <select
+          [(ngModel)]="pageSize"
+          (ngModelChange)="onPageSizeChange()"
+          class="ui-control-sm pr-8"
+        >
+          <option [value]="5">5</option>
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+          <option [value]="50">50</option>
+        </select>
 
-                <select [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()"
-                    class="py-2 pl-3 pr-8 text-sm border border-gray-300 rounded-lg dark:bg-gray-900 dark:text-white">
-                    <option [value]="5">5</option>
-                    <option [value]="10">10</option>
-                    <option [value]="20">20</option>
-                    <option [value]="50">50</option>
-                </select>
+        <span class="ui-muted">entries</span>
+      </div>
+    </div>
 
-                <span class="text-gray-500 dark:text-gray-400">entries</span>
+    <table class="ui-table">
+      <thead class="ui-table-head">
+        <tr>
+          <th
+            *ngFor="let col of columns"
+            (click)="col.sortable ? toggleSort(col.key) : null"
+            [ngClass]="{
+              'ui-table-th-active': sortKey === col.key,
+              'cursor-pointer': col.sortable
+            }"
+            class="ui-table-th"
+          >
+            <div class="flex items-center gap-2">
+              <span>{{ col.label }}</span>
+              <span
+                *ngIf="col.sortable"
+                class="text-[10px] leading-none text-gray-400 dark:text-gray-500"
+              >
+                {{ sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '' }}
+              </span>
             </div>
 
-        </div>
-        <table class="w-full table-fixed divide-y divide-gray-200 dark:divide-white/[0.05]">
-            <thead class="bg-gray-50 dark:bg-gray-900">
-                <tr>
-                    <th *ngFor="let col of columns" (click)="col.sortable ? toggleSort(col.key) : null"
-                        [ngClass]="{'bg-gray-200 dark:bg-gray-700': sortKey === col.key}"
-                        class="px-4 py-3 text-left felx text-xs font-medium text-theme-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer">
-                        {{ col.label }}
-                        <span *ngIf="col.sortable">
-                            {{ sortKey === col.key ? (sortDir === 'asc' ? '▲' : '▼') : '' }}
-                        </span>
-                        <input *ngIf="filterable" type="text" placeholder="Filter..." [(ngModel)]="filters[col.key]"
-                            (ngModelChange)="applyFilters()" (click)="$event.stopPropagation()"
-                            class="w-full max-w-full flex border rounded px-2 py-1 text-xs text-theme-xs dark:bg-gray-800 dark:text-white" />
-                    </th>
-                    <ng-container *ngIf="rowActions">
-                        <th></th>
-                    </ng-container>
+            <input
+              *ngIf="filterable"
+              type="text"
+              placeholder="Filter..."
+              [(ngModel)]="filters[col.key]"
+              (ngModelChange)="applyFilters()"
+              (click)="$event.stopPropagation()"
+              class="ui-control-sm mt-2 h-8 w-full px-2 py-1 text-xs normal-case"
+            />
+          </th>
 
-                </tr>
-            </thead>
-            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-white/[0.05]">
-                <tr *ngFor="let row of paginatedData; trackBy:trackByFn">
-                    <td *ngFor="let col of columns"
-                        class="px-4 py-4 font-normal text-theme-sm text-gray-500 dark:text-gray-400 whitespace-normal break-words">
-                        <ng-container *ngIf="col.type === 'date'; else checkBoolean">
-                            {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }}
-                        </ng-container>
-                        <ng-template #checkBoolean>
-                            <ng-container *ngIf="col.type === 'boolean'; else checkTemplate">
-                                {{ row[col.key] ? 'Yes' : 'No' }}
-                            </ng-container>
-                        </ng-template>
+          <th *ngIf="rowActions" class="ui-table-th w-40">Actions</th>
+        </tr>
+      </thead>
 
-                        <!-- 2. Jeśli kolumna ma template -->
-                        <ng-template #checkTemplate>
-                            <ng-container *ngIf="col.template; else defaultCell">
-                                <ng-container
-                                    *ngTemplateOutlet="col.template; context: { $implicit: row }"></ng-container>
-                            </ng-container>
-                        </ng-template>
+      <tbody class="ui-table-body">
+        <tr *ngFor="let row of paginatedData; trackBy: trackByFn" class="ui-table-row">
+          <td
+            *ngFor="let col of columns"
+            class="ui-table-cell whitespace-normal break-words"
+          >
+            <ng-container *ngIf="col.type === 'date'; else checkBoolean">
+              {{ row[col.key] | date:'yyyy-MM-dd HH:mm' }}
+            </ng-container>
 
-                        <!-- 3. Domyślnie zwykła wartość -->
-                        <ng-template #defaultCell>
-                            {{ row[col.key] }}
-                        </ng-template>
-                    </td>
-                    <ng-container *ngIf="rowActions">
-                        <td class="px-4 py-2">
-                            <div class="flex">
-                                <ng-container *ngFor="let action of rowActions">
-                                    <button type="button" *ngIf="!action.visible || action.visible(row)"
-                                        (click)="emitRowAction(row, action.action)"
-                                        class="mr-2 px-2 py-1 text-xs rounded-lg border hover:bg-brand-400 rounded ">
-                                        {{ action.label }}
-                                    </button>
-                                </ng-container>
-                            </div>
+            <ng-template #checkBoolean>
+              <ng-container *ngIf="col.type === 'boolean'; else checkTemplate">
+                {{ row[col.key] ? 'Yes' : 'No' }}
+              </ng-container>
+            </ng-template>
 
-                        </td>
-                    </ng-container>
+            <ng-template #checkTemplate>
+              <ng-container *ngIf="col.template; else defaultCell">
+                <ng-container
+                  *ngTemplateOutlet="col.template; context: { $implicit: row }"
+                ></ng-container>
+              </ng-container>
+            </ng-template>
 
-                </tr>
-                <tr *ngIf="displayedRecordCount === 0">
-                    <td [attr.colspan]="columns.length + (rowActions ? 1 : 0)"
-                        class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                        No records to display.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+            <ng-template #defaultCell>
+              {{ row[col.key] }}
+            </ng-template>
+          </td>
+
+          <td *ngIf="rowActions" class="ui-table-cell">
+            <div class="flex flex-wrap gap-2">
+              <ng-container *ngFor="let action of rowActions">
+                <button
+                  type="button"
+                  *ngIf="!action.visible || action.visible(row)"
+                  (click)="emitRowAction(row, action.action)"
+                  class="inline-flex items-center rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-700 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 dark:border-gray-700 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+                >
+                  {{ action.label }}
+                </button>
+              </ng-container>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="displayedRecordCount === 0">
+          <td
+            [attr.colspan]="columns.length + (rowActions ? 1 : 0)"
+            class="px-5 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
+          >
+            No records to display.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div
+    class="flex flex-col gap-3 border-t border-gray-100 px-5 py-4 dark:border-white/[0.05] sm:flex-row sm:items-center sm:justify-between"
+  >
+    <button
+      (click)="goToPageSafe(currentPage - 1)"
+      [disabled]="currentPage === 1"
+      class="ui-button-secondary"
+    >
+      Previous
+    </button>
+
+    <div class="flex justify-center gap-2">
+      <button
+        *ngFor="let page of visiblePages"
+        (click)="goToPageSafe(page)"
+        [ngClass]="{
+          'ui-button-page-active': currentPage === page,
+          'ui-button-page-default': currentPage !== page
+        }"
+        [disabled]="page === '...'"
+        class="ui-button-page"
+      >
+        {{ page }}
+      </button>
     </div>
 
-    <div class="flex items-center justify-between mt-4 px-4 py-3 border-t border-gray-100 dark:border-white/10">
-
-        <button (click)="goToPageSafe(currentPage - 1)" [disabled]="currentPage === 1"
-            class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40 hover:bg-brand-400">
-            Previous
-        </button>
-
-        <div class="flex justify-center mt-4 space-x-2">
-            <button *ngFor="let page of visiblePages" (click)="goToPageSafe(page)" [ngClass]="{
-                    'bg-blue-100 text-blue-700': currentPage === page,   
-                    'bg-gray-100 text-gray-700 hover:bg-gray-200': currentPage !== page
-                }" [disabled]="page === '...'"
-                class="px-3 py-1 rounded hover:bg-brand-400 hover:text-white transition-colors">
-                {{ page }}
-            </button>
-        </div>
-
-        <button (click)="goToPageSafe(currentPage + 1)" [disabled]="currentPage >= totalPages"
-            class="px-3 py-1 text-sm rounded-lg border disabled:opacity-40 hover:bg-brand-400">
-            Next
-        </button>
-
-    </div>
-
+    <button
+      (click)="goToPageSafe(currentPage + 1)"
+      [disabled]="currentPage >= totalPages"
+      class="ui-button-secondary"
+    >
+      Next
+    </button>
+  </div>
 </div>

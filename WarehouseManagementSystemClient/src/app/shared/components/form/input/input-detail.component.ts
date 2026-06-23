@@ -5,14 +5,15 @@ import { Component, Input } from "@angular/core";
   template: `
     <input 
       [value]="displayValue" 
-      disabled 
-      class="h-11 w-full rounded border px-4 py-2 text-sm" 
+      disabled
+      [class]="'ui-control-readonly ' + className"
     />
   `
 })
 export class InputDetailComponent {
   @Input() value: any;
   @Input() type: 'text' | 'boolean' | 'date' | 'enum' = 'text';
+  @Input() className = '';
 
   get displayValue(): string {
     if (typeof this.value === 'boolean') {

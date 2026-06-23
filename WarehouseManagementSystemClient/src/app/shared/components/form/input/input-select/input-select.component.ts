@@ -77,7 +77,7 @@ export class InputSelectComponent implements ControlValueAccessor, Validator {
   onTouched: () => void = () => { };
 
   get selectClasses(): string {
-    let base = `h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30`;
+    let base = `ui-control w-full appearance-none px-4 py-2.5`;
     if (this.errorMessages.length) {
       base += ` border-error-500 focus:border-error-300 focus:ring-error-500/20`;
     }

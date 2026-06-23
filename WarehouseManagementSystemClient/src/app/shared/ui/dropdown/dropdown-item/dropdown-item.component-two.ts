@@ -18,7 +18,7 @@ import { RouterModule } from '@angular/router';
 })
 export class DropdownItemTwoComponent {
   @Input() to!: string; // Required route path
-  @Input() baseClassName = 'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900';
+  @Input() baseClassName = 'ui-dropdown-item';
   @Input() className = '';
   @Output() itemClick = new EventEmitter<void>();
   @Output() click = new EventEmitter<void>();
