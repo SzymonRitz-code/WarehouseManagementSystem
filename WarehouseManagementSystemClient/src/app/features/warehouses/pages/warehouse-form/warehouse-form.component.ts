@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { WarehouseService } from '../../services/warehouse-service';
 import { ActivatedRoute, isActive, Router } from '@angular/router';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
-import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
+import { setServerErrors } from '../../../../core/helpers/validation-helper.helper';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
 import { take } from 'rxjs';
 
@@ -70,7 +70,7 @@ export class WarehouseFormComponent implements OnInit {
             isActive: (this.warehouse as Warehouse).isActive
           })
         },
-        error: (err) => { console.error(err) }
+        error: () => this.router.navigateByUrl('/warehouses')
       })
     }
 
@@ -103,7 +103,6 @@ export class WarehouseFormComponent implements OnInit {
         this.router.navigateByUrl(`/warehouses/detail/${id}`);
       },
       error: (err) => {
-        console.error(err);
         setServerErrors(err, this.warehouseForm);
       }
     }) 

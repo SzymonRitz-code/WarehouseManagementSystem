@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { PageBreadcrumbComponent } from "../../../shared/components/common/page-breadcrumb/page-breadcrumb.component";
 import { ComponentCardComponent } from "../../../shared/components/common/component-card/component-card.component";
 import { TableComponent } from "../../../shared/components/table/table.component";
-import { AuditLog } from '../model/audtLog';
+import { AuditLog } from '../model/audit-log';
 import { catchError, finalize, Observable, of, shareReplay, startWith, Subject, switchMap } from 'rxjs';
 import { AuditLogService } from '../services/audit-log-service';
 

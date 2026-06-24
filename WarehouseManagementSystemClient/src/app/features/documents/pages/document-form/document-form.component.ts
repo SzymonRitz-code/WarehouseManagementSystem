@@ -16,8 +16,8 @@ import { WarehouseService } from '../../../warehouses/services/warehouse-service
 import { DatePickerComponent } from "../../../../shared/components/form/date-picker/date-picker.component";
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
 import { DocumentItemsComponent } from "../document-items/document-items-list/document-items.component";
-import { minFormArrayLength } from '../../../../core/guards/vaildators';
-import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
+import { minFormArrayLength } from '../../../../core/guards/validators';
+import { setServerErrors } from '../../../../core/helpers/validation-helper.helper';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
 import { map, take } from 'rxjs';
 
@@ -96,8 +96,8 @@ export class DocumentFormComponent implements OnInit {
               }));
             });
           },
-          error: (err) => {
-            console.error('Error fetching document:', err);
+          error: () => {
+            this.router.navigateByUrl('/documents');
           }
         });
     }
@@ -112,8 +112,9 @@ export class DocumentFormComponent implements OnInit {
         this.sourceOptions = options;
         this.targetOptions = options;
       },
-      error: (err) => {
-        console.error('Error fetching warehouses:', err);
+      error: () => {
+        this.sourceOptions = [];
+        this.targetOptions = [];
       }
     });
     this.documentTypeOptions = Object.values(DocumentType).map(d => ({ value: d, label: d }))
@@ -148,7 +149,6 @@ export class DocumentFormComponent implements OnInit {
         this.router.navigateByUrl(`/documents/detail/${id}`);
       },
       error: (err) => {
-        console.error(err);
         setServerErrors(err, this.documentForm);
       }
     })

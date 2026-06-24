@@ -14,7 +14,7 @@ import { InputSelectComponent } from "../../../../shared/components/form/input/i
 import { UnitOfMeasure } from '../../../../core/enums/unitOfMeasure';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { TextAreaComponent } from '../../../../shared/components/form/input/text-area.component';
-import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
+import { setServerErrors } from '../../../../core/helpers/validation-helper.helper';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
 import { take } from 'rxjs';
 
@@ -80,7 +80,7 @@ export class ProductFormComponent implements OnInit {
             volume: this.product.volume
           });
         },
-        error: (err) => { console.error(err) }
+        error: () => this.router.navigateByUrl('/products')
       });
 
     }
@@ -120,7 +120,6 @@ export class ProductFormComponent implements OnInit {
         this.router.navigateByUrl(`/products/detail/${id}`);
       },
       error: (err) => {
-        console.error(err);
         setServerErrors(err, this.productForm);
       }
     });

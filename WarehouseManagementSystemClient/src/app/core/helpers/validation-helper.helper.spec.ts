@@ -1,5 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { clearServerErrors, setServerErrors } from './vaildation-helper.helper';
+import { clearServerErrors, setServerErrors } from './validation-helper.helper';
 
 describe('validation helper', () => {
   it('maps backend validation errors onto matching form controls', () => {

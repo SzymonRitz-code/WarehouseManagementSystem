@@ -1,8 +1,8 @@
-import { DropdownItemTwoComponent } from './dropdown-item.component-two';
+import { RouterDropdownItemComponent } from './router-dropdown-item.component';
 
-describe('DropdownItemTwoComponent', () => {
+describe('RouterDropdownItemComponent', () => {
   it('combines base and custom classes', () => {
-    const component = new DropdownItemTwoComponent();
+    const component = new RouterDropdownItemComponent();
     component.baseClassName = 'base';
     component.className = 'custom';
 
@@ -10,7 +10,7 @@ describe('DropdownItemTwoComponent', () => {
   });
 
   it('emits both click outputs without preventing router navigation', () => {
-    const component = new DropdownItemTwoComponent();
+    const component = new RouterDropdownItemComponent();
     const click = vi.fn();
     const itemClick = vi.fn();
     const event = new MouseEvent('click');
@@ -18,7 +18,7 @@ describe('DropdownItemTwoComponent', () => {
     component.click.subscribe(click);
     component.itemClick.subscribe(itemClick);
 
-    component.handleClick(event);
+    component.handleClick();
 
     expect(preventDefault).not.toHaveBeenCalled();
     expect(click).toHaveBeenCalledTimes(1);

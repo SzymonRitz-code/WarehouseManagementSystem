@@ -10,7 +10,7 @@ import { DocumentService } from '../../services/document-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
-import { DocumentItemsDetailComponent } from "../document-items/app-document-items-detail/app-document-items-detail.component";
+import { DocumentItemsDetailComponent } from '../document-items/document-items-detail/document-items-detail.component';
 import { ZoneService } from '../../../zones/services/zone-service';
 import { ProductService } from '../../../products/services/product-service';
 import { catchError, forkJoin, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';

@@ -10,7 +10,7 @@ import { ProductService } from '../../../services/product-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CreateBatch } from '../../../model/product-create-batch';
 import { ProductBatchService } from '../../../services/product-batch-service';
-import { setServerErrors } from '../../../../../core/helpsers/vaildation-helper.helper';
+import { setServerErrors } from '../../../../../core/helpers/validation-helper.helper';
 import { InputSelectComponent } from '../../../../../shared/components/form/input/input-select/input-select.component';
 import { CommonModule } from '@angular/common';
 import { InputFieldComponent } from '../../../../../shared/components/form/input/input-field.component';

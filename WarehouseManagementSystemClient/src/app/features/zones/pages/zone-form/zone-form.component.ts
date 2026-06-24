@@ -12,7 +12,7 @@ import { ZoneService } from '../../services/zone-service';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { CommonModule } from '@angular/common';
 import { InputSelectComponent } from "../../../../shared/components/form/input/input-select/input-select.component";
-import { setServerErrors } from '../../../../core/helpsers/vaildation-helper.helper';
+import { setServerErrors } from '../../../../core/helpers/validation-helper.helper';
 import { CheckboxComponent } from "../../../../shared/components/form/input/checkbox.component";
 import { TemperatureType } from '../../../../core/enums/temperatureType';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
@@ -112,7 +112,6 @@ export class ZoneFormComponent implements OnInit {
         this.router.navigateByUrl(`/zones/detail/${id}`);
       },
       error: (err) => {
-        console.error(err);
         setServerErrors(err, this.zoneForm);
       }
     })

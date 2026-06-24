@@ -5,7 +5,11 @@ import 'zone.js';
 
 
 bootstrapApplication(AppComponent, appConfig)
-  .catch((err) => console.error(err));
+  .catch((err: unknown) => {
+    setTimeout(() => {
+      throw err;
+    });
+  });
 
 
 // komenda do uruchomienia projektu: ng serve --ssl true --ssl-cert src/localhost.crt --ssl-key src/localhost.key

@@ -1,22 +1,22 @@
- import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-dropdown-item-two',
+  selector: 'app-router-dropdown-item',
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
     <a
       [routerLink]="to"
       [ngClass]="combinedClasses"
-      (click)="handleClick($event)"
+      (click)="handleClick()"
     >
       <ng-content></ng-content>
     </a>
   `,
 })
-export class DropdownItemTwoComponent {
+export class RouterDropdownItemComponent {
   @Input() to!: string; // Required route path
   @Input() baseClassName = 'ui-dropdown-item';
   @Input() className = '';
@@ -27,7 +27,7 @@ export class DropdownItemTwoComponent {
     return `${this.baseClassName} ${this.className}`.trim();
   }
 
-  handleClick(event: Event) {
+  handleClick() {
     this.click.emit();
     this.itemClick.emit();
   }

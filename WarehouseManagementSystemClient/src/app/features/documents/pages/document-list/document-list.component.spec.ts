@@ -183,6 +183,24 @@ describe('DocumentListComponent', () => {
     expect(documentService.getDocuments).toHaveBeenCalledTimes(2);
   });
 
+  it('shows an error when cancel command fails', async () => {
+    await firstDocumentsEmission();
+    documentService.cancelDocument.mockReturnValue(throwError(() => new Error('cancel failed')));
+
+    component.onCancel(documentRow);
+
+    expect(component.errorMessage()).toBe('Document could not be cancelled. Please try again.');
+  });
+
+  it('shows an error when confirm command fails', async () => {
+    await firstDocumentsEmission();
+    documentService.confirmDocument.mockReturnValue(throwError(() => new Error('confirm failed')));
+
+    component.onConfirm(documentRow);
+
+    expect(component.errorMessage()).toBe('Document could not be confirmed. Please try again.');
+  });
+
   function firstDocumentsEmission(): Promise<DocumentList[]> {
     return new Promise(resolve => {
       component.documents$.subscribe(rows => resolve(rows));

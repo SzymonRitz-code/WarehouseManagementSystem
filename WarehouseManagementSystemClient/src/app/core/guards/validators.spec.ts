@@ -1,5 +1,5 @@
 import { FormArray, FormControl } from '@angular/forms';
-import { minFormArrayLength } from './vaildators';
+import { minFormArrayLength } from './validators';
 
 describe('minFormArrayLength', () => {
   it('returns null when FormArray length is at least the required minimum', () => {

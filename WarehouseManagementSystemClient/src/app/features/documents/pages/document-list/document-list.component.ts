@@ -179,14 +179,14 @@ export class DocumentListComponent implements OnInit {
   onCancel(row: DocumentList): void {
     this.documentService.cancelDocument(row).pipe(take(1)).subscribe({
       next: () => this.retry(),
-      error: (err) => console.error('Error cancelling document:', err)
+      error: () => this.errorMessage.set('Document could not be cancelled. Please try again.')
     });
   }
 
   onConfirm(row: DocumentList): void {
     this.documentService.confirmDocument(row).pipe(take(1)).subscribe({
       next: () => this.retry(),
-      error: (err) => console.error('Error confirming document:', err)
+      error: () => this.errorMessage.set('Document could not be confirmed. Please try again.')
     });
   }
 
