@@ -17,7 +17,7 @@ using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Services;
 
-public class DocumentIntegrationTests
+public class DocumentCommandServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IStockService> _stockServiceMock = new();
@@ -30,7 +30,7 @@ public class DocumentIntegrationTests
 
     private readonly DocumentCommandService _service;
 
-    public DocumentIntegrationTests()
+    public DocumentCommandServiceTests()
     {
         _service = new DocumentCommandService(
             _unitOfWorkMock.Object,
