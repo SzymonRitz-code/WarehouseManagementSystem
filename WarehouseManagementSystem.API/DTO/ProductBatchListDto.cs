@@ -1,4 +1,4 @@
-﻿ namespace WarehouseManagementSystem.API.DTO;
+﻿namespace WarehouseManagementSystem.API.DTO;
 
 public record struct ProductBatchListDto
 (
