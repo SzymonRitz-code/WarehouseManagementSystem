@@ -1,20 +1,12 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Moq;
-using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using WarehouseManagementSystem.Domain.ValueObjects;
+using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Test.Domain.InventoryDomain;
 
-public class ProductBatchTests
+[Trait("Category", "Inventory_ProductBatch")]
+public class ProductBatchTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
-    Mock<IUserService> _userServiceMock = new Mock<IUserService>();
-    public ProductBatchTests()
-    {
-        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
-            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
-    }
 
     [Fact]
     public void Constructor_Should_Set_Properties_Correctly()
@@ -26,7 +18,7 @@ public class ProductBatchTests
         var expirationDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6));
 
         // Act
-        var batch = new ProductBatch(productId, batchNumber, _userServiceMock.Object.GetUser(default), manufacturedDate, expirationDate);
+        var batch = CreateBatch(productId, batchNumber, manufacturedDate, expirationDate);
 
         // Assert
         batch.Id.Should().NotBe(Guid.Empty);
@@ -38,14 +30,12 @@ public class ProductBatchTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void SetBatchNumber_Should_Throw_On_Invalid_BatchNumber(string invalidBatch)
+    [ClassData(typeof(InvalidRequiredStringTestData))]
+    public void SetBatchNumber_Should_Throw_On_Invalid_BatchNumber(string? invalidBatch)
     {
-        var batch = new ProductBatch(Guid.NewGuid(), "VALID", _userServiceMock.Object.GetUser(default), null, null);
+        var batch = CreateBatch(batchNumber: "VALID");
 
-        Action act = () => batch.SetBatchNumber(invalidBatch);
+        Action act = () => batch.SetBatchNumber(invalidBatch!);
 
         act.Should().Throw<ArgumentException>()
            .WithMessage("Batch number is required.");
@@ -54,7 +44,7 @@ public class ProductBatchTests
     [Fact]
     public void SetBatchNumber_Should_Throw_When_Length_Exceeds_50()
     {
-        var batch = new ProductBatch(Guid.NewGuid(), "VALID", _userServiceMock.Object.GetUser(default), null, null);
+        var batch = CreateBatch(batchNumber: "VALID");
         var longBatch = new string('A', 51);
 
         Action act = () => batch.SetBatchNumber(longBatch);
@@ -66,7 +56,7 @@ public class ProductBatchTests
     [Fact]
     public void SetManufacturingDates_Should_Throw_If_ManufacturedDate_In_Future()
     {
-        var batch = new ProductBatch(Guid.NewGuid(), "BATCH", _userServiceMock.Object.GetUser(default), null, null);
+        var batch = CreateBatch();
         var futureDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1));
 
         Action act = () => batch.SetManufacturingDates(futureDate, null);
@@ -78,7 +68,7 @@ public class ProductBatchTests
     [Fact]
     public void SetManufacturingDates_Should_Throw_If_Expiration_Before_Manufactured()
     {
-        var batch = new ProductBatch(Guid.NewGuid(), "BATCH", _userServiceMock.Object.GetUser(default), null, null);
+        var batch = CreateBatch();
         var manufacturedDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
         var expirationDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-2));
 
@@ -92,7 +82,7 @@ public class ProductBatchTests
     public void IsExpired_Should_Return_True_When_ExpirationDate_Passed()
     {
         var expiredDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
-        var batch = new ProductBatch(Guid.NewGuid(), "BATCH", _userServiceMock.Object.GetUser(default), null, expiredDate);
+        var batch = CreateBatch(expirationDate: expiredDate);
 
         batch.IsExpired().Should().BeTrue();
     }
@@ -100,7 +90,7 @@ public class ProductBatchTests
     [Fact]
     public void IsExpired_Should_Return_False_When_ExpirationDate_NotSet()
     {
-        var batch = new ProductBatch(Guid.NewGuid(), "BATCH", _userServiceMock.Object.GetUser(default), null, null);
+        var batch = CreateBatch();
 
         batch.IsExpired().Should().BeFalse();
     }
@@ -109,7 +99,7 @@ public class ProductBatchTests
     public void ExpiresSoon_Should_Return_True_When_Within_Threshold()
     {
         var expiration = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2));
-        var batch = new ProductBatch(Guid.NewGuid(), "BATCH", _userServiceMock.Object.GetUser(default), null, expiration);
+        var batch = CreateBatch(expirationDate: expiration);
 
         batch.ExpiresSoon(3).Should().BeTrue();
     }
@@ -118,7 +108,7 @@ public class ProductBatchTests
     public void ExpiresSoon_Should_Return_False_When_Beyond_Threshold()
     {
         var expiration = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(10));
-        var batch = new ProductBatch(Guid.NewGuid(), "BATCH", _userServiceMock.Object.GetUser(default), null, expiration);
+        var batch = CreateBatch(expirationDate: expiration);
 
         batch.ExpiresSoon(5).Should().BeFalse();
     }
@@ -126,8 +116,15 @@ public class ProductBatchTests
     [Fact]
     public void ExpiresSoon_Should_Return_False_When_ExpirationDate_NotSet()
     {
-        var batch = new ProductBatch(Guid.NewGuid(), "BATCH", _userServiceMock.Object.GetUser(default), null, null);
+        var batch = CreateBatch();
 
         batch.ExpiresSoon(5).Should().BeFalse();
     }
+
+    private ProductBatch CreateBatch(
+        Guid? productId = null,
+        string batchNumber = "BATCH",
+        DateOnly? manufacturedDate = null,
+        DateOnly? expirationDate = null)
+        => new(productId ?? Guid.NewGuid(), batchNumber, fixture.User, manufacturedDate, expirationDate);
 }

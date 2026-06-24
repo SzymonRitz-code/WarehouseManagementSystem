@@ -1,40 +1,26 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Moq;
-using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
-using WarehouseManagementSystem.Domain.ValueObjects;
+using WarehouseManagementSystem.Tests.Support;
 
-namespace WarehouseManagementSystem.Tests.Integration.WarehouseDomain;
+namespace WarehouseManagementSystem.Tests.Domain.WarehouseDomain;
 
-public class WarehouseIntegrationTests
+[Trait("Category", "Warehouse_Aggregate")]
+public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
     private readonly Guid _productId = Guid.NewGuid();
-    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
-
-    public WarehouseIntegrationTests()
-    {
-        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
-            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
-    }
-
-    private Warehouse CreateWarehouse()
-    {
-        return new Warehouse(
-            "WH01",
-            "Main Warehouse",
-            "Poland",
-            "Warsaw",
-            "ul. Example 1", _userServiceMock.Object.GetUser(default));
-    }
 
     [Fact]
     public void Constructor_ShouldInitializeWarehouseCorrectly()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
 
+        // Act
+        var zones = warehouse.Zones;
+
+        // Assert
         warehouse.Id.Should().NotBeEmpty();
         warehouse.Code.Should().Be("WH01");
         warehouse.Name.Should().Be("Main Warehouse");
@@ -42,52 +28,67 @@ public class WarehouseIntegrationTests
         warehouse.City.Should().Be("Warsaw");
         warehouse.Address.Should().Be("ul. Example 1");
         warehouse.IsActive.Should().BeTrue();
-        warehouse.Zones.Should().BeEmpty();
+        zones.Should().BeEmpty();
     }
 
     [Fact]
     public void AddZone_ShouldAddAndRetrieveZoneCorrectly()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
-        var zone = warehouse.AddZone("Z01", "Zone 1", TemperatureType.Ambient, true);
 
+        // Act
+        var zone = warehouse.AddZone("Z01", "Zone 1", TemperatureType.Ambient, true);
+        var retrieved = warehouse.GetZone(zone.Id);
+
+        // Assert
         zone.Should().NotBeNull();
         zone.Code.Should().Be("Z01");
         warehouse.Zones.Should().Contain(zone);
-
-        var retrieved = warehouse.GetZone(zone.Id);
         retrieved.Should().Be(zone);
     }
 
     [Fact]
     public void AddZone_ShouldThrow_WhenDuplicateCode()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
         warehouse.AddZone("Z01", "Zone 1", TemperatureType.Ambient, true);
 
+        // Act
         Action act = () => warehouse.AddZone("Z01", "Zone 2", TemperatureType.Cold, false);
+
+        // Assert
         act.Should().Throw<InvalidOperationException>().WithMessage("*already exists*");
     }
 
     [Fact]
     public void RemoveZone_ShouldRemoveZoneCorrectly()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
         var zone = warehouse.AddZone("Z01", "Zone 1", TemperatureType.Ambient, true);
 
+        // Act
         warehouse.RemoveZone(zone.Id);
+
+        // Assert
         warehouse.Zones.Should().BeEmpty();
     }
 
     [Fact]
     public void RemoveZone_ShouldThrow_WhenContainsStock()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
         var zone = warehouse.AddZone("Z01", "Zone 1", TemperatureType.Ambient, true);
 
-        zone.Stocks.Add(new Stock(_productId, warehouse.Id, zone.Id, null, 10));
+        zone.Stocks.Add(CreateStock(warehouse.Id, zone.Id));
 
+        // Act
         Action act = () => warehouse.RemoveZone(zone.Id);
+
+        // Assert
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*containing stock*");
     }
@@ -95,10 +96,14 @@ public class WarehouseIntegrationTests
     [Fact]
     public void Deactivate_ShouldThrow_WhenZonesExist()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
         warehouse.AddZone("Z01", "Zone 1", TemperatureType.Ambient, true);
 
+        // Act
         Action act = () => warehouse.Deactivate();
+
+        // Assert
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*active zones*");
     }
@@ -106,13 +111,14 @@ public class WarehouseIntegrationTests
     [Fact]
     public void Deactivate_ShouldThrow_WhenStocksExist()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
-        warehouse.Stocks = new System.Collections.Generic.List<Stock>
-        {
-            new Stock(_productId, warehouse.Id, Guid.NewGuid(), null, 10)
-        };
+        warehouse.Stocks = [CreateStock(warehouse.Id, Guid.NewGuid())];
 
+        // Act
         Action act = () => warehouse.Deactivate();
+
+        // Assert
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*containing stock*");
     }
@@ -120,23 +126,29 @@ public class WarehouseIntegrationTests
     [Fact]
     public void Activate_ShouldSetIsActiveToTrue()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
-        warehouse.Deactivate(); // make inactive first
-        warehouse.IsActive.Should().BeFalse();
+        warehouse.Deactivate();
 
+        // Act
         warehouse.Activate();
+
+        // Assert
         warehouse.IsActive.Should().BeTrue();
     }
 
     [Fact]
     public void UpdateWarehouseProperties_ShouldWorkCorrectly()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
 
+        // Act
         warehouse.SetCode("WH02");
         warehouse.SetName("Secondary Warehouse");
         warehouse.SetLocation("Germany", "Berlin", "Street 123");
 
+        // Assert
         warehouse.Code.Should().Be("WH02");
         warehouse.Name.Should().Be("Secondary Warehouse");
         warehouse.Country.Should().Be("Germany");
@@ -147,9 +159,25 @@ public class WarehouseIntegrationTests
     [Fact]
     public void GetZone_ShouldThrow_WhenNotFound()
     {
+        // Arrange
         var warehouse = CreateWarehouse();
 
+        // Act
         Action act = () => warehouse.GetZone(Guid.NewGuid());
+
+        // Assert
         act.Should().Throw<InvalidOperationException>().WithMessage("*not found*");
     }
+
+    private Warehouse CreateWarehouse()
+        => new(
+            "WH01",
+            "Main Warehouse",
+            "Poland",
+            "Warsaw",
+            "ul. Example 1",
+            fixture.User);
+
+    private Stock CreateStock(Guid warehouseId, Guid zoneId)
+        => new(_productId, warehouseId, zoneId, null, 10);
 }

@@ -1,21 +1,13 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Moq;
-using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
-using WarehouseManagementSystem.Domain.ValueObjects;
+using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.CatalogDomain;
 
-public class ProductTests
+[Trait("Category", "Catalog_Product")]
+public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
-    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
-    public ProductTests()
-    {
-        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
-            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
-    }
 
     [Fact]
     public void Constructor_Should_Set_Properties_Correctly()
@@ -30,7 +22,7 @@ public class ProductTests
         var description = "  Some description  ";
 
         // Act
-        var product = new Product(sku, name, unit, requiresBatch, _userServiceMock.Object.GetUser(default), weight, volume, description);
+        var product = CreateProduct(sku, name, unit, requiresBatch, weight, volume, description);
 
         // Assert
         product.Id.Should().NotBe(Guid.Empty);
@@ -46,16 +38,14 @@ public class ProductTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void SetSku_Should_Throw_On_Invalid_Value(string invalidSku)
+    [ClassData(typeof(InvalidRequiredStringTestData))]
+    public void SetSku_Should_Throw_On_Invalid_Value(string? invalidSku)
     {
         // Arrange
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
 
         // Act
-        Action act = () => product.SetSku(invalidSku);
+        Action act = () => product.SetSku(invalidSku!);
 
         // Assert
         act.Should().Throw<ArgumentException>()
@@ -63,14 +53,12 @@ public class ProductTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void SetName_Should_Throw_On_Invalid_Value(string invalidName)
+    [ClassData(typeof(InvalidRequiredStringTestData))]
+    public void SetName_Should_Throw_On_Invalid_Value(string? invalidName)
     {
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
 
-        Action act = () => product.SetName(invalidName);
+        Action act = () => product.SetName(invalidName!);
 
         act.Should().Throw<ArgumentException>()
            .WithMessage("Name is required.");
@@ -79,7 +67,7 @@ public class ProductTests
     [Fact]
     public void SetWeight_Should_Throw_On_Negative_Value()
     {
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
 
         Action act = () => product.SetWeight(-1);
 
@@ -90,7 +78,7 @@ public class ProductTests
     [Fact]
     public void SetVolume_Should_Throw_On_Negative_Value()
     {
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
 
         Action act = () => product.SetVolume(-0.5m);
 
@@ -101,7 +89,7 @@ public class ProductTests
     [Fact]
     public void SetDescription_Should_Trim_And_Handle_Null()
     {
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
 
         product.SetDescription("  Test Desc  ");
         product.Description.Should().Be("Test Desc");
@@ -116,7 +104,7 @@ public class ProductTests
     [Fact]
     public void Activate_Should_Set_IsActive_True()
     {
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
         product.Deactivate();
 
         product.IsActive.Should().BeFalse();
@@ -128,7 +116,7 @@ public class ProductTests
     public void Deactivate_Should_Set_IsActive_False()
     {
         //Arrange
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
 
         // Act
         product.Deactivate();
@@ -140,7 +128,7 @@ public class ProductTests
     [Fact]
     public void RequireBatchTracking_Should_Set_RequiresBatch_True()
     {
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, false, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct();
 
         product.RequiresBatch.Should().BeFalse();
         product.RequireBatchTracking();
@@ -150,10 +138,20 @@ public class ProductTests
     [Fact]
     public void DisableBatchTracking_Should_Set_RequiresBatch_False()
     {
-        var product = new Product("SKU1", "Name", UnitOfMeasure.Piece, true, _userServiceMock.Object.GetUser(default), 1.5m, 0.75m, "Description");
+        var product = CreateProduct(requiresBatch: true);
 
         product.RequiresBatch.Should().BeTrue();
         product.DisableBatchTracking();
         product.RequiresBatch.Should().BeFalse();
     }
+
+    private Product CreateProduct(
+        string sku = "SKU1",
+        string name = "Name",
+        UnitOfMeasure unit = UnitOfMeasure.Piece,
+        bool requiresBatch = false,
+        decimal weight = 1.5m,
+        decimal volume = 0.75m,
+        string? description = "Description")
+        => new(sku, name, unit, requiresBatch, fixture.User, weight, volume, description);
 }

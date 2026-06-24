@@ -1,35 +1,19 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Moq;
-using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
-using WarehouseManagementSystem.Domain.ValueObjects;
+using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.WarehouseDomain;
 
-public class WarehouseZoneTests
+ [Trait("Category", "Warehouse_Zone")]
+public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
-    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
-
-    public WarehouseZoneTests()
-    {
-        _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
-            .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
-    }
-
     [Fact]
     public void Constructor_ShouldInitializePropertiesCorrectly()
     {
         var warehouseId = Guid.NewGuid();
-        var zone = new WarehouseZone(
-            "Z01",
-            "Zone 1",
-            TemperatureType.Ambient,
-            true,
-            warehouseId,
-            _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
+        var zone = CreateZone(warehouseId: warehouseId);
 
         zone.Id.Should().NotBeEmpty();
         zone.Code.Should().Be("Z01");
@@ -42,39 +26,35 @@ public class WarehouseZoneTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void SetCode_ShouldThrow_WhenCodeIsInvalid(string code)
+    [ClassData(typeof(InvalidRequiredStringTestData))]
+    public void SetCode_ShouldThrow_WhenCodeIsInvalid(string? code)
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
-        Action act = () => zone.SetCode(code);
+        var zone = CreateZone();
+        Action act = () => zone.SetCode(code!);
         act.Should().Throw<ArgumentException>().WithMessage("*cannot be empty*");
     }
 
     [Fact]
     public void SetCode_ShouldTrimAndUppercaseCode()
     {
-        var zone = new WarehouseZone("z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
+        var zone = CreateZone(code: "z01");
         zone.SetCode(" z02 ");
         zone.Code.Should().Be("Z02");
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void SetName_ShouldThrow_WhenNameIsInvalid(string name)
+    [ClassData(typeof(InvalidRequiredStringTestData))]
+    public void SetName_ShouldThrow_WhenNameIsInvalid(string? name)
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
-        Action act = () => zone.SetName(name);
+        var zone = CreateZone();
+        Action act = () => zone.SetName(name!);
         act.Should().Throw<ArgumentException>().WithMessage("*cannot be empty*");
     }
 
     [Fact]
     public void SetName_ShouldTrimName()
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
+        var zone = CreateZone();
         zone.SetName("  New Zone  ");
         zone.Name.Should().Be("New Zone");
     }
@@ -82,7 +62,7 @@ public class WarehouseZoneTests
     [Fact]
     public void SetPickingZone_ShouldChangeFlag()
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
+        var zone = CreateZone();
         zone.SetPickingZone(false);
         zone.IsPickingZone.Should().BeFalse();
 
@@ -93,23 +73,23 @@ public class WarehouseZoneTests
     [Fact]
     public void ContainsStock_ShouldReturnFalse_WhenNoStocks()
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
+        var zone = CreateZone();
         zone.ContainsStock().Should().BeFalse();
     }
 
     [Fact]
     public void ContainsStock_ShouldReturnTrue_WhenHasStocks()
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
-        zone.Stocks.Add(new Stock(Guid.NewGuid(), zone.WarehouseId, zone.Id, null, 10));
+        var zone = CreateZone();
+        zone.Stocks.Add(CreateStock(zone));
         zone.ContainsStock().Should().BeTrue();
     }
 
     [Fact]
     public void EnsureCanBeRemoved_ShouldThrow_WhenContainsStocks()
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
-        zone.Stocks.Add(new Stock(Guid.NewGuid(), zone.WarehouseId, zone.Id, null, 5));
+        var zone = CreateZone();
+        zone.Stocks.Add(CreateStock(zone, 5));
 
         Action act = () => zone.EnsureCanBeRemoved();
         act.Should().Throw<InvalidOperationException>().WithMessage("*contains stock*");
@@ -118,8 +98,19 @@ public class WarehouseZoneTests
     [Fact]
     public void EnsureCanBeRemoved_ShouldNotThrow_WhenNoStocks()
     {
-        var zone = new WarehouseZone("Z01", "Zone 1", TemperatureType.Ambient, true, Guid.NewGuid(), _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
+        var zone = CreateZone();
         Action act = () => zone.EnsureCanBeRemoved();
         act.Should().NotThrow();
     }
+
+    private WarehouseZone CreateZone(
+        string code = "Z01",
+        string name = "Zone 1",
+        TemperatureType temperatureType = TemperatureType.Ambient,
+        bool isPickingZone = true,
+        Guid? warehouseId = null)
+        => new(code, name, temperatureType, isPickingZone, warehouseId ?? Guid.NewGuid(), fixture.User);
+
+    private static Stock CreateStock(WarehouseZone zone, decimal quantity = 10m)
+        => new(Guid.NewGuid(), zone.WarehouseId, zone.Id, null, quantity);
 }
