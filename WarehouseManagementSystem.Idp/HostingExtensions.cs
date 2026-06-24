@@ -1,4 +1,3 @@
-using Duende.IdentityServer;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Serilog;
 

@@ -25,7 +25,7 @@
             cfg.AddProductBatchMappings();
             cfg.AddDocumentMappings();
             cfg.AddDocumentItemMappings();
- 
+
         }
         /// <summary>
         /// Adds the mappings for the AuditLog entity to the AutoMapper configuration.

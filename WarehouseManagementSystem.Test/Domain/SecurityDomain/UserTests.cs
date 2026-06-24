@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace WarehouseManagementSystem.Test.Domain.SecurityDomain
+﻿namespace WarehouseManagementSystem.Test.Domain.SecurityDomain
 {
     internal class UserTests
     {

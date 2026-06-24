@@ -1,4 +1,5 @@
 ﻿namespace WarehouseManagementSystem.Domain.ValueObjects;
+
 public class UserSnapshot
 {
     public Guid Id { get; }

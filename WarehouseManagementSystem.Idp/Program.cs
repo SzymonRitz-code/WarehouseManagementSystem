@@ -1,6 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using IdentityServer;
 using Serilog;
-using System.IdentityModel.Tokens.Jwt;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()

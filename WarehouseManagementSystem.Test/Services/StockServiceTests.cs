@@ -8,7 +8,6 @@ using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
-using Xunit;
 
 namespace WarehouseManagementSystem.Tests.Services
 {

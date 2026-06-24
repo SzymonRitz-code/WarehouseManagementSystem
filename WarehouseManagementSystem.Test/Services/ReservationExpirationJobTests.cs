@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Infrastructure.Services;
-using Xunit;
 
 namespace WarehouseManagementSystem.Tests.Services;
 

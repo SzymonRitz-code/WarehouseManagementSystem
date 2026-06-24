@@ -9,15 +9,15 @@ namespace WarehouseManagementSystem.API.DTO
 
 
         [property: Required, StringLength(200)]
-        public string Name {get; set;}
+        public string Name { get; set; }
 
         [property: Required, StringLength(200)]
-        public string Country {get; set;}
+        public string Country { get; set; }
 
         [property: Required, StringLength(200)]
-        public string City {get; set;}
+        public string City { get; set; }
 
         [property: Required, StringLength(200)]
-        public string Address {get; set;}
+        public string Address { get; set; }
     }
 }

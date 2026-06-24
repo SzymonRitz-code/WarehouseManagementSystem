@@ -3,12 +3,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using WarehouseManagementSystem.API.Services.User;
-using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 using WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
-using Xunit;
 
 namespace WarehouseManagementSystem.Tests.Infrastructure.Repositories;
 

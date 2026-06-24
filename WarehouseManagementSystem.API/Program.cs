@@ -31,7 +31,7 @@ JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // wyłączenie mapo
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add(new AuthorizeFilter()); // dodanie globalnego filtra autoryzacji, który wymaga uwierzytelnienia dla wszystkich endpointów, chyba że zostanie to nadpisane przez atrybut [AllowAnonymous] na poziomie kontrolera lub akcji.
-    
+
     options.ReturnHttpNotAcceptable = true;
 
     options.CacheProfiles.Add(HttpCacheProfiles.ReferenceData, new CacheProfile
@@ -41,7 +41,7 @@ builder.Services.AddControllers(options =>
         VaryByQueryKeys = ["*"]
     });
     options.CacheProfiles.Add(HttpCacheProfiles.OperationalData, new CacheProfile
-    { 
+    {
         Duration = HttpCacheProfiles.OperationalDataDuration,
         Location = ResponseCacheLocation.Client,
         VaryByQueryKeys = ["*"]

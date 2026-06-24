@@ -49,14 +49,14 @@ public class DocumentTests
     }
 
     // ================= Number & Notes Validations =================
-[Theory]
-[ClassData(typeof(InvalidRequiredStringTestData))]
-public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
-{
-    var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
-    Action act = () => doc.SetNumber(invalidNumber!);
-    act.Should().Throw<ArgumentException>().WithMessage("Document number cannot be empty.");
-}
+    [Theory]
+    [ClassData(typeof(InvalidRequiredStringTestData))]
+    public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
+    {
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
+        Action act = () => doc.SetNumber(invalidNumber!);
+        act.Should().Throw<ArgumentException>().WithMessage("Document number cannot be empty.");
+    }
 
     [Fact]
     public void SetNumber_Should_Throw_If_Too_Long()

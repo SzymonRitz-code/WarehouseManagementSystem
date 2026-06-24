@@ -2,11 +2,10 @@
 // See LICENSE in the project root for license information.
 
 
-using Duende.IdentityModel;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace Globomantics.Idp.Pages.Diagnostics;
 

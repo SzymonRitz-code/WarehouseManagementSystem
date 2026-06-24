@@ -118,7 +118,7 @@ public class Warehouse
             name,
             temperatureType,
             isPickingZone,
-            Id, 
+            Id,
             new UserSnapshot(CreatedByUser.Id, CreatedByUser.Email, CreatedByUser.Name));
 
         _zones.Add(zone);

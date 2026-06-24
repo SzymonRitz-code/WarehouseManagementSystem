@@ -6,7 +6,7 @@ using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.WarehouseDomain;
 
- [Trait("Category", "Warehouse")]
+[Trait("Category", "Warehouse")]
 public class WarehouseTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
     [Fact]
