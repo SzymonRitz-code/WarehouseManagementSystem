@@ -34,6 +34,7 @@ public class DocumentCommandServiceOrchestrationTests
     private readonly Mock<IAuditLogService> _auditLogService = new();
     private readonly Mock<IUserService> _userServiceMock = new();
     private readonly Mock<IDocumentNumberGenerator> _numberGeneratorMock = new();
+    private readonly Mock<IUnitOfWorkTransaction> _transactionMock = new();
 
     private readonly DocumentCommandService _service;
 
@@ -48,15 +49,14 @@ public class DocumentCommandServiceOrchestrationTests
             _auditLogService.Object);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _unitOfWorkMock.Setup(u => u.Documents).Returns(_documentRepoMock.Object);
-        var transactionMock = new Mock<IUnitOfWorkTransaction>();
-        transactionMock
+        _transactionMock
             .Setup(x => x.CommitAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _unitOfWorkMock
             .Setup(x => x.BeginTransactionAsync(
                 It.IsAny<System.Data.IsolationLevel>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(transactionMock.Object);
+            .ReturnsAsync(_transactionMock.Object);
         _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
@@ -431,6 +431,24 @@ public class DocumentCommandServiceOrchestrationTests
 
         _stockServiceMock.Verify(s => s.ReleaseReservationAsync(reservation.StockId, reservation.Id), Times.Once);
         doc.Status.Should().Be(DocumentStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task CancelDocument_UsesSerializableTransaction_AndCommits()
+    {
+        var doc = DraftDocumentWithItem(DocumentType.WZ);
+        using var cts = new CancellationTokenSource();
+        SetupDocumentFind(doc);
+        _unitOfWorkMock.Setup(u => u.Stocks.GetActiveReservationsByDocumentIdAsync(doc.Id))
+            .ReturnsAsync(new List<StockReservation>());
+
+        await _service.CancelDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default), cts.Token);
+
+        _unitOfWorkMock.Verify(
+            u => u.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cts.Token),
+            Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(cts.Token), Times.Once);
+        _transactionMock.Verify(t => t.CommitAsync(cts.Token), Times.Once);
     }
 
     [Fact]
