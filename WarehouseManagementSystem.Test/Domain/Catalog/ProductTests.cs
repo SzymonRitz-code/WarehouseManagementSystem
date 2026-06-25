@@ -5,10 +5,16 @@ using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.CatalogDomain;
 
+/// <summary>
+/// Tests for the <see cref="Product"/> class in the Catalog domain.
+/// </summary>
+/// <param name="fixture"></param>
 [Trait("Category", "Catalog_Product")]
 public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
-
+    /// <summary>
+    /// Tests that the constructor of the <see cref="Product"/> class sets properties correctly.
+    /// </summary>
     [Fact]
     public void Constructor_Should_Set_Properties_Correctly()
     {
@@ -36,7 +42,10 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         product.Description.Should().Be("Some description"); // trimmed
         product.CreatedAt.Should().BeOnOrBefore(DateTimeOffset.UtcNow);
     }
-
+    /// <summary>
+    /// Tests that the SetSku method throws an ArgumentException when provided with an invalid SKU value.
+    /// </summary>
+    /// <param name="invalidSku">The invalid SKU value.</param>
     [Theory]
     [ClassData(typeof(InvalidRequiredStringTestData))]
     public void SetSku_Should_Throw_On_Invalid_Value(string? invalidSku)
@@ -51,7 +60,10 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         act.Should().Throw<ArgumentException>()
            .WithMessage("SKU cannot be empty.");
     }
-
+    /// <summary>
+    /// Tests that the SetName method throws an ArgumentException when provided with an invalid Name value.
+    /// </summary>
+    /// <param name="invalidName">The invalid Name value.</param>
     [Theory]
     [ClassData(typeof(InvalidRequiredStringTestData))]
     public void SetName_Should_Throw_On_Invalid_Value(string? invalidName)
@@ -63,7 +75,9 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         act.Should().Throw<ArgumentException>()
            .WithMessage("Name is required.");
     }
-
+    /// <summary>
+    /// Tests that the SetWeight method throws an ArgumentException when provided with a negative weight value.
+    /// </summary>
     [Fact]
     public void SetWeight_Should_Throw_On_Negative_Value()
     {
@@ -74,7 +88,9 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         act.Should().Throw<ArgumentException>()
            .WithMessage("Weight cannot be negative.");
     }
-
+    /// <summary>
+    /// Tests that the SetVolume method throws an ArgumentException when provided with a negative volume value.
+    /// </summary>
     [Fact]
     public void SetVolume_Should_Throw_On_Negative_Value()
     {
@@ -85,7 +101,9 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         act.Should().Throw<ArgumentException>()
            .WithMessage("Volume cannot be negative.");
     }
-
+    /// <summary>
+    /// Tests that the SetDescription method trims whitespace and handles null values correctly.
+    /// </summary>
     [Fact]
     public void SetDescription_Should_Trim_And_Handle_Null()
     {
@@ -100,7 +118,9 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         product.SetDescription("   ");
         product.Description.Should().BeNull();
     }
-
+    /// <summary>
+    /// Tests that the Activate method sets the IsActive property to true.
+    /// </summary>
     [Fact]
     public void Activate_Should_Set_IsActive_True()
     {
@@ -111,7 +131,9 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         product.Activate();
         product.IsActive.Should().BeTrue();
     }
-
+    /// <summary>
+    /// Tests that the Deactivate method sets the IsActive property to false.
+    /// </summary>
     [Fact]
     public void Deactivate_Should_Set_IsActive_False()
     {
@@ -124,7 +146,9 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         // Assert
         product.IsActive.Should().BeFalse();
     }
-
+    /// <summary>
+    /// Tests that the RequireBatchTracking method sets the RequiresBatch property to true.
+    /// </summary>
     [Fact]
     public void RequireBatchTracking_Should_Set_RequiresBatch_True()
     {
@@ -134,7 +158,9 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         product.RequireBatchTracking();
         product.RequiresBatch.Should().BeTrue();
     }
-
+    /// <summary>
+    /// Tests that the DisableBatchTracking method sets the RequiresBatch property to false.
+    /// </summary>
     [Fact]
     public void DisableBatchTracking_Should_Set_RequiresBatch_False()
     {
@@ -144,7 +170,17 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         product.DisableBatchTracking();
         product.RequiresBatch.Should().BeFalse();
     }
-
+    /// <summary>
+    /// Creates a new instance of the <see cref="Product"/> class with the specified parameters.
+    /// </summary>
+    /// <param name="sku">The SKU of the product.</param>
+    /// <param name="name">The name of the product.</param>
+    /// <param name="unit">The unit of measure for the product.</param>
+    /// <param name="requiresBatch">Indicates whether the product requires batch tracking.</param>
+    /// <param name="weight">The weight of the product.</param>
+    /// <param name="volume">The volume of the product.</param>
+    /// <param name="description">The description of the product.</param>
+    /// <returns>A new instance of the <see cref="Product"/> class.</returns>
     private Product CreateProduct(
         string sku = "SKU1",
         string name = "Name",

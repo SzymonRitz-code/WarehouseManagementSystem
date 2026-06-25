@@ -4,11 +4,18 @@ using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
 {
+    /// <summary>
+    /// Tests for the <see cref="ProductBatch"/> class in the Inventory domain.
+    /// </summary>
+    /// <param name="fixture">The test fixture for domain tests.</param>
     [Trait("Category", "Inventory_ProductBatch")]
     public class ProductBatchBehaviorTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
     {
         private readonly Guid _productId = Guid.NewGuid();
 
+        /// <summary>
+        /// Tests that the constructor of <see cref="ProductBatch"/> initializes the object correctly with valid parameters.
+        /// </summary>
         [Fact]
         public void Constructor_ShouldInitializeBatchCorrectly()
         {
@@ -29,6 +36,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             isExpired.Should().BeFalse();
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.SetBatchNumber"/> method updates the batch number correctly when provided with a valid value.
+        /// </summary>
         [Fact]
         public void SetBatchNumber_ShouldUpdateValue_WhenValid()
         {
@@ -42,6 +52,10 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             batch.BatchNumber.Should().Be("NEWBATCH");
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.SetBatchNumber"/> method throws an exception when provided with an invalid value (null or empty).
+        /// </summary>
+        /// <param name="value">The invalid batch number value to test.</param>
         [Theory]
         [ClassData(typeof(InvalidRequiredStringTestData))]
         public void SetBatchNumber_ShouldThrow_WhenInvalid(string? value)
@@ -56,6 +70,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             act.Should().Throw<ArgumentException>().WithMessage("*required*");
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.SetManufacturingDates"/> method updates the manufacturing and expiration dates correctly when provided with valid values.
+        /// </summary>
         [Fact]
         public void SetManufacturingDates_ShouldUpdateDates_WhenValid()
         {
@@ -72,6 +89,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             batch.ExpirationDate.Should().Be(eDate);
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.SetManufacturingDates"/> method throws an exception when the manufactured date is set in the future.
+        /// </summary>
         [Fact]
         public void SetManufacturingDates_ShouldThrow_WhenManufacturedInFuture()
         {
@@ -86,6 +106,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             act.Should().Throw<ArgumentException>().WithMessage("*future*");
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.SetManufacturingDates"/> method throws an exception when the expiration date is set before the manufactured date.
+        /// </summary>
         [Fact]
         public void SetManufacturingDates_ShouldThrow_WhenExpirationBeforeManufactured()
         {
@@ -101,6 +124,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             act.Should().Throw<ArgumentException>().WithMessage("*earlier than manufactured*");
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.IsExpired"/> method returns true when the batch is expired and false when it is not expired.
+        /// </summary>
         [Fact]
         public void IsExpired_ShouldReturnTrue_WhenExpired()
         {
@@ -115,6 +141,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             isExpired.Should().BeTrue();
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.IsExpired"/> method returns false when the batch is not expired.
+        /// </summary>
         [Fact]
         public void IsExpired_ShouldReturnFalse_WhenNotExpired()
         {
@@ -129,6 +158,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             isExpired.Should().BeFalse();
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.ExpiresSoon"/> method returns true when the batch is within the specified threshold of expiration and false when it is not.
+        /// </summary>
         [Fact]
         public void ExpiresSoon_ShouldReturnTrue_WhenWithinThreshold()
         {
@@ -143,6 +175,9 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             expiresSoon.Should().BeTrue();
         }
 
+        /// <summary>
+        /// Tests that the <see cref="ProductBatch.ExpiresSoon"/> method returns false when the batch is outside the specified threshold of expiration.
+        /// </summary>
         [Fact]
         public void ExpiresSoon_ShouldReturnFalse_WhenOutsideThreshold()
         {
@@ -157,6 +192,13 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             expiresSoon.Should().BeFalse();
         }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="ProductBatch"/> with the specified parameters or default values for testing purposes.
+        /// </summary>
+        /// <param name="batchNumber">The batch number of the product batch.</param>
+        /// <param name="manufacturedDate">The manufactured date of the product batch.</param>
+        /// <param name="expirationDate">The expiration date of the product batch.</param>
+        /// <returns>A new instance of <see cref="ProductBatch"/>.</returns>
         private ProductBatch CreateBatch(
             string batchNumber = "BATCH01",
             DateOnly? manufacturedDate = null,

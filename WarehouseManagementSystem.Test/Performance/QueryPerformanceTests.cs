@@ -17,15 +17,30 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.Tests.Performance;
 
+/// <summary>
+/// Performance tests for query operations in the Warehouse Management System, focusing on ensuring that queries scale efficiently with increasing data volumes and adhere to performance guardrails.
+/// </summary>
+/// <param name="database">The database fixture providing the test database context.</param>
 [Trait("TestType", "Performance")]
 [Trait("Category", "QueryPerformance")]
 public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture database)
     : IClassFixture<QueryPerformanceDatabaseFixture>
 {
+    #region Constants
+
     private const int PageSize = 50;
     private const int MeasurementIterations = 7;
     private const int ExpectedPagedListSqlCommands = 2; // Count query + paged data query.
 
+    #endregion
+
+    #region Performance Tests
+
+    /// <summary>
+    /// Tests that the ProductListQuery scales efficiently with increasing row counts, using bounded SQL commands and adhering to performance guardrails for median and 95th percentile execution times.
+    /// </summary>
+    /// <param name="rowCount">The number of rows to seed in the database for the test.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Theory]
     [InlineData(1)]
     [InlineData(100)]
@@ -71,6 +86,11 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         timings.P95.Should().BeLessThan(P95Guardrail(rowCount));
     }
 
+    /// <summary>
+    /// Tests that the StockListQuery scales efficiently with increasing row counts, using bounded SQL commands and adhering to performance guardrails for median and 95th percentile execution times.
+    /// </summary>
+    /// <param name="rowCount">The number of rows to seed in the database for the test.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Theory]
     [InlineData(1)]
     [InlineData(100)]
@@ -120,6 +140,11 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         timings.P95.Should().BeLessThan(P95Guardrail(rowCount));
     }
 
+    /// <summary>
+    /// Tests that the DocumentListQuery scales efficiently with increasing row counts, using bounded SQL commands and adhering to performance guardrails for median and 95th percentile execution times.
+    /// </summary>
+    /// <param name="rowCount">The number of rows to seed in the database for the test.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Theory]
     [InlineData(1)]
     [InlineData(100)]
@@ -167,6 +192,17 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         timings.P95.Should().BeLessThan(P95Guardrail(rowCount));
     }
 
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>
+    /// Measures the execution time of an asynchronous action over a specified number of iterations and returns a summary containing the median and 95th percentile timings.
+    /// </summary>
+    /// <typeparam name="T">The type of the result returned by the asynchronous action.</typeparam>
+    /// <param name="action">The asynchronous action to measure.</param>
+    /// <param name="iterations">The number of iterations to perform for measurement.</param>
+    /// <returns>A task representing the asynchronous operation, containing the timing summary.</returns>
     private static async Task<TimingSummary> MeasureAsync<T>(
         Func<Task<T>> action,
         int iterations)
@@ -184,6 +220,11 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         return TimingSummary.From(samples);
     }
 
+    /// <summary>
+    /// Returns the median guardrail time based on the number of rows, providing a performance threshold for median execution time.
+    /// </summary>
+    /// <param name="rowCount">The number of rows to consider for determining the guardrail.</param>
+    /// <returns>A <see cref="TimeSpan"/> representing the median guardrail time.</returns>
     private static TimeSpan MedianGuardrail(int rowCount)
     {
         // Timing is a secondary guardrail. Command count is the primary deterministic regression signal.
@@ -195,8 +236,23 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         };
     }
 
+    /// <summary>
+    /// Returns the 95th percentile guardrail time based on the number of rows, providing a performance threshold for the 95th percentile execution time.
+    /// </summary>
+    /// <param name="rowCount">The number of rows to consider for determining the guardrail.</param>
+    /// <returns>A <see cref="TimeSpan"/> representing the 95th percentile guardrail time.</returns>
     private static TimeSpan P95Guardrail(int rowCount) => MedianGuardrail(rowCount) * 2;
 
+    #endregion
+
+    #region Data Seeding Methods
+
+    /// <summary>
+    /// Seeds the database with a specified number of product records for performance testing, creating products with unique SKUs and names, and saving them to the provided database context.
+    /// </summary>
+    /// <param name="context">The database context to use for seeding products.</param>
+    /// <param name="rowCount">The number of product records to create.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static async Task SeedProductsAsync(
         WarehouseManagementSystemDbContext context,
         int rowCount)
@@ -217,6 +273,12 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         await context.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Seeds the database with a specified number of stock records for performance testing, creating a warehouse, a zone, and products with associated stock quantities, and saving them to the provided database context.
+    /// </summary>
+    /// <param name="context">The database context to use for seeding stock data.</param>
+    /// <param name="rowCount">The number of stock records to create.</param>
+    /// <returns>A task representing the asynchronous operation, containing the created warehouse and zone.</returns>
     private static async Task<(Warehouse Warehouse, WarehouseZone Zone)> SeedStockDataAsync(
         WarehouseManagementSystemDbContext context,
         int rowCount)
@@ -249,6 +311,12 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         return (warehouse, zone);
     }
 
+    /// <summary>
+    /// Seeds the database with a specified number of document records for performance testing, creating a warehouse, a zone, a product, and associated documents with items, and saving them to the provided database context.
+    /// </summary>
+    /// <param name="context">The database context to use for seeding document data.</param>
+    /// <param name="rowCount">The number of document records to create.</param>
+    /// <returns>A task representing the asynchronous operation, containing the created warehouse.</returns>
     private static async Task<Warehouse> SeedDocumentDataAsync(
         WarehouseManagementSystemDbContext context,
         int rowCount)
@@ -280,8 +348,15 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         Guid.Parse("33333333-3333-3333-3333-333333333333"),
         "performance.test@example.com",
         "Performance Tester");
+
+    #endregion
 }
 
+#region Database Fixture
+
+/// <summary>
+/// Fixture for setting up a SQL Server database in a Docker container for performance testing, providing methods to create and migrate databases, and to create DbContext instances with optional command counting for query performance measurement.
+/// </summary>
 public sealed class QueryPerformanceDatabaseFixture : IAsyncLifetime
 {
     private readonly MsSqlContainer _container = new MsSqlBuilder()
@@ -336,6 +411,13 @@ public sealed class QueryPerformanceDatabaseFixture : IAsyncLifetime
     }
 }
 
+#endregion
+
+#region Command Counter Interceptor
+
+/// <summary>
+/// A custom DbCommandInterceptor that counts the number of database commands executed, allowing for performance testing and validation of SQL command usage in query operations.
+/// </summary>
 public sealed class CommandCounterInterceptor : DbCommandInterceptor
 {
     private int _commandCount;
@@ -410,6 +492,10 @@ public sealed class CommandCounterInterceptor : DbCommandInterceptor
     }
 }
 
+#endregion
+
+#region Timing Summary
+
 public sealed record TimingSummary(TimeSpan Median, TimeSpan P95)
 {
     public static TimingSummary From(IReadOnlyCollection<TimeSpan> samples)
@@ -426,3 +512,5 @@ public sealed record TimingSummary(TimeSpan Median, TimeSpan P95)
         return new TimingSummary(median, ordered[Math.Clamp(p95Index, 0, ordered.Length - 1)]);
     }
 }
+
+#endregion

@@ -6,6 +6,9 @@ using WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
 
 namespace WarehouseManagementSystem.Tests.Repositories
 {
+    /// <summary>
+    /// Tests for the <see cref="AuditLogRepository"/> class, focusing on its filtering capabilities and ensuring that it correctly retrieves audit logs based on various criteria such as entity name, entity ID, and performed by ID.
+    /// </summary>
     public class AuditLogRepositoryTests
     {
         private WarehouseManagementSystemDbContext CreateDbContext()
@@ -17,6 +20,10 @@ namespace WarehouseManagementSystem.Tests.Repositories
             return new WarehouseManagementSystemDbContext(options);
         }
 
+        /// <summary>
+        /// Tests that the GetFilteredAsync method correctly filters audit logs by entity name. It sets up two audit logs with different entity names, saves them to the in-memory database, and then retrieves logs filtered by one of the entity names. The test asserts that only the log with the specified entity name is returned.
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task GetFilteredAsync_Should_FilterByEntityName()
         {
@@ -54,6 +61,10 @@ namespace WarehouseManagementSystem.Tests.Repositories
             result.First().EntityName.Should().Be("Entity2");
         }
 
+        /// <summary>
+        /// Tests that the GetFilteredAsync method correctly filters audit logs by entity ID. It sets up two audit logs with different entity IDs, saves them to the in-memory database, and then retrieves logs filtered by one of the entity IDs. The test asserts that only the log with the specified entity ID is returned.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         [Fact]
         public async Task GetFilteredAsync_Should_FilterByEntityId()
         {
@@ -93,6 +104,10 @@ namespace WarehouseManagementSystem.Tests.Repositories
             result.First().EntityId.Should().Be(entityId);
         }
 
+        /// <summary>
+        /// Tests that the GetFilteredAsync method correctly filters audit logs by the ID of the user who performed the operation. It sets up two audit logs with different performed by IDs, saves them to the in-memory database, and then retrieves logs filtered by one of the performed by IDs. The test asserts that only the log with the specified performed by ID is returned.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         [Fact]
         public async Task GetFilteredAsync_Should_FilterByPerformedById()
         {
@@ -132,6 +147,10 @@ namespace WarehouseManagementSystem.Tests.Repositories
             result.First().PerformedById.Should().Be(userId);
         }
 
+        /// <summary>
+        /// Tests that the GetFilteredAsync method correctly applies multiple filters together. It sets up two audit logs with different combinations of entity names, entity IDs, and performed by IDs, saves them to the in-memory database, and then retrieves logs filtered by a specific combination of these criteria. The test asserts that only the log matching all specified filters is returned.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         [Fact]
         public async Task GetFilteredAsync_Should_ApplyAllFiltersTogether()
         {
@@ -179,6 +198,10 @@ namespace WarehouseManagementSystem.Tests.Repositories
             matched.PerformedById.Should().Be(userId);
         }
 
+        /// <summary>
+        /// Tests that the GetFilteredAsync method returns audit logs ordered by the PerformedAt property in descending order. It sets up two audit logs with different PerformedAt timestamps, saves them to the in-memory database, and then retrieves all logs without any filters. The test asserts that the first log in the result has a later PerformedAt timestamp than the second log, confirming that the ordering is correct.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         [Fact]
         public async Task GetFilteredAsync_Should_OrderByPerformedAtDescending()
         {

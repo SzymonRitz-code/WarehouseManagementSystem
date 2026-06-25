@@ -4,8 +4,14 @@ using WarehouseManagementSystem.Domain.Model.Documents;
 
 namespace WarehouseManagementSystem.Tests.Domain.DocumentsDomain;
 
+/// <summary>
+/// Tests for the <see cref="DocumentSequence"/> class in the Documents domain.
+/// </summary>
 public class DocumentSequenceTests
 {
+    /// <summary>
+    /// Tests that the properties of the DocumentSequence class can be set and retrieved correctly.
+    /// </summary>
     [Fact]
     public void Should_Set_All_Properties_Correctly()
     {
@@ -33,7 +39,9 @@ public class DocumentSequenceTests
         sequence.WarehouseId.Should().Be(warehouseId);
         sequence.LastNumber.Should().Be(lastNumber);
     }
-
+    /// <summary>
+    /// Tests that the DocumentSequence class can accept a null value for the WarehouseId property.
+    /// </summary>
     [Fact]
     public void Should_Accept_Null_WarehouseId()
     {

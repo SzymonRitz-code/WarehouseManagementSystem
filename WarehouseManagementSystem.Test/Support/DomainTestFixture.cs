@@ -2,6 +2,9 @@ using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Tests.Support;
 
+/// <summary>
+/// Provides a test fixture for domain tests.
+/// </summary>
 public sealed class DomainTestFixture
 {
     public UserSnapshot User { get; } = new(

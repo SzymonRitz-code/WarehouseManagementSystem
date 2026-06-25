@@ -51,6 +51,11 @@ public class DocumentCommandServiceTests
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
 
+    #region CreateDocumentAsync Tests
+
+    /// <summary>
+    /// Verifies that CreateDocumentAsync throws ArgumentException when document has no items.
+    /// </summary>
     [Fact]
     public async Task CreateDocumentAsync_ShouldThrow_WhenNoItems()
     {
@@ -65,6 +70,9 @@ public class DocumentCommandServiceTests
             .WithMessage("*at least one item*");
     }
 
+    /// <summary>
+    /// Verifies that CreateDocumentAsync creates a document and saves it to the repository with correct properties.
+    /// </summary>
     [Fact]
     public async Task CreateDocumentAsync_ShouldCreateDocumentAndSave()
     {
@@ -103,6 +111,13 @@ public class DocumentCommandServiceTests
         document.Items.First().ProductId.Should().Be(draftItems.First().ProductId);
     }
 
+    #endregion
+
+    #region ConfirmDocumentAsync Tests
+
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync generates and assigns a document number and persists changes in a serializable transaction.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldGenerateNumberAndSave()
     {
@@ -132,6 +147,10 @@ public class DocumentCommandServiceTests
             Times.Once);
         _transactionMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync throws CannotConfirmEmptyDocumentException when attempting to confirm a document without items.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldThrowException_WhenDocumentIsEmpty()
     {
@@ -154,6 +173,9 @@ public class DocumentCommandServiceTests
             .WithMessage($"Document {doc.Id} cannot be confirmed without items.");
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync calls IncreaseStockAsync for PZ (intake) documents with correct parameters.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldIncreaseStock_ForPZ()
     {
@@ -191,6 +213,9 @@ public class DocumentCommandServiceTests
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync calls DecreaseStockAsync for WZ (withdrawal) documents with correct parameters.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldDecreaseStock_ForWZ()
     {
@@ -223,6 +248,9 @@ public class DocumentCommandServiceTests
             null), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync calls MoveStockAsync for MM (transfer) documents with correct parameters.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldMoveStock_ForMM()
     {
@@ -261,6 +289,9 @@ public class DocumentCommandServiceTests
             null), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync throws DocumentNotFoundException when document does not exist.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldThrow_WhenDocumentNotFound()
     {
@@ -275,6 +306,13 @@ public class DocumentCommandServiceTests
             .WithMessage("*was not found*");
     }
 
+    #endregion
+
+    #region CancelDocumentAsync Tests
+
+    /// <summary>
+    /// Verifies that CancelDocumentAsync releases stock reservations for WZ (withdrawal) documents.
+    /// </summary>
     [Fact]
     public async Task CancelDocumentAsync_ShouldReleaseReservations_ForWZ()
     {
@@ -310,6 +348,9 @@ public class DocumentCommandServiceTests
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that CancelDocumentAsync successfully cancels a document when no reservations exist and commits the transaction.
+    /// </summary>
     [Fact]
     public async Task CancelDocumentAsync_ShouldCancelDocument_WhenNoReservations()
     {
@@ -341,4 +382,6 @@ public class DocumentCommandServiceTests
             Times.Once);
         _transactionMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    #endregion
 }

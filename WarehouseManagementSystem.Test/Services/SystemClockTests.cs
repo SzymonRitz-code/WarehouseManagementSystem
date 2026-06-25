@@ -5,6 +5,9 @@ namespace WarehouseManagementSystem.Tests.Services
 {
     public class SystemClockTests
     {
+        /// <summary>
+        /// Verifies that UtcNow returns the current UTC time with accuracy within 1 second.
+        /// </summary>
         [Fact]
         public void UtcNow_ShouldReturnCurrentUtcDateTimeOffset()
         {
@@ -20,6 +23,9 @@ namespace WarehouseManagementSystem.Tests.Services
             (result - now).Duration().Should().BeLessThanOrEqualTo(TimeSpan.FromSeconds(1));
         }
 
+        /// <summary>
+        /// Verifies that UtcNow returns different, increasing values on subsequent calls.
+        /// </summary>
         [Fact]
         public void UtcNow_ShouldReturnDifferentValues_OnSubsequentCalls()
         {

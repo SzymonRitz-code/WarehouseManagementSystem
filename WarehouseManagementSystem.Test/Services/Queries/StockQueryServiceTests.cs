@@ -11,10 +11,17 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.Tests.Services.Queries;
 
+/// <summary>
+/// Tests for the <see cref="StockQueryService"/> class in the API services, focusing on querying stock information and availability.
+/// </summary>
 public class StockQueryServiceTests
 {
     private const string TestUserName = "Stock Tester";
 
+    /// <summary>
+    /// Tests the GetStocksAsync method to ensure it correctly filters stocks based on search criteria, availability, and projects related names.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetStocksAsync_ShouldFilterBySearchAndAvailableOnly_ThenProjectRelatedNames()
     {
@@ -50,6 +57,10 @@ public class StockQueryServiceTests
         result.Items[0].QuantityAvailable.Should().Be(15);
     }
 
+    /// <summary>
+    /// Tests the GetByProductAndWarehouseAsync method to ensure it returns only the stock entries that match the specified product and warehouse.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetByProductAndWarehouseAsync_ShouldReturnOnlyMatchingWarehouseStock()
     {
@@ -70,6 +81,10 @@ public class StockQueryServiceTests
         result[0].Id.Should().Be(matchingStock.Id);
     }
 
+    /// <summary>
+    /// Tests the GetStockAvailabilityAsync method to ensure it returns the correct availability projection for all stock entries, including total, reserved, and available quantities.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetStockAvailabilityAsync_ShouldReturnAvailabilityProjectionForAllStock()
     {
@@ -91,6 +106,10 @@ public class StockQueryServiceTests
         result[0].QuantityAvailable.Should().Be(18);
     }
 
+    /// <summary>
+    /// Tests the IsAvailableAsync method to ensure it correctly determines stock availability based on required quantity and matching location, returning true for sufficient stock and false for insufficient stock.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task IsAvailableAsync_ShouldRespectRequiredQuantityAndMatchingLocation()
     {
@@ -110,6 +129,10 @@ public class StockQueryServiceTests
         canReserveSeven.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Creates a new instance of the WarehouseManagementSystemDbContext using an in-memory database for testing purposes. Each test will have its own isolated database instance to ensure test independence and avoid side effects.
+    /// </summary>
+    /// <returns>A new instance of WarehouseManagementSystemDbContext.</returns>
     private static WarehouseManagementSystemDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<WarehouseManagementSystemDbContext>()
@@ -119,8 +142,23 @@ public class StockQueryServiceTests
         return new TestDbContext(options);
     }
 
+    /// <summary>
+    /// Creates a new instance of the StockQueryService using the provided WarehouseManagementSystemDbContext. This allows for testing the service methods with the in-memory database context.
+    /// </summary>
+    /// <param name="context">The in-memory database context to be used by the service.</param>
+    /// <returns>A new instance of StockQueryService.</returns>
     private static StockQueryService CreateService(WarehouseManagementSystemDbContext context) => new(context);
 
+    /// <summary>
+    /// Creates a new Stock entity with the specified product, warehouse, zone, batch, quantity, and reserved quantity. This helper method is used to seed test data for stock-related tests.
+    /// </summary>
+    /// <param name="productId">The ID of the product associated with the stock.</param>
+    /// <param name="warehouseId">The ID of the warehouse where the stock is located.</param>
+    /// <param name="zoneId">The ID of the zone within the warehouse where the stock is located.</param>
+    /// <param name="batchId">The ID of the batch associated with the stock, if any.</param>
+    /// <param name="quantity">The total quantity of the stock.</param>
+    /// <param name="reservedQuantity">The quantity of the stock that is reserved.</param>
+    /// <returns>A new instance of Stock with the specified properties.</returns>
     private static Stock CreateStock(
         Guid productId,
         Guid warehouseId,
@@ -139,12 +177,25 @@ public class StockQueryServiceTests
         return stock;
     }
 
+    /// <summary>
+    /// Adds the specified stock entities to the in-memory database context and saves the changes asynchronously. This helper method is used to seed test data for stock-related tests.
+    /// </summary>
+    /// <param name="context">The in-memory database context to which the stock entities will be added.</param>
+    /// <param name="stocks">The stock entities to be added to the context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static async Task AddStocksAsync(WarehouseManagementSystemDbContext context, params Stock[] stocks)
     {
         context.Stocks.AddRange(stocks);
         await context.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Adds a new warehouse with the specified code and name to the in-memory database context, along with a default zone. This helper method is used to seed test data for warehouse-related tests.
+    /// </summary>
+    /// <param name="context">The in-memory database context to which the warehouse will be added.</param>
+    /// <param name="code">The code of the warehouse.</param>
+    /// <param name="name">The name of the warehouse.</param>
+    /// <returns>A task representing the asynchronous operation, containing the created warehouse and its default zone.</returns>
     private static async Task<(Warehouse Warehouse, WarehouseZone Zone)> AddWarehouseAsync(
         WarehouseManagementSystemDbContext context,
         string code,
@@ -159,6 +210,11 @@ public class StockQueryServiceTests
         return (warehouse, zone);
     }
 
+    /// <summary>
+    /// Seeds the in-memory database context with reference data, including a warehouse, zone, product, and product batch. This helper method is used to set up the initial state for stock-related tests.
+    /// </summary>
+    /// <param name="context">The in-memory database context to which the reference data will be added.</param>
+    /// <returns>A task representing the asynchronous operation, containing the created warehouse, zone, product, and product batch.</returns>
     private static async Task<(Warehouse Warehouse, WarehouseZone Zone, Product Product, ProductBatch Batch)> SeedReferenceDataAsync(
         WarehouseManagementSystemDbContext context)
     {
@@ -175,6 +231,10 @@ public class StockQueryServiceTests
         return (warehouse, zone, product, batch);
     }
 
+    /// <summary>
+    /// Creates a new UserSnapshot instance with predefined values for testing purposes. This helper method is used to provide a consistent user context for stock-related tests.
+    /// </summary>
+    /// <returns>A new UserSnapshot instance with predefined values for testing purposes.</returns>
     private static UserSnapshot CreateUser() => new(
         Guid.Parse("22222222-2222-2222-2222-222222222222"),
         "stock.test@example.com",

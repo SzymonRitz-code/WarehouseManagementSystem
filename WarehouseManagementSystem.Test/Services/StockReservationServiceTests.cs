@@ -25,6 +25,9 @@ namespace WarehouseManagementSystem.Tests.Services
                 .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
         }
 
+        /// <summary>
+        /// Verifies that ExpireReservationsAsync expires all expired reservations and returns their quantities to stock.
+        /// </summary>
         [Fact]
         public async Task ExpireReservationsAsync_ShouldExpireAllExpiredReservationsAndSaveChanges()
         {
@@ -81,6 +84,9 @@ namespace WarehouseManagementSystem.Tests.Services
                 Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that ExpireReservationsAsync handles gracefully when stock for an expired reservation is not found.
+        /// </summary>
         [Fact]
         public async Task ExpireReservationsAsync_ShouldSkipReservationIfStockNotFound()
         {
@@ -106,6 +112,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that ExpireReservationsAsync handles gracefully when there are no expired reservations.
+        /// </summary>
         [Fact]
         public async Task ExpireReservationsAsync_ShouldHandleNoExpiredReservations()
         {
@@ -124,6 +133,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that ExpireReservationsAsync does not call FindAsync when there are no expired reservations.
+        /// </summary>
         [Fact]
         public async Task ExpireReservationsAsync_ShouldNotCallExpireReservation_WhenNoExpiredReservations()
         {

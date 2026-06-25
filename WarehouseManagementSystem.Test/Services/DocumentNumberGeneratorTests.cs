@@ -24,6 +24,9 @@ public class DocumentNumberGeneratorTests
         return new DocumentNumberGenerator(context, clock);
     }
 
+    /// <summary>
+    /// Verifies that GenerateAsync creates a new document sequence when it does not exist.
+    /// </summary>
     [Fact]
     public async Task GenerateAsync_ShouldCreateSequence_WhenSequenceDoesNotExist()
     {
@@ -45,6 +48,9 @@ public class DocumentNumberGeneratorTests
         sequence.Year.Should().Be(date.Year);
     }
 
+    /// <summary>
+    /// Verifies that GenerateAsync increments existing document sequence number correctly.
+    /// </summary>
     [Fact]
     public async Task GenerateAsync_ShouldIncrementSequence_WhenSequenceExists()
     {
@@ -74,6 +80,9 @@ public class DocumentNumberGeneratorTests
         sequence.LastNumber.Should().Be(6);
     }
 
+    /// <summary>
+    /// Verifies that GenerateAsync creates separate sequences for different warehouses with independent numbering.
+    /// </summary>
     [Fact]
     public async Task GenerateAsync_ShouldCreateSeparateSequences_ForDifferentWarehouses()
     {
@@ -95,6 +104,9 @@ public class DocumentNumberGeneratorTests
         sequences.Count.Should().Be(2);
     }
 
+    /// <summary>
+    /// Verifies that GenerateAsync creates a new sequence when year changes, resetting numbering to 1.
+    /// </summary>
     [Fact]
     public async Task GenerateAsync_ShouldCreateNewSequence_ForNewYear()
     {
@@ -124,6 +136,9 @@ public class DocumentNumberGeneratorTests
         sequences.Count.Should().Be(2);
     }
 
+    /// <summary>
+    /// Verifies that GenerateAsync uses a global sequence when warehouse ID is null.
+    /// </summary>
     [Fact]
     public async Task GenerateAsync_ShouldUseGlobalSequence_WhenWarehouseIsNull()
     {
@@ -139,6 +154,9 @@ public class DocumentNumberGeneratorTests
         number2.Should().Be("PZ/2025/000002");
     }
 
+    /// <summary>
+    /// Verifies that FormatPreview formats document number without warehouse code.
+    /// </summary>
     [Fact]
     public void FormatPreview_ShouldFormatWithoutWarehouseCode()
     {
@@ -152,6 +170,9 @@ public class DocumentNumberGeneratorTests
         result.Should().Be("PZ/2025/000042");
     }
 
+    /// <summary>
+    /// Verifies that FormatPreview formats document number with warehouse code.
+    /// </summary>
     [Fact]
     public void FormatPreview_ShouldFormatWithWarehouseCode()
     {

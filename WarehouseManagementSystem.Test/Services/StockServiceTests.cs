@@ -27,6 +27,9 @@ namespace WarehouseManagementSystem.Tests.Services
 
         #region GetOrCreateAsync Tests
 
+        /// <summary>
+        /// Verifies that GetOrCreateAsync returns existing stock without creating a new one.
+        /// </summary>
         [Fact]
         public async Task GetOrCreateAsync_ShouldReturnExistingStock()
         {
@@ -41,6 +44,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.Stocks.Add(It.IsAny<Stock>()), Times.Never);
         }
 
+        /// <summary>
+        /// Verifies that GetOrCreateAsync creates a new stock when it does not exist and saves it.
+        /// </summary>
         [Fact]
         public async Task GetOrCreateAsync_ShouldCreateNewStockIfNotExists()
         {
@@ -66,6 +72,9 @@ namespace WarehouseManagementSystem.Tests.Services
 
         #region IncreaseStockAsync Tests
 
+        /// <summary>
+        /// Verifies that IncreaseStockAsync increases stock quantity by the specified amount.
+        /// </summary>
         [Fact]
         public async Task IncreaseStockAsync_ShouldIncreaseStockQuantity()
         {
@@ -81,6 +90,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that IncreaseStockAsync throws ArgumentException when quantity is zero or negative.
+        /// </summary>
         [Theory]
         [InlineData(0)]
         [InlineData(-5)]
@@ -94,6 +106,9 @@ namespace WarehouseManagementSystem.Tests.Services
 
         #region DecreaseStockAsync Tests
 
+        /// <summary>
+        /// Verifies that DecreaseStockAsync decreases stock quantity by the specified amount.
+        /// </summary>
         [Fact]
         public async Task DecreaseStockAsync_ShouldDecreaseStockQuantity()
         {
@@ -109,6 +124,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that DecreaseStockAsync throws ArgumentException when quantity is invalid (zero or negative).
+        /// </summary>
         [Fact]
         public async Task DecreaseStockAsync_ShouldThrow_WhenQuantityIsInvalid()
         {
@@ -120,6 +138,9 @@ namespace WarehouseManagementSystem.Tests.Services
 
         #region MoveStockAsync Tests
 
+        /// <summary>
+        /// Verifies that MoveStockAsync correctly decreases stock in source warehouse and increases it in target warehouse.
+        /// </summary>
         [Fact]
         public async Task MoveStockAsync_ShouldMoveStockBetweenWarehouses()
         {
@@ -149,6 +170,9 @@ namespace WarehouseManagementSystem.Tests.Services
 
         #region Reservation Tests
 
+        /// <summary>
+        /// Verifies that ReserveStockAsync creates a reservation with correct quantity and updates reserved quantity.
+        /// </summary>
         [Fact]
         public async Task ReserveStockAsync_ShouldCreateReservation()
         {
@@ -164,6 +188,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that ReleaseReservationAsync releases a reservation and decreases reserved quantity.
+        /// </summary>
         [Fact]
         public async Task ReleaseReservationAsync_ShouldReleaseReservation()
         {
@@ -179,6 +206,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that CancelReservationAsync cancels a reservation and returns reserved quantity to available stock.
+        /// </summary>
         [Fact]
         public async Task CancelReservationAsync_ShouldCancelReservation()
         {
@@ -193,6 +223,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that ConfirmReservationAsync confirms a reservation, reducing available quantity and releasing reserved quantity.
+        /// </summary>
         [Fact]
         public async Task ConfirmReservationAsync_ShouldConfirmReservation()
         {
@@ -208,6 +241,9 @@ namespace WarehouseManagementSystem.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that ExpireReservationsAsync expires all reservations past their expiration date and releases their quantities.
+        /// </summary>
         [Fact]
         public async Task ExpireReservationsAsync_ShouldExpireAllExpiredReservations()
         {
