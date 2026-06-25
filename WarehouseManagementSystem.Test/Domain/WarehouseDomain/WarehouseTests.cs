@@ -221,7 +221,9 @@ public class WarehouseTests(DomainTestFixture fixture) : IClassFixture<DomainTes
         string country = "PL",
         string city = "City",
         string address = "Address")
-        => new(code, name, country, city, address, fixture.User);
+    {
+        return new(code, name, country, city, address, fixture.User);
+    }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Stock"/> class with the specified warehouse and zone IDs.
@@ -230,5 +232,7 @@ public class WarehouseTests(DomainTestFixture fixture) : IClassFixture<DomainTes
     /// <param name="zoneId">The ID of the zone.</param>
     /// <returns>A new instance of the <see cref="Stock"/> class.</returns>
     private static Stock CreateStock(Guid warehouseId, Guid zoneId)
-        => new(Guid.NewGuid(), warehouseId, zoneId, null, 10);
+    {
+        return new(Guid.NewGuid(), warehouseId, zoneId, null, 10);
+    }
 }

@@ -237,8 +237,11 @@ public class DocumentQueryServiceTests
     /// Creates a UserSnapshot instance with a predefined ID, email, and name for testing purposes.
     /// </summary>
     /// <returns>The created UserSnapshot instance.</returns>
-    private static UserSnapshot CreateUser() => new(
+    private static UserSnapshot CreateUser()
+    {
+        return new(
         Guid.Parse("11111111-1111-1111-1111-111111111111"),
         "wms.test@example.com",
         TestUserName);
+    }
 }

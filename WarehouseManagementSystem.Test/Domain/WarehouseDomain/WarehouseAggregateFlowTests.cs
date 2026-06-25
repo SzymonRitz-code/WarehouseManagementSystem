@@ -205,12 +205,12 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
     /// <returns>A new instance of the <see cref="Warehouse"/> class.</returns>
     private Warehouse CreateWarehouse()
         => new(
-            "WH01",
-            "Main Warehouse",
-            "Poland",
-            "Warsaw",
-            "ul. Example 1",
-            fixture.User);
+                "WH01",
+                "Main Warehouse",
+                "Poland",
+                "Warsaw",
+                "ul. Example 1",
+                fixture.User);
 
     /// <summary>
     /// Creates a new instance of the <see cref="Stock"/> class with predefined properties for testing purposes.

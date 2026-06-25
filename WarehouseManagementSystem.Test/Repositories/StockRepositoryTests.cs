@@ -15,7 +15,7 @@ namespace WarehouseManagementSystem.Tests.Infrastructure.Repositories;
 /// </summary>
 public class StockRepositoryTests
 {
-    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
+    private readonly Mock<IUserService> _userServiceMock = new();
     public StockRepositoryTests()
     {
         _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))

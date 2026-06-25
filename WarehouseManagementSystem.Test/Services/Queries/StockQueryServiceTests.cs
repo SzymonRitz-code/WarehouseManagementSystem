@@ -235,8 +235,11 @@ public class StockQueryServiceTests
     /// Creates a new UserSnapshot instance with predefined values for testing purposes. This helper method is used to provide a consistent user context for stock-related tests.
     /// </summary>
     /// <returns>A new UserSnapshot instance with predefined values for testing purposes.</returns>
-    private static UserSnapshot CreateUser() => new(
+    private static UserSnapshot CreateUser()
+    {
+        return new(
         Guid.Parse("22222222-2222-2222-2222-222222222222"),
         "stock.test@example.com",
         TestUserName);
+    }
 }

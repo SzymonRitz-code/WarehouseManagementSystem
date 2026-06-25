@@ -138,11 +138,14 @@ public class DocumentsControllerTests
     /// <param name="page">The page number.</param>
     /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A paged result of DocumentListDto.</returns>
-    private static PagedResult<DocumentListDto> CreatePagedDocumentsResult(int page, int pageSize) => new()
+    private static PagedResult<DocumentListDto> CreatePagedDocumentsResult(int page, int pageSize)
     {
-        Items = [],
-        Page = page,
-        PageSize = pageSize,
-        TotalItems = 0
-    };
+        return new()
+        {
+            Items = [],
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = 0
+        };
+    }
 }

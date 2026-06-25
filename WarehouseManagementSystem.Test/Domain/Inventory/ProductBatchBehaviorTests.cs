@@ -204,10 +204,10 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             DateOnly? manufacturedDate = null,
             DateOnly? expirationDate = null)
             => new(
-                _productId,
-                batchNumber,
-                fixture.User,
-                manufacturedDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
-                expirationDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)));
+                        _productId,
+                        batchNumber,
+                        fixture.User,
+                        manufacturedDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+                        expirationDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)));
+        }
     }
-}

@@ -109,11 +109,11 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
 
             if (oldSnapshot is not null && newSnapshot is not null)
             {
-                var changeSet = BuildChangeSet(oldSnapshot, newSnapshot);
-                oldValues = changeSet.OldValues;
-                newValues = changeSet.NewValues;
+                var (OldValues, NewValues) = BuildChangeSet(oldSnapshot, newSnapshot);
+                oldValues = OldValues;
+                newValues = NewValues;
 
-                if (changeSet.OldValues.Count == 0 && changeSet.NewValues.Count == 0)
+                if (OldValues.Count == 0 && NewValues.Count == 0)
                 {
                     return;
                 }

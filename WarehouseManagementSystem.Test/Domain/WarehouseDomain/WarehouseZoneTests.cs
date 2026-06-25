@@ -154,7 +154,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         TemperatureType temperatureType = TemperatureType.Ambient,
         bool isPickingZone = true,
         Guid? warehouseId = null)
-        => new(code, name, temperatureType, isPickingZone, warehouseId ?? Guid.NewGuid(), fixture.User);
+    {
+        return new(code, name, temperatureType, isPickingZone, warehouseId ?? Guid.NewGuid(), fixture.User);
+    }
 
     /// <summary>
     /// Creates a new instance of <see cref="Stock"/> associated with the specified <see cref="WarehouseZone"/> for testing purposes.
@@ -163,5 +165,7 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
     /// <param name="quantity">The quantity of the stock.</param>
     /// <returns>A new instance of <see cref="Stock"/>.</returns>
     private static Stock CreateStock(WarehouseZone zone, decimal quantity = 10m)
-        => new(Guid.NewGuid(), zone.WarehouseId, zone.Id, null, quantity);
+    {
+        return new(Guid.NewGuid(), zone.WarehouseId, zone.Id, null, quantity);
+    }
 }

@@ -64,7 +64,9 @@ public class DocumentCommandServiceOrchestrationTests
         Guid? productId = null,
         Guid? sourceZone = null,
         int quantity = 5)
-        => new(productId ?? Guid.NewGuid(), quantity, null, sourceZone ?? Guid.NewGuid(), null);
+    {
+        return new(productId ?? Guid.NewGuid(), quantity, null, sourceZone ?? Guid.NewGuid(), null);
+    }
 
     /// <summary>
     /// Builds a Draft document with one item — ready for service-level tests.
@@ -91,21 +93,28 @@ public class DocumentCommandServiceOrchestrationTests
     }
 
     private void SetupNumberGenerator(string number = "PZ/2024/001")
-        => _numberGeneratorMock
-            .Setup(x => x.GenerateAsync(
-                It.IsAny<DocumentType>(),
-                It.IsAny<Guid?>(),
-                It.IsAny<DateTimeOffset>()))
-            .ReturnsAsync(number);
+    {
+        _numberGeneratorMock
+                .Setup(x => x.GenerateAsync(
+                    It.IsAny<DocumentType>(),
+                    It.IsAny<Guid?>(),
+                    It.IsAny<DateTimeOffset>()))
+                .ReturnsAsync(number);
+    }
 
     private void SetupDocumentGetDocumentWithItems(Document doc)
-        => _unitOfWorkMock
-            .Setup(x => x.Documents.GetDocumentWithItems(doc.Id))
-            .ReturnsAsync(doc);
+    {
+        _unitOfWorkMock
+                .Setup(x => x.Documents.GetDocumentWithItems(doc.Id))
+                .ReturnsAsync(doc);
+    }
+
     private void SetupDocumentFind(Document doc)
-    => _unitOfWorkMock
-        .Setup(x => x.Documents.FindAsync(doc.Id))
-        .ReturnsAsync(doc);
+    {
+        _unitOfWorkMock
+            .Setup(x => x.Documents.FindAsync(doc.Id))
+            .ReturnsAsync(doc);
+    }
 
     #endregion
 

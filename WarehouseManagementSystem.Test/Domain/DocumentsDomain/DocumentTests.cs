@@ -16,7 +16,7 @@ namespace WarehouseManagementSystem.Tests.Domain.DocumentsDomain;
 /// </summary>
 public class DocumentTests
 {
-    private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
+    private readonly Mock<IUserService> _userServiceMock = new();
 
     public DocumentTests()
     {
