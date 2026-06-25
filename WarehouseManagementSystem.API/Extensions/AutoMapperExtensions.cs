@@ -10,6 +10,8 @@
 
     public static class AutoMapperExtensions
     {
+        #region Mapping Registration
+
         /// <summary>
         /// Adds all the necessary mappings for the WMS application to the AutoMapper configuration.
         /// </summary>
@@ -27,6 +29,11 @@
             cfg.AddDocumentItemMappings();
 
         }
+
+        #endregion
+
+        #region Audit and Inventory Mappings
+
         /// <summary>
         /// Adds the mappings for the AuditLog entity to the AutoMapper configuration.
         /// </summary>
@@ -57,6 +64,11 @@
         {
             cfg.CreateMap<StockReservation, StockReservationDto>();
         }
+
+        #endregion
+
+        #region Catalog and Warehouse Mappings
+
         /// <summary>
         /// Adds the mappings for the Product entity to the AutoMapper configuration.
         /// </summary>
@@ -92,6 +104,11 @@
             cfg.CreateMap<ProductBatch, ProductBatchDto>()
                 .ForMember(dto => dto.ProductName, opt => opt.MapFrom(pb => pb.Product.Name));
         }
+
+        #endregion
+
+        #region Document Mappings
+
         /// <summary>
         /// Adds the mappings for the Document entity to the AutoMapper configuration.
         /// </summary>
@@ -120,6 +137,8 @@
                 .ForMember(dto => dto.SourceZoneName, opt => opt.MapFrom(di => di.SourceZone != null ? di.SourceZone.Name : null))
                 .ForMember(dto => dto.TargetZoneName, opt => opt.MapFrom(di => di.TargetZone != null ? di.TargetZone.Name : null));
         }
+
+        #endregion
 
     }
 }

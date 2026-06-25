@@ -4,6 +4,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Seed;
 
 public static partial class DbSeeder
 {
+    #region Catalog Models
+
     private sealed record Weighted<T>(T Value, int Weight);
 
     private sealed record Category(
@@ -14,6 +16,10 @@ public static partial class DbSeeder
         string[] PackSizes,
         IReadOnlyList<Weighted<UnitOfMeasure>> Units,
         int BatchTrackingPercent);
+
+    #endregion
+
+    #region Product Catalog
 
     private static class ProductCatalog
     {
@@ -134,4 +140,6 @@ public static partial class DbSeeder
             return units;
         }
     }
+
+    #endregion
 }

@@ -7,12 +7,18 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 
 public class ProductQueryService : IProductQueryService
 {
+    #region Fields and Constructor
+
     private readonly WarehouseManagementSystemDbContext _context;
 
     public ProductQueryService(WarehouseManagementSystemDbContext context)
     {
         _context = context;
     }
+
+    #endregion
+
+    #region Product Query Operations
 
     public async Task<IReadOnlyList<ProductListDto>> GetProductsAsync(CancellationToken ct = default)
     {
@@ -81,6 +87,10 @@ public class ProductQueryService : IProductQueryService
             })
             .FirstOrDefaultAsync(ct);
     }
+
+    #endregion
+
+    #region Query Helpers
 
     private IQueryable<Product> BuildProductListQuery()
     {
@@ -152,4 +162,6 @@ public class ProductQueryService : IProductQueryService
                 : products.OrderBy(p => p.SKU)
         };
     }
+
+    #endregion
 }

@@ -10,6 +10,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Seed;
 
 public static partial class DbSeeder
 {
+    #region Seed Result and Sequence Generation
+
     private sealed record DocumentSeedResult(
         int Documents,
         int DocumentItems,
@@ -29,6 +31,10 @@ public static partial class DbSeeder
             })
             .ToList();
     }
+
+    #endregion
+
+    #region Document Generation
 
     private static async Task<DocumentSeedResult> GenerateDocumentsAsync(
         WarehouseManagementSystemDbContext db,
@@ -213,6 +219,10 @@ public static partial class DbSeeder
             sequenceCounters);
     }
 
+    #endregion
+
+    #region Operational Error Handling
+
     private static InvalidOperationException CreateOperationalSeedException(
         string message,
         Exception innerException,
@@ -240,6 +250,10 @@ public static partial class DbSeeder
             $"RemainingItems={remainingItems}.",
             innerException);
     }
+
+    #endregion
+
+    #region Document Item Generation
 
     private static int CalculateDocumentItemCount(
         Random random,
@@ -383,6 +397,10 @@ public static partial class DbSeeder
             targetZoneId);
     }
 
+    #endregion
+
+    #region Document Status and Type Selection
+
     private static void ApplyOperationalStatus(Random random, Document document)
     {
         var roll = random.Next(100);
@@ -415,6 +433,10 @@ public static partial class DbSeeder
             _ => DocumentType.ADJ
         };
     }
+
+    #endregion
+
+    #region Warehouse and Zone Selection
 
     private static Warehouse PickWarehouseWithAvailableStock(
         Random random,
@@ -476,6 +498,10 @@ public static partial class DbSeeder
         return eligibleZones[random.Next(eligibleZones.Count)];
     }
 
+    #endregion
+
+    #region Quantity Generation
+
     private static decimal GenerateMovementQuantity(Random random, UnitOfMeasure unit)
     {
         var quantity = unit switch
@@ -513,4 +539,6 @@ public static partial class DbSeeder
 
         return Math.Round(quantity, 2);
     }
+
+    #endregion
 }

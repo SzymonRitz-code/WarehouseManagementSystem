@@ -13,6 +13,8 @@ namespace WarehouseManagementSystem.API.Services.Documents;
 
 public class DocumentCommandService : IDocumentCommandService
 {
+    #region Fields and Constructor
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IStockService _stockService;
     private readonly IDocumentNumberGenerator _numberGenerator;
@@ -35,6 +37,10 @@ public class DocumentCommandService : IDocumentCommandService
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
         _clock = systemClock ?? throw new ArgumentNullException(nameof(systemClock));
     }
+
+    #endregion
+
+    #region Create and Update Operations
 
     public async Task<Document> CreateDocumentAsync(
         DocumentType type,
@@ -139,6 +145,10 @@ public class DocumentCommandService : IDocumentCommandService
         return document;
     }
 
+    #endregion
+
+    #region Confirm Operation
+
     public async Task ConfirmDocumentAsync(Guid documentId, UserSnapshot confirmedBy, CancellationToken ct = default)
     {
         _logger.LogInformation("Confirming document {DocumentId} by {UserId}", documentId, confirmedBy.Id);
@@ -223,6 +233,10 @@ public class DocumentCommandService : IDocumentCommandService
         _logger.LogInformation("Document {DocumentId} confirmed by {UserId}", documentId, confirmedBy.Id);
     }
 
+    #endregion
+
+    #region Cancel Operation
+
     public async Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default)
     {
         var document = await _unitOfWork.Documents.FindAsync(documentId)
@@ -271,6 +285,10 @@ public class DocumentCommandService : IDocumentCommandService
         _logger.LogInformation("Document {DocumentId} canceled by {UserId}", documentId, canceledBy.Id);
     }
 
+    #endregion
+
+    #region Helper Methods
+
     private async Task<Document> GetDocumentWithItemsOrThrowAsync(Guid documentId)
     {
         return await _unitOfWork.Documents.GetDocumentWithItems(documentId)
@@ -281,4 +299,6 @@ public class DocumentCommandService : IDocumentCommandService
     {
         return items?.ToList() ?? throw new ArgumentNullException(nameof(items));
     }
+
+    #endregion
 }

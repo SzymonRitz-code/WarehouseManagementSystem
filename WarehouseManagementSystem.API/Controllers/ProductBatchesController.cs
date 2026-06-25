@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
@@ -15,6 +15,8 @@ namespace WarehouseManagementSystem.API.Controllers;
 [Route("api/batches")]
 public class ProductBatchesController : ControllerBase
 {
+    #region Fields and Constructor
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IProductBatchQueryService _productBatchQueryService;
@@ -37,6 +39,9 @@ public class ProductBatchesController : ControllerBase
         _userService = userService;
     }
 
+    #endregion
+
+    #region Query Actions
 
     /// <summary>
     /// Gets batches assigned to the specified product.
@@ -72,10 +77,6 @@ public class ProductBatchesController : ControllerBase
         return Ok(batch);
     }
 
-    // ===========================
-    // MODE 2 — Global
-    // ===========================
-
     /// <summary>
     /// Gets the list of all product batches.
     /// </summary>
@@ -109,8 +110,11 @@ public class ProductBatchesController : ControllerBase
 
         return Ok(result);
     }
-    // przy wielu trybach HttpPost musi odpowiadać URL GET zwaracnemu w return inaczej aplikacja zwraca 405 not allowed
-    //[HttpPost]
+
+    #endregion
+
+    #region Create, Update and Delete Actions
+
     /// <summary>
     /// Creates a new product batch.
     /// </summary>
@@ -166,8 +170,6 @@ public class ProductBatchesController : ControllerBase
         }
 
         var createdDto = _mapper.Map<ProductBatchDto>(batch);
-        // Gdy mam sub-path trzeba dodać wszystkie zeminne w route(tutaj productId i Batch) 
-        // CreatedAtAction i created at route działają bardzo podobnie i korzystają z UrlHelper i oba kierują do zasobu GET
         return CreatedAtAction(nameof(GetBatchByProduct), new { productId = batch.ProductId, batchId = batch.Id }, createdDto);
     }
 
@@ -185,12 +187,9 @@ public class ProductBatchesController : ControllerBase
     [HttpPut("/api/products/{productId:guid}/batches/{batchId:guid}")]
     public async Task<ActionResult<ProductBatchDto>> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto)
     {
-        // można użyć wersję z kursu REST API. Wersja gdzie robię patch obiektu o pola które uległy zmiane => zabezpiecza przez nadpisaniem danych nie wypełnianych w formularzu
-        // Wybrałem wewrsję w której aktualizuję tylko edytowalne pola
         if (batchId != batchDto.Id) return BadRequest("Route ID and body ID mismatch.");
 
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
-
 
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
         if (batch == null) return NotFound();
@@ -221,7 +220,6 @@ public class ProductBatchesController : ControllerBase
             throw;
         }
 
-        // zwracam OK zamiast NoContent żeby móc korzystać z Id obiektu który edytuję
         var updatedBatch = await _productBatchQueryService.GetProductBatchDetails(batchId);
         return Ok(updatedBatch);
     }
@@ -265,6 +263,10 @@ public class ProductBatchesController : ControllerBase
         return NoContent();
     }
 
+    #endregion
+
+    #region Options Action
+
     /// <summary>
     /// Returns the available HTTP methods supported by the product batches controller.
     /// </summary>
@@ -278,4 +280,6 @@ public class ProductBatchesController : ControllerBase
         Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
         return Ok();
     }
+
+    #endregion
 }

@@ -23,6 +23,7 @@ using WarehouseManagementSystem.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#region MVC and API Behavior
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // wyłączenie mapowania claimów JWT na standardowe nazwy claimów w .NET, dzięki temu nazwy claimów w tokenie JWT będą takie same jak w aplikacji, bez tego np. "sub" byłby mapowany na ClaimTypes.NameIdentifier, a "role" na ClaimTypes.Role, co może powodować problemy z autoryzacją jeśli w tokenie są niestandardowe nazwy claimów.
 // Add services to the container.
@@ -64,6 +65,11 @@ builder.Services.AddControllers(options =>
     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
 }).AddWmsApiBehavior();
 builder.Services.AddEndpointsApiExplorer();
+
+#endregion
+
+#region Swagger and Logging
+
 builder.Services.AddSwaggerGen(o =>
 {
     o.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()  // JWT token dla serwera
@@ -94,6 +100,11 @@ builder.Host.UseSerilog((ctx, lc) => lc
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
     .Enrich.FromLogContext()
     .ReadFrom.Configuration(ctx.Configuration));
+
+#endregion
+
+#region Database and Application Services
+
 builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
 {
     options.UseSqlServer(
@@ -127,6 +138,9 @@ builder.Services.AddHostedService<ReservationExpirationJob>();
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
 builder.Services.AddSingleton<IUserService, UserService>();
 
+#endregion
+
+#region Mapping and CORS
 
 builder.Services.AddAutoMapper(cfg =>
 {
@@ -145,6 +159,11 @@ builder.Services.AddCors(options =>
                   .AllowAnyMethod();
         });
 });
+
+#endregion
+
+#region Authentication and Authorization
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
@@ -220,6 +239,11 @@ builder.Services.AddAuthorization(o =>
     //o.AddPolicy("isemployee", p => p.RequireClaim("employeeno"));
 });
 builder.Services.AddResponseCaching();
+
+#endregion
+
+#region HTTP Pipeline
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -242,3 +266,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+#endregion

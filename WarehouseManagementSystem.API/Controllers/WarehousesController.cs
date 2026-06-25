@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +16,8 @@ namespace WarehouseManagementSystem.API.Controllers;
 [Route("api/[controller]")]
 public class WarehousesController : ControllerBase
 {
+    #region Fields and Constructor
+
     private readonly IStockQueryService _stockQueryService;
     private readonly IWarehouseQueryService _warehouseQueryService;
     private readonly IUnitOfWork _unitOfWork;
@@ -41,6 +43,10 @@ public class WarehousesController : ControllerBase
         _logger = logger;
         _userService = userService;
     }
+
+    #endregion
+
+    #region Query Actions
 
     /// <summary>
     /// Gets all stock records in the selected warehouse.
@@ -100,6 +106,11 @@ public class WarehousesController : ControllerBase
 
         return Ok(warehouse);
     }
+
+    #endregion
+
+    #region Create, Update and Delete Actions
+
     /// <summary>
     /// Creates a new warehouse.
     /// </summary>
@@ -175,7 +186,6 @@ public class WarehousesController : ControllerBase
         if (warehouseDto.IsActive) { warehouse.Activate(); }
         else { warehouse.Deactivate(); }
 
-
         try
         {
             var user = _userService.GetUser(HttpContext);
@@ -203,8 +213,6 @@ public class WarehousesController : ControllerBase
 
         return NoContent();
     }
-
-
 
     /// <summary>
     /// Deletes a warehouse.
@@ -245,10 +253,18 @@ public class WarehousesController : ControllerBase
         return NoContent();
     }
 
+    #endregion
+
+    #region Helper Methods
+
     private bool WarehouseExists(Guid warehouseId)
     {
         return _unitOfWork.Warehouses.Any(w => w.Id == warehouseId);
     }
+
+    #endregion
+
+    #region Options Action
 
     /// <summary>
     /// Returns the available HTTP methods supported by the warehouses controller.
@@ -260,4 +276,6 @@ public class WarehousesController : ControllerBase
         Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
         return Ok();
     }
+
+    #endregion
 }

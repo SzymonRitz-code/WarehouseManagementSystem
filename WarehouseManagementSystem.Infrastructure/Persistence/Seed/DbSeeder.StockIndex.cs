@@ -4,6 +4,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Seed;
 
 public static partial class DbSeeder
 {
+    #region Stock Seed State Model
+
     private readonly record struct StockSeedKey(
         Guid ProductId,
         Guid WarehouseId,
@@ -44,6 +46,10 @@ public static partial class DbSeeder
             Available -= quantity;
         }
     }
+
+    #endregion
+
+    #region Stock Seed Index
 
     private sealed class StockSeedIndex
     {
@@ -190,4 +196,6 @@ public static partial class DbSeeder
             _availableWarehouseIndexes.Remove(warehouseId);
         }
     }
+
+    #endregion
 }

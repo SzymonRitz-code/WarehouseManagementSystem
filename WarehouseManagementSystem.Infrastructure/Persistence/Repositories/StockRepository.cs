@@ -8,6 +8,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
 
 public class StockRepository : IStockRepository
 {
+    #region Fields and Constructor
+
     private readonly WarehouseManagementSystemDbContext _context;
 
     public StockRepository(WarehouseManagementSystemDbContext context)
@@ -15,9 +17,9 @@ public class StockRepository : IStockRepository
         _context = context;
     }
 
-    // ===========================
-    // COMMAND METHODS (StockService)
-    // ===========================
+    #endregion
+
+    #region Command Methods
 
     public void Add(Stock entity) => _context.Stocks.Add(entity);
 
@@ -41,9 +43,9 @@ public class StockRepository : IStockRepository
                 s.ProductBatchId == batchId);
     }
 
-    // ===========================
-    // QUERY METHODS (StockQueryService)
-    // ===========================
+    #endregion
+
+    #region Query Methods
 
     public async Task<IEnumerable<Stock>> AllAsNoTrackingAsync()
     {
@@ -70,9 +72,9 @@ public class StockRepository : IStockRepository
                 s.ProductBatchId == batchId);
     }
 
-    // ===========================
-    // STOCK RESERVATIONS QUERIES
-    // ===========================
+    #endregion
+
+    #region Stock Reservation Queries
 
     public async Task<IReadOnlyList<StockReservation>> GetActiveReservationsAsync(Guid stockId)
     {
@@ -122,4 +124,6 @@ public class StockRepository : IStockRepository
             .Where(s => s.StockId == stockId)
             .ToListAsync();
     }
+
+    #endregion
 }

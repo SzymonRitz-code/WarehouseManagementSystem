@@ -50,7 +50,8 @@ public class WarehouseManagementSystemDbContext : DbContext
         base.OnModelCreating(modelBuilder);
     }
 
-    // ================= INVENTORY =================
+    #region Inventory Configuration
+
     private void ConfigureStock(ModelBuilder modelBuilder)
     {
         var builder = modelBuilder.Entity<Stock>();
@@ -164,7 +165,10 @@ public class WarehouseManagementSystemDbContext : DbContext
         builder.HasIndex(x => new { x.ProductId });
     }
 
-    // ================= WAREHOUSE =================
+    #endregion
+
+    #region Warehouse Configuration
+
     private void ConfigureWarehouse(ModelBuilder modelBuilder)
     {
         var builder = modelBuilder.Entity<Warehouse>();
@@ -252,7 +256,10 @@ public class WarehouseManagementSystemDbContext : DbContext
         }).IsUnique();
     }
 
-    // ================= CATALOG =================
+    #endregion
+
+    #region Catalog Configuration
+
     private void ConfigureProduct(ModelBuilder modelBuilder)
     {
         var builder = modelBuilder.Entity<Product>();
@@ -291,7 +298,10 @@ public class WarehouseManagementSystemDbContext : DbContext
         }).IsUnique();
     }
 
-    // ================= DOCUMENTS =================
+    #endregion
+
+    #region Documents Configuration
+
     private void ConfigureDocument(ModelBuilder modelBuilder)
     {
         var builder = modelBuilder.Entity<Document>();
@@ -452,7 +462,10 @@ public class WarehouseManagementSystemDbContext : DbContext
             .IsUnique();
     }
 
-    // ================= AUDIT =================
+    #endregion
+
+    #region Audit Configuration
+
     private void ConfigureAuditLog(ModelBuilder modelBuilder)
     {
         var builder = modelBuilder.Entity<AuditLog>();
@@ -492,4 +505,6 @@ public class WarehouseManagementSystemDbContext : DbContext
 
         builder.HasIndex(x => new { x.EntityName, x.EntityId });
     }
+
+    #endregion
 }

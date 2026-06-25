@@ -10,6 +10,8 @@ namespace WarehouseManagementSystem.API.Services.Documents;
 /// </summary>
 public interface IDocumentCommandService
 {
+    #region Draft Document Operations
+
     /// <summary>
     /// Creates a new document in draft status.
     /// </summary>
@@ -64,6 +66,10 @@ public interface IDocumentCommandService
         string? notes,
         CancellationToken ct = default);
 
+    #endregion
+
+    #region Workflow Operations
+
     /// <summary>
     /// Confirms a document and performs the resulting stock operations.
     /// </summary>
@@ -95,4 +101,6 @@ public interface IDocumentCommandService
     /// <exception cref="ReservationNotFoundException">Thrown when a related reservation does not exist during release.</exception>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default);
+
+    #endregion
 }

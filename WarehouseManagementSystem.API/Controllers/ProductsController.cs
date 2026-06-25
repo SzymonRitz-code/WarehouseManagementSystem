@@ -15,6 +15,8 @@ namespace WarehouseManagementSystem.API.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
+    #region Fields and Constructor
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IProductQueryService _productQueryService;
@@ -39,6 +41,10 @@ public class ProductsController : ControllerBase
         _logger = logger;
         _userService = userService;
     }
+
+    #endregion
+
+    #region Query Actions
 
     /// <summary>
     /// Gets the product list.
@@ -85,6 +91,10 @@ public class ProductsController : ControllerBase
 
         return Ok(product);
     }
+
+    #endregion
+
+    #region Create and Update Actions
 
     /// <summary>
     /// Creates a new product.
@@ -205,6 +215,10 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    #endregion
+
+    #region Delete Action
+
     /// <summary>
     /// Deletes a product.
     /// </summary>
@@ -244,6 +258,10 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    #endregion
+
+    #region Stock Query Actions
+
     private bool ProductExists(Guid id) => _unitOfWork.Products.Any(p => p.Id == id);
 
     /// <summary>
@@ -275,6 +293,10 @@ public class ProductsController : ControllerBase
         return Ok(available);
     }
 
+    #endregion
+
+    #region Options Action
+
     /// <summary>
     /// Returns the available HTTP methods supported by the products controller.
     /// </summary>
@@ -285,4 +307,6 @@ public class ProductsController : ControllerBase
         Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
         return Ok();
     }
+
+    #endregion
 }

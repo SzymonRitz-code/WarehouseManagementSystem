@@ -9,6 +9,8 @@ namespace WarehouseManagementSystem.Domain.Services;
 /// </summary>
 public interface IStockService
 {
+    #region Stock Quantity Operations
+
     /// <summary>
     /// Gets an existing stock record for the product and location, or creates a new one with zero quantity.
     /// </summary>
@@ -43,6 +45,10 @@ public interface IStockService
     /// <exception cref="ArgumentException">Thrown when <paramref name="quantity"/> is less than or equal to zero.</exception>
     /// <exception cref="InsufficientStockException">Thrown when the available quantity is lower than the quantity to subtract.</exception>
     Task DecreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId);
+
+    #endregion
+
+    #region Reservation Operations
 
     /// <summary>
     /// Reserves part of the available stock quantity.
@@ -96,6 +102,10 @@ public interface IStockService
     /// <returns>A task representing the reservation expiration operation.</returns>
     Task ExpireReservationsAsync();
 
+    #endregion
+
+    #region Movement Operations
+
     /// <summary>
     /// Moves product quantity between warehouse locations.
     /// </summary>
@@ -110,4 +120,6 @@ public interface IStockService
     /// <exception cref="ArgumentException">Thrown when <paramref name="quantity"/> is less than or equal to zero.</exception>
     /// <exception cref="InsufficientStockException">Thrown when the available quantity in the source location is lower than the quantity to move.</exception>
     Task MoveStockAsync(Guid productId, Guid sourceWarehouseId, Guid sourceZoneId, Guid targetWarehouseId, Guid targetZoneId, decimal quantity, Guid? batchId);
+
+    #endregion
 }

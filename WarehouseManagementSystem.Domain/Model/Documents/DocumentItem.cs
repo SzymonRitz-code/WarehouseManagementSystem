@@ -7,6 +7,8 @@ namespace WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 
 public class DocumentItem
 {
+    #region Constructors
+
     private DocumentItem() { } // EF Core
 
     public DocumentItem(
@@ -23,6 +25,10 @@ public class DocumentItem
         SourceZoneId = sourceZoneId;
         TargetZoneId = targetZoneId;
     }
+
+    #endregion
+
+    #region Properties
 
     public Guid Id { get; private set; }
     public decimal Quantity { get; private set; }
@@ -42,7 +48,9 @@ public class DocumentItem
     public Guid? TargetZoneId { get; private set; }
     public WarehouseZone? TargetZone { get; private set; }
 
-    // ===== Business Methods =====
+    #endregion
+
+    #region Business Methods
 
     public void SetQuantity(decimal quantity)
     {
@@ -122,4 +130,6 @@ public class DocumentItem
                 break;
         }
     }
+
+    #endregion
 }

@@ -9,6 +9,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Seed;
 
 public static partial class DbSeeder
 {
+    #region Warehouse Generation
+
     private static List<Warehouse> GenerateWarehouses(Random random, Faker faker, int warehouseCount, int zonesPerWarehouse)
     {
         var warehouseTemplates = new[]
@@ -89,6 +91,10 @@ public static partial class DbSeeder
         }
     }
 
+    #endregion
+
+    #region Product Generation
+
     private static List<Product> GenerateProducts(Random random, Faker faker, int count)
     {
         var categories = ProductCatalog.Categories;
@@ -166,6 +172,10 @@ public static partial class DbSeeder
         return $"{category.Name}; brand {brand}; pack {pack}; unit {unit}; {batchInfo}. {handling}";
     }
 
+    #endregion
+
+    #region Product Batch Generation
+
     private static List<ProductBatch> GenerateProductBatches(
         Random random,
         IReadOnlyCollection<Product> products,
@@ -213,6 +223,10 @@ public static partial class DbSeeder
 
         return batches;
     }
+
+    #endregion
+
+    #region Stock Generation
 
     private static List<Stock> GenerateStocks(
         Random random,
@@ -326,6 +340,10 @@ public static partial class DbSeeder
         return Math.Max(1m, Math.Round(quantity * pickingFactor, 2));
     }
 
+    #endregion
+
+    #region Dimension and User Helpers
+
     private static (decimal? Weight, decimal? Volume) EstimateDimensions(
         Random random,
         UnitOfMeasure unit,
@@ -384,4 +402,6 @@ public static partial class DbSeeder
 
         return weighted[^1].Value;
     }
+
+    #endregion
 }
