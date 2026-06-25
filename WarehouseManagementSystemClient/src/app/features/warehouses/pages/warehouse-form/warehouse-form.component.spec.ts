@@ -62,6 +62,45 @@ describe('WarehouseFormComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/warehouses/detail/wh-created');
   });
 
+  it('lets a user fill and submit the create form from the rendered UI', async () => {
+    await setup();
+    warehouseService.addWarehouse.mockReturnValue(of({ id: 'wh-created', ...validWarehousePayload(), isActive: true }));
+
+    setInputValue('app-input-field[formcontrolname="code"] input', 'MAIN');
+    setInputValue('app-input-field[formcontrolname="name"] input', 'Main Warehouse');
+    setInputValue('app-input-field[formcontrolname="country"] input', 'Poland');
+    setInputValue('app-input-field[formcontrolname="city"] input', 'Warsaw');
+    setInputValue('app-input-field[formcontrolname="address"] input', 'Main Street 1');
+    fixture.detectChanges();
+
+    buttonByText('Save').click();
+    await fixture.whenStable();
+
+    expect(warehouseService.addWarehouse).toHaveBeenCalledWith({
+      code: 'MAIN',
+      name: 'Main Warehouse',
+      country: 'Poland',
+      city: 'Warsaw',
+      address: 'Main Street 1'
+    });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/warehouses/detail/wh-created');
+  });
+
+  it('keeps save disabled in the rendered UI when required fields are empty', async () => {
+    await setup();
+
+    setInputValue('app-input-field[formcontrolname="code"] input', '');
+    setInputValue('app-input-field[formcontrolname="name"] input', '');
+    fixture.detectChanges();
+
+    const saveButton = buttonByText('Save');
+    expect(saveButton.disabled).toBe(true);
+
+    saveButton.click();
+
+    expect(warehouseService.addWarehouse).not.toHaveBeenCalled();
+  });
+
   it('loads existing warehouse into edit form', async () => {
     const existingWarehouse = warehouseFixture();
     await setup('wh-1', {
@@ -193,5 +232,20 @@ describe('WarehouseFormComponent', () => {
       id: 'wh-1',
       ...validWarehousePayload()
     };
+  }
+
+  function setInputValue(selector: string, value: string): void {
+    const input = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function buttonByText(text: string): HTMLButtonElement {
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const button = buttons.find(candidate => candidate.textContent?.trim() === text);
+    if (!button) {
+      throw new Error(`Button "${text}" was not found.`);
+    }
+    return button;
   }
 });

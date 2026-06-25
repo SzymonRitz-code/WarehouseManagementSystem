@@ -53,6 +53,64 @@ describe('UserFormComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/users/detail/2');
   });
 
+  it('lets a user fill and submit the create form from the rendered UI', async () => {
+    await setup(null, {
+      userServiceOverrides: {
+        addUser: vi.fn().mockReturnValue({
+          id: '2',
+          username: 'operator',
+          firstName: 'Warehouse',
+          lastName: 'Operator',
+          email: 'operator@example.com',
+          role: 'Operator',
+          status: 'true',
+          createdAt: new Date('2026-06-22T08:00:00Z')
+        })
+      }
+    });
+
+    setInputValue('app-input-field[formcontrolname="email"] input', 'operator@example.com');
+    setInputValue('app-input-field[formcontrolname="username"] input', 'operator');
+    setInputValue('app-input-field[formcontrolname="firstName"] input', 'Warehouse');
+    setInputValue('app-input-field[formcontrolname="lastName"] input', 'Operator');
+    setInputValue('app-input-field[formcontrolname="role"] input', 'Operator');
+    setInputValue('app-input-field[formcontrolname="status"] input', 'true');
+    fixture.detectChanges();
+
+    buttonByText('Save').click();
+    await fixture.whenStable();
+
+    expect(userService.addUser).toHaveBeenCalledWith({
+      id: '',
+      username: 'operator',
+      firstName: 'Warehouse',
+      lastName: 'Operator',
+      email: 'operator@example.com',
+      role: 'Operator',
+      status: 'true'
+    });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/users/detail/2');
+  });
+
+  it('keeps save disabled in the rendered UI when email is invalid', async () => {
+    await setup();
+
+    setInputValue('app-input-field[formcontrolname="email"] input', 'not-an-email');
+    setInputValue('app-input-field[formcontrolname="username"] input', 'operator');
+    setInputValue('app-input-field[formcontrolname="firstName"] input', 'Warehouse');
+    setInputValue('app-input-field[formcontrolname="lastName"] input', 'Operator');
+    setInputValue('app-input-field[formcontrolname="role"] input', 'Operator');
+    setInputValue('app-input-field[formcontrolname="status"] input', 'true');
+    fixture.detectChanges();
+
+    const saveButton = buttonByText('Save');
+    expect(saveButton.disabled).toBe(true);
+
+    saveButton.click();
+
+    expect(userService.addUser).not.toHaveBeenCalled();
+  });
+
   it('loads edit form from local user cache without calling users endpoint', async () => {
     const cachedUser = userFixture();
     await setup('1', {
@@ -178,5 +236,20 @@ describe('UserFormComponent', () => {
       ...validUserPayload(),
       createdAt: new Date('2026-06-22T08:00:00Z')
     };
+  }
+
+  function setInputValue(selector: string, value: string): void {
+    const input = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function buttonByText(text: string): HTMLButtonElement {
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const button = buttons.find(candidate => candidate.textContent?.trim() === text);
+    if (!button) {
+      throw new Error(`Button "${text}" was not found.`);
+    }
+    return button;
   }
 });

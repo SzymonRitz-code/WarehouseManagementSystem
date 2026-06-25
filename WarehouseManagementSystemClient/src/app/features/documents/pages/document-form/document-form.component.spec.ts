@@ -74,6 +74,63 @@ describe('DocumentFormComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/documents/detail/doc-created');
   });
 
+  it('lets a user fill document header fields and submit from the rendered UI', async () => {
+    await setup(null, {
+      warehouseService: { getWarehouses: vi.fn().mockReturnValue(of([
+        { id: 'wh-1', code: 'MAIN', name: 'Main Warehouse' },
+        { id: 'wh-2', code: 'DOCK', name: 'Dock Warehouse' }
+      ])) }
+    });
+    documentService.addDocument.mockReturnValue(of({ id: 'doc-created' }));
+
+    component.documentForm.patchValue({ documentDate: new Date('2026-06-22T00:00:00Z') });
+    addValidItemFromParentFlow();
+    setSelectValue('app-input-select[formcontrolname="type"] select', DocumentType.PZ);
+    setSelectValue('app-input-select[formcontrolname="sourceWarehouseId"] select', 'wh-1');
+    setSelectValue('app-input-select[formcontrolname="targetWarehouseId"] select', 'wh-2');
+    setTextAreaValue('app-text-area[formcontrolname="notes"] textarea', 'Delivery from supplier');
+    fixture.detectChanges();
+
+    buttonByText('Save').click();
+    await fixture.whenStable();
+
+    expect(documentService.addDocument).toHaveBeenCalledWith({
+      documentDate: '2026-06-22',
+      type: DocumentType.PZ,
+      notes: 'Delivery from supplier',
+      sourceWarehouseId: 'wh-1',
+      targetWarehouseId: 'wh-2',
+      items: [
+        {
+          productId: 'prod-1',
+          quantity: 12,
+          sourceZoneId: 'zone-1',
+          targetZoneId: 'zone-2',
+          productBatchId: 'batch-1'
+        }
+      ]
+    });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/documents/detail/doc-created');
+  });
+
+  it('keeps save disabled in the rendered UI while the document has no items', async () => {
+    await setup();
+
+    component.documentForm.patchValue({
+      documentDate: new Date('2026-06-22T00:00:00Z'),
+      type: DocumentType.PZ,
+      sourceWarehouseId: 'wh-1'
+    });
+    fixture.detectChanges();
+
+    const saveButton = buttonByText('Save');
+    expect(saveButton.disabled).toBe(true);
+
+    saveButton.click();
+
+    expect(documentService.addDocument).not.toHaveBeenCalled();
+  });
+
   it('loads existing document into form including document item FormArray', async () => {
     const existingDocument = documentFixture();
     await setup('doc-1', {
@@ -206,6 +263,17 @@ describe('DocumentFormComponent', () => {
     }));
   }
 
+  function addValidItemFromParentFlow(): void {
+    const items = component.documentForm.get('items') as FormArray;
+    items.push(new FormBuilder().group({
+      productId: ['prod-1', Validators.required],
+      quantity: [12, Validators.required],
+      productBatchId: ['batch-1'],
+      sourceZoneId: ['zone-1'],
+      targetZoneId: ['zone-2']
+    }));
+  }
+
   function documentFixture(): Document {
     return {
       id: 'doc-1',
@@ -230,5 +298,26 @@ describe('DocumentFormComponent', () => {
         }
       ]
     };
+  }
+
+  function setTextAreaValue(selector: string, value: string): void {
+    const textarea = fixture.nativeElement.querySelector(selector) as HTMLTextAreaElement;
+    textarea.value = value;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function setSelectValue(selector: string, value: string): void {
+    const select = fixture.nativeElement.querySelector(selector) as HTMLSelectElement;
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function buttonByText(text: string): HTMLButtonElement {
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const button = buttons.find(candidate => candidate.textContent?.trim() === text);
+    if (!button) {
+      throw new Error(`Button "${text}" was not found.`);
+    }
+    return button;
   }
 });

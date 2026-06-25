@@ -83,6 +83,53 @@ describe('ZoneFormComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/zones/detail/zone-created');
   });
 
+  it('lets a user fill and submit the create form from the rendered UI', async () => {
+    await setup(null, {
+      warehouseServiceOverrides: {
+        getWarehouses: vi.fn().mockReturnValue(of([
+          { id: 'wh-1', code: 'MAIN', name: 'Main Warehouse' }
+        ]))
+      }
+    });
+    zoneService.addZone.mockReturnValue(of({ id: 'zone-created', ...validZonePayload() }));
+
+    setInputValue('app-input-field[formcontrolname="code"] input', 'A-01');
+    setInputValue('app-input-field[formcontrolname="name"] input', 'Picking A-01');
+    setSelectValue('app-input-select[formcontrolname="temperatureType"] select', TemperatureType.Ambient);
+    setCheckboxValue('app-checkbox[formcontrolname="isPickingZone"] input', true);
+    setSelectValue('app-input-select[formcontrolname="warehouseId"] select', 'wh-1');
+    fixture.detectChanges();
+
+    buttonByText('Save').click();
+    await fixture.whenStable();
+
+    expect(zoneService.addZone).toHaveBeenCalledWith({
+      code: 'A-01',
+      name: 'Picking A-01',
+      temperatureType: TemperatureType.Ambient,
+      isPickingZone: true,
+      warehouseId: 'wh-1'
+    });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/zones/detail/zone-created');
+  });
+
+  it('keeps save disabled in the rendered UI when required fields are missing', async () => {
+    await setup();
+
+    setInputValue('app-input-field[formcontrolname="code"] input', '');
+    setInputValue('app-input-field[formcontrolname="name"] input', '');
+    setSelectValue('app-input-select[formcontrolname="temperatureType"] select', '');
+    setSelectValue('app-input-select[formcontrolname="warehouseId"] select', '');
+    fixture.detectChanges();
+
+    const saveButton = buttonByText('Save');
+    expect(saveButton.disabled).toBe(true);
+
+    saveButton.click();
+
+    expect(zoneService.addZone).not.toHaveBeenCalled();
+  });
+
   it('loads existing zone into edit form', async () => {
     const existingZone = zoneFixture();
     await setup('zone-1', {
@@ -225,5 +272,32 @@ describe('ZoneFormComponent', () => {
       id: 'zone-1',
       ...validZonePayload()
     };
+  }
+
+  function setInputValue(selector: string, value: string): void {
+    const input = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function setSelectValue(selector: string, value: string): void {
+    const select = fixture.nativeElement.querySelector(selector) as HTMLSelectElement;
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function setCheckboxValue(selector: string, checked: boolean): void {
+    const checkbox = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
+    checkbox.checked = checked;
+    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function buttonByText(text: string): HTMLButtonElement {
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const button = buttons.find(candidate => candidate.textContent?.trim() === text);
+    if (!button) {
+      throw new Error(`Button "${text}" was not found.`);
+    }
+    return button;
   }
 });
