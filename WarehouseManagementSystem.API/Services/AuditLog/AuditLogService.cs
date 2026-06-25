@@ -114,7 +114,9 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
                 newValues = changeSet.NewValues;
 
                 if (changeSet.OldValues.Count == 0 && changeSet.NewValues.Count == 0)
+                {
                     return;
+                }
             }
 
             AddLog(entityName, entityId, operation, performedById, oldValues, newValues, ipAddress);
@@ -178,7 +180,9 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
                 newValues.TryGetValue(key, out var newValue);
 
                 if (JsonSerializer.Serialize(oldValue, JsonOptions) == JsonSerializer.Serialize(newValue, JsonOptions))
+                {
                     continue;
+                }
 
                 changedOldValues[key] = oldValue;
                 changedNewValues[key] = newValue;

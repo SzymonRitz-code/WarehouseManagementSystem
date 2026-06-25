@@ -151,10 +151,14 @@ public class StockQueryService : IStockQueryService
                 s.WarehouseId == warehouseId);
 
         if (batchId.HasValue)
+        {
             query = query.Where(s => s.ProductBatchId == batchId.Value);
+        }
 
         if (warehouseZoneId.HasValue)
+        {
             query = query.Where(s => s.WarehouseZoneId == warehouseZoneId.Value);
+        }
 
         return await query.FirstOrDefaultAsync(ct);
     }
@@ -220,10 +224,14 @@ public class StockQueryService : IStockQueryService
                 s.WarehouseId == warehouseId);
 
         if (batchId.HasValue)
+        {
             query = query.Where(s => s.ProductBatchId == batchId.Value);
+        }
 
         if (warehouseZoneId.HasValue)
+        {
             query = query.Where(s => s.WarehouseZoneId == warehouseZoneId.Value);
+        }
 
         return await query
             .Select(s => s.QuantityTotal - s.QuantityReserved)
@@ -255,7 +263,9 @@ public class StockQueryService : IStockQueryService
         CancellationToken ct = default)
     {
         if (requiredQuantity <= 0)
+        {
             throw new ArgumentException("Required quantity must be greater than zero.", nameof(requiredQuantity));
+        }
 
         var available = await _context.Stocks
             .AsNoTracking()

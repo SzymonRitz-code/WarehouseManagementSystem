@@ -24,7 +24,10 @@ public class StockReservationService : IStockReservationService
         foreach (var reservation in expiredReservations)
         {
             var stock = await _unitOfWork.Stocks.FindAsync(reservation.StockId);
-            if (stock == null) continue;
+            if (stock == null)
+            {
+                continue;
+            }
 
             // Wywołanie agregatu domenowego Stock do wygaszenia rezerwacji
             stock.ExpireReservation(reservation.Id);

@@ -71,9 +71,7 @@ public class WarehouseZonesController : ControllerBase
     public async Task<ActionResult<WarehouseZoneDetailsDto>> GetWarehouseZone(Guid warehouseZoneId, CancellationToken ct)
     {
         var zone = await _warehouseQueryService.GetWarehouseZoneAsync(warehouseZoneId, ct);
-        if (zone == null) return NotFound();
-
-        return Ok(zone);
+        return zone == null ? (ActionResult<WarehouseZoneDetailsDto>)NotFound() : (ActionResult<WarehouseZoneDetailsDto>)Ok(zone);
     }
 
     #endregion
@@ -93,12 +91,22 @@ public class WarehouseZonesController : ControllerBase
     [HttpPut("{warehouseZoneId}")]
     public async Task<IActionResult> UpdateWarehouseZone(Guid warehouseZoneId, UpdateWarehouseZoneDto zoneDto)
     {
-        if (warehouseZoneId != zoneDto.Id) return BadRequest("Route ID and body ID mismatch.");
+        if (warehouseZoneId != zoneDto.Id)
+        {
+            return BadRequest("Route ID and body ID mismatch.");
+        }
 
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
-        if (zone == null) return NotFound();
+        if (zone == null)
+        {
+            return NotFound();
+        }
+
         var oldZone = AuditSnapshots.WarehouseZone(zone);
 
         zone.SetCode(zoneDto.Code);
@@ -124,7 +132,11 @@ public class WarehouseZonesController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!WarehouseZoneExists(warehouseZoneId)) return NotFound();
+            if (!WarehouseZoneExists(warehouseZoneId))
+            {
+                return NotFound();
+            }
+
             throw;
         }
         catch (Exception ex)
@@ -151,7 +163,10 @@ public class WarehouseZonesController : ControllerBase
         {
             ModelState.AddModelError(nameof(zoneDto.Code), "Code Already exists");
         }
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         try
         {
@@ -191,7 +206,11 @@ public class WarehouseZonesController : ControllerBase
     public async Task<IActionResult> DeleteWarehouseZone(Guid warehouseZoneId)
     {
         var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
-        if (zone == null) return NotFound();
+        if (zone == null)
+        {
+            return NotFound();
+        }
+
         var oldZone = AuditSnapshots.WarehouseZone(zone);
 
         try

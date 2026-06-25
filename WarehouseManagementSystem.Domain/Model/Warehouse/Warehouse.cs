@@ -58,7 +58,9 @@ public class Warehouse
     public void SetCode(string code)
     {
         if (string.IsNullOrWhiteSpace(code))
+        {
             throw new ArgumentException("Warehouse code cannot be empty.");
+        }
 
         Code = code.Trim().ToUpperInvariant();
     }
@@ -66,7 +68,9 @@ public class Warehouse
     public void SetName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Warehouse name cannot be empty.");
+        }
 
         Name = name.Trim();
     }
@@ -74,13 +78,19 @@ public class Warehouse
     public void SetLocation(string country, string city, string address)
     {
         if (string.IsNullOrWhiteSpace(country))
+        {
             throw new ArgumentException("Country is required.");
+        }
 
         if (string.IsNullOrWhiteSpace(city))
+        {
             throw new ArgumentException("City is required.");
+        }
 
         if (string.IsNullOrWhiteSpace(address))
+        {
             throw new ArgumentException("Address is required.");
+        }
 
         Country = country.Trim();
         City = city.Trim();
@@ -90,7 +100,9 @@ public class Warehouse
     public void Activate()
     {
         if (IsActive)
+        {
             return;
+        }
 
         IsActive = true;
     }
@@ -98,14 +110,25 @@ public class Warehouse
     public void Deactivate()
     {
         if (!IsActive)
+        {
             return;
+        }
+
         if (_zones != null)
+        {
             if (_zones.Any())
+            {
                 throw new InvalidOperationException("Cannot deactivate warehouse with active zones.");
+            }
+        }
 
         if (Stocks != null)
+        {
             if (Stocks.Any())
+            {
                 throw new InvalidOperationException("Cannot deactivate warehouse containing stock.");
+            }
+        }
 
         IsActive = false;
     }
@@ -121,7 +144,9 @@ public class Warehouse
         bool isPickingZone)
     {
         if (_zones.Any(z => z.Code == code))
+        {
             throw new InvalidOperationException($"Zone with code '{code}' already exists.");
+        }
 
         var zone = new WarehouseZone(
             code,
@@ -140,10 +165,14 @@ public class Warehouse
         var zone = _zones.FirstOrDefault(z => z.Id == zoneId);
 
         if (zone == null)
+        {
             throw new InvalidOperationException("Zone not found.");
+        }
 
         if (zone.Stocks.Any())
+        {
             throw new InvalidOperationException("Cannot remove zone containing stock.");
+        }
 
         _zones.Remove(zone);
     }
@@ -152,10 +181,7 @@ public class Warehouse
     {
         var zone = _zones.FirstOrDefault(z => z.Id == zoneId);
 
-        if (zone == null)
-            throw new InvalidOperationException("Zone not found.");
-
-        return zone;
+        return zone == null ? throw new InvalidOperationException("Zone not found.") : zone;
     }
 
     #endregion

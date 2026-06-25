@@ -28,7 +28,9 @@ namespace WarehouseManagementSystem.API.Services.User
                 ?? throw new UnauthorizedAccessException("User identity not found in token.");
 
             if (!Guid.TryParse(sub, out var userId))
+            {
                 throw new UnauthorizedAccessException("User identity in token is invalid.");
+            }
 
             var name = context.User.FindFirst("name")?.Value ?? "Unknown";
             var email = context.User.FindFirst("email")?.Value ?? string.Empty;

@@ -33,7 +33,9 @@ public class StockReservation
         DateTimeOffset? expiresAt = null)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Reservation quantity must be greater than zero.");
+        }
 
         Id = Guid.NewGuid();
         StockId = stockId;
@@ -53,10 +55,14 @@ public class StockReservation
     public void SetReservationSource(string source)
     {
         if (string.IsNullOrWhiteSpace(source))
+        {
             throw new ArgumentException("Reservation source is required.");
+        }
 
         if (source.Length > 50)
+        {
             throw new ArgumentException("Reservation source too long.");
+        }
 
         _reservationSource = source.Trim();
     }
@@ -64,7 +70,9 @@ public class StockReservation
     public void SetExpiration(DateTimeOffset? expiresAt)
     {
         if (expiresAt.HasValue && expiresAt <= CreatedAt)
+        {
             throw new ArgumentException("Expiration must be later than creation time.");
+        }
 
         ExpiresAt = expiresAt;
     }
@@ -78,8 +86,10 @@ public class StockReservation
     {
         ValidatePositive(quantity);
 
-        if (_quantity < quantity)
+        if (Quantity < quantity)
+        {
             throw new InvalidOperationException("Cannot decrease more than reserved quantity.");
+        }
 
         _quantity -= quantity;
     }
@@ -104,29 +114,32 @@ public class StockReservation
     public void Expire()
     {
         if (Status != ReservationStatus.Active)
+        {
             return;
+        }
 
         Status = ReservationStatus.Expired;
     }
 
     public bool IsExpired(DateTimeOffset now)
     {
-        if (!ExpiresAt.HasValue)
-            return false;
-
-        return now >= ExpiresAt.Value;
+        return !ExpiresAt.HasValue ? false : now >= ExpiresAt.Value;
     }
 
     private void EnsureActive()
     {
         if (Status != ReservationStatus.Active)
+        {
             throw new ArgumentException("Reservation is not active.");
+        }
     }
 
     private void ValidatePositive(decimal quantity)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be greater than zero.");
+        }
     }
 
 }

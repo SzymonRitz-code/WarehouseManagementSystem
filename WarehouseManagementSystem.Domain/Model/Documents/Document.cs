@@ -71,10 +71,14 @@ public class Document
     public void SetNumber(string number)
     {
         if (string.IsNullOrWhiteSpace(number))
+        {
             throw new ArgumentException("Document number cannot be empty.");
+        }
 
         if (number.Length > MaxNumberLength)
+        {
             throw new ArgumentException($"Document number cannot exceed {MaxNumberLength} characters.");
+        }
 
         Number = number;
     }
@@ -82,7 +86,9 @@ public class Document
     public void SetNotes(string? notes)
     {
         if (notes != null && notes.Length > MaxNotesLength)
+        {
             throw new ArgumentException($"Notes cannot exceed {MaxNotesLength} characters.");
+        }
 
         Notes = notes;
     }
@@ -102,7 +108,9 @@ public class Document
         EnsureDraft();
 
         if (item == null)
+        {
             throw new ArgumentNullException(nameof(item));
+        }
 
         _items.Add(item);
     }
@@ -110,11 +118,15 @@ public class Document
     {
         EnsureDraft();
         if (!newItems.Any())
+        {
             throw new InvalidOperationException("Document must have at least one item.");
+        }
 
         _items.Clear();
         foreach (var item in newItems)
+        {
             _items.Add(item);
+        }
     }
     public void RemoveItem(Guid itemId)
     {
@@ -122,7 +134,9 @@ public class Document
 
         var item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item == null)
+        {
             throw new InvalidOperationException("Item not found.");
+        }
 
         _items.Remove(item);
     }
@@ -134,10 +148,14 @@ public class Document
     public void StartTransfer(DateTimeOffset now)
     {
         if (Status == DocumentStatus.Cancelled)
+        {
             throw new DocumentNotInDraftStateException(Id);
+        }
 
         if (Status != DocumentStatus.Confirmed)
+        {
             throw new DocumentNotInDraftStateException(Id);
+        }
 
         Status = DocumentStatus.Transfer;
         TransferStartedAt = now;
@@ -146,10 +164,14 @@ public class Document
     public void Confirm(ValueObjects.UserSnapshot confirmedByUser)
     {
         if (!_items.Any())
+        {
             throw new CannotConfirmEmptyDocumentException(Id);
+        }
 
         if (Status != DocumentStatus.Draft)
+        {
             throw new DocumentNotInDraftStateException(Id);
+        }
 
         Status = DocumentStatus.Confirmed;
         ConfirmedByUser = confirmedByUser;
@@ -159,7 +181,9 @@ public class Document
     public void CompleteTransfer(ValueObjects.UserSnapshot confirmedByUser)
     {
         if (Status != DocumentStatus.Transfer)
+        {
             throw new InvalidOperationException("Only transferred document can be completed.");
+        }
 
         Status = DocumentStatus.Confirmed;
         ConfirmedByUser = confirmedByUser;
@@ -169,10 +193,14 @@ public class Document
     public void Cancel(UserSnapshot cancelledByUser)
     {
         if (Status == DocumentStatus.Cancelled)
+        {
             throw new DocumentAlreadyCancelledException(Id);
+        }
 
         if (Status == DocumentStatus.Confirmed)
+        {
             throw new DocumentNotInDraftStateException(Id);
+        }
 
         Status = DocumentStatus.Cancelled;
         CancelledAt = DateTimeOffset.UtcNow;
@@ -186,7 +214,9 @@ public class Document
     private void EnsureDraft()
     {
         if (Status != DocumentStatus.Draft)
+        {
             throw new DocumentNotInDraftStateException(Id);
+        }
     }
 
     public void SetSourceWarehouse(Guid sourceWarehouseId)

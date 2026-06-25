@@ -54,7 +54,9 @@ public class DocumentCommandService : IDocumentCommandService
     {
         var drafts = NormalizeItems(items);
         if (drafts.Count == 0)
+        {
             throw new ArgumentException("Document must have at least one item.", nameof(items));
+        }
 
         _logger.LogInformation("Creating document by {UserId}", createdBy.Id);
 
@@ -109,7 +111,9 @@ public class DocumentCommandService : IDocumentCommandService
     {
         var drafts = NormalizeItems(items);
         if (drafts.Count == 0)
+        {
             throw new ArgumentException("Document must have at least one item.", nameof(items));
+        }
 
         var document = await GetDocumentWithItemsOrThrowAsync(documentId);
         var oldDocument = AuditSnapshots.Document(document);
@@ -194,7 +198,9 @@ public class DocumentCommandService : IDocumentCommandService
 
             case DocumentType.MM:
                 if (document.TargetWarehouseId == null)
+                {
                     throw new MissingTargetWarehouseForMmDocumentException(document.Id);
+                }
 
                 foreach (var item in document.Items)
                 {

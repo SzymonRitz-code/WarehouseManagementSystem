@@ -51,10 +51,7 @@ namespace WarehouseManagementSystem.API.Controllers
             var reservation = (await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId))
                 .FirstOrDefault(r => r.Id == reservationId);
 
-            if (reservation == null || reservation.StockId != stockId)
-                return NotFound();
-
-            return Ok(_mapper.Map<StockReservationDto>(reservation));
+            return reservation == null || reservation.StockId != stockId ? (ActionResult<StockReservationDto>)NotFound() : (ActionResult<StockReservationDto>)Ok(_mapper.Map<StockReservationDto>(reservation));
         }
 
         /// <summary>

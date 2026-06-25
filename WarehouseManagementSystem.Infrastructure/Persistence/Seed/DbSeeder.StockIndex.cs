@@ -88,22 +88,16 @@ public static partial class DbSeeder
 
         public Guid PickWarehouseIdWithAvailableStock(Random random)
         {
-            if (_availableWarehouseIds.Count == 0)
-            {
-                throw new InvalidOperationException("Cannot pick warehouse without available stock.");
-            }
-
-            return _availableWarehouseIds[random.Next(_availableWarehouseIds.Count)];
+            return _availableWarehouseIds.Count == 0
+                ? throw new InvalidOperationException("Cannot pick warehouse without available stock.")
+                : _availableWarehouseIds[random.Next(_availableWarehouseIds.Count)];
         }
 
         public StockSeedState PickAvailableStock(Random random, Guid warehouseId)
         {
-            if (!_availableByWarehouse.TryGetValue(warehouseId, out var states) || states.Count == 0)
-            {
-                throw new InvalidOperationException("Cannot generate outbound document item without available stock.");
-            }
-
-            return states[random.Next(states.Count)];
+            return !_availableByWarehouse.TryGetValue(warehouseId, out var states) || states.Count == 0
+                ? throw new InvalidOperationException("Cannot generate outbound document item without available stock.")
+                : states[random.Next(states.Count)];
         }
 
         public void Increase(

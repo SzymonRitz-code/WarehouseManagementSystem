@@ -15,7 +15,6 @@ public class Stock
 
     public decimal QuantityTotal => _quantityTotal;
     public decimal QuantityReserved => _quantityReserved;
-
     public decimal Available => _quantityTotal - _quantityReserved;
 
     public DateTimeOffset LastUpdated { get; private set; }
@@ -51,7 +50,9 @@ public class Stock
         decimal initialQuantity)
     {
         if (initialQuantity < 0)
+        {
             throw new ArgumentException("Initial quantity cannot be negative.");
+        }
 
         Id = Guid.NewGuid();
         ProductId = productId;
@@ -91,7 +92,9 @@ public class Stock
         ValidatePositive(quantity);
 
         if (quantity > Available)
+        {
             throw new InvalidOperationException("Not enough available stock.");
+        }
 
         _quantityTotal -= quantity;
         Touch();
@@ -100,8 +103,10 @@ public class Stock
     {
         ValidatePositive(quantity);
 
-        if (quantity > _quantityReserved)
+        if (quantity > QuantityReserved)
+        {
             throw new InvalidOperationException("Not enough reserved stock to decrease.");
+        }
 
         _quantityReserved -= quantity;
         Touch();
@@ -110,10 +115,14 @@ public class Stock
     public void AdjustTotal(decimal newTotal)
     {
         if (newTotal < 0)
+        {
             throw new ArgumentException("Total quantity cannot be negative.");
+        }
 
-        if (newTotal < _quantityReserved)
+        if (newTotal < QuantityReserved)
+        {
             throw new InvalidOperationException("Total cannot be lower than reserved quantity.");
+        }
 
         _quantityTotal = newTotal;
 
@@ -131,16 +140,22 @@ public class Stock
         DateTimeOffset? expiresAt = null)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity cannot be negative or zero.", nameof(quantity));
+        }
 
         if (string.IsNullOrWhiteSpace(source))
+        {
             throw new ArgumentException("Source must be provided.", nameof(source));
+        }
 
         // Obliczamy ile jest dostępne na rezerwacje
-        var availableToReserve = QuantityTotal - _quantityReserved;
+        var availableToReserve = QuantityTotal - QuantityReserved;
 
         if (quantity > availableToReserve)
+        {
             throw new InvalidOperationException("Not enough stock available to reserve.");
+        }
 
         var reservation = new StockReservation(
             Id,
@@ -185,7 +200,9 @@ public class Stock
     {
         var reservation = GetReservation(reservationId);
         if (reservation == null)
+        {
             throw new InvalidOperationException("Reservation not found.");
+        }
 
         // zmniejszamy fizycznie ilość w magazynie
         //Decrease(reservation.Quantity);
@@ -235,16 +252,15 @@ public class Stock
     {
         var reservation = _reservations.FirstOrDefault(x => x.Id == reservationId);
 
-        if (reservation is null)
-            throw new InvalidOperationException("Reservation not found.");
-
-        return reservation;
+        return reservation is null ? throw new InvalidOperationException("Reservation not found.") : reservation;
     }
 
     private void ValidatePositive(decimal quantity)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be greater than zero.");
+        }
     }
     public bool IsAvailable(decimal quantity)
     {

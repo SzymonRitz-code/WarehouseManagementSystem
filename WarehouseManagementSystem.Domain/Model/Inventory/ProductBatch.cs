@@ -8,9 +8,7 @@ public class ProductBatch
     #region Properties
 
     public Guid Id { get; private set; }
-
-    private string _batchNumber = null!;
-    public string BatchNumber => _batchNumber;
+    public string BatchNumber { get; private set; } = null!;
 
     public DateOnly? ExpirationDate { get; private set; }
     public DateOnly? ManufacturedDate { get; private set; }
@@ -53,12 +51,16 @@ public class ProductBatch
     public void SetBatchNumber(string batchNumber)
     {
         if (string.IsNullOrWhiteSpace(batchNumber))
+        {
             throw new ArgumentException("Batch number is required.");
+        }
 
         if (batchNumber.Length > 50)
+        {
             throw new ArgumentException("Batch number cannot exceed 50 characters.");
+        }
 
-        _batchNumber = batchNumber.Trim();
+        BatchNumber = batchNumber.Trim();
     }
 
     public void SetManufacturingDates(DateOnly? manufacturedDate, DateOnly? expirationDate)
@@ -81,16 +83,15 @@ public class ProductBatch
 
     public bool IsExpired()
     {
-        if (!ExpirationDate.HasValue)
-            return false;
-
-        return ExpirationDate.Value < DateOnly.FromDateTime(DateTime.UtcNow);
+        return !ExpirationDate.HasValue ? false : ExpirationDate.Value < DateOnly.FromDateTime(DateTime.UtcNow);
     }
 
     public bool ExpiresSoon(int daysThreshold)
     {
         if (!ExpirationDate.HasValue)
+        {
             return false;
+        }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         return ExpirationDate.Value <= today.AddDays(daysThreshold);

@@ -127,17 +127,9 @@ public class FakeUserService : IFakeUserService
     {
         var user = FindByUsername(username);
 
-        if (user != null)
-        {
-            if (string.IsNullOrWhiteSpace(user.Password) && string.IsNullOrWhiteSpace(password))
-            {
-                return true;
-            }
-
-            return Equals(user.Password, password);
-        }
-
-        return false;
+        return user != null
+            ? string.IsNullOrWhiteSpace(user.Password) && string.IsNullOrWhiteSpace(password) ? true : Equals(user.Password, password)
+            : false;
     }
     public TestUser? FindByUsername(string username) => Users.FirstOrDefault(x => x.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
 

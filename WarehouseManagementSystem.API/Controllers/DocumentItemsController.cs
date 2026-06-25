@@ -32,7 +32,9 @@ public class DocumentItemsController : ControllerBase
     {
         var document = await _documentQueryService.GetByIdAsync(documentId);
         if (document == null)
+        {
             return NotFound();
+        }
 
         var items = document.Items;
         var itemsDto = _mapper.Map<IEnumerable<DocumentItemDto>>(items);
@@ -53,11 +55,15 @@ public class DocumentItemsController : ControllerBase
     {
         var document = await _documentQueryService.GetByIdAsync(documentId);
         if (document == null)
+        {
             return NotFound();
+        }
 
         var item = document.Items.FirstOrDefault(i => i.Id == itemId);
         if (item == null)
+        {
             return NotFound();
+        }
 
         var itemDto = _mapper.Map<DocumentItemDto>(item);
         return Ok(itemDto);

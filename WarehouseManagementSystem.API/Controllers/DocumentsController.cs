@@ -87,9 +87,7 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<DocumentDto>> GetDocumentById(Guid documentId)
     {
         var document = await _queryService.GetByIdAsync(documentId);
-        if (document == null) return NotFound();
-
-        return Ok(_mapper.Map<DocumentDto>(document));
+        return document == null ? (ActionResult<DocumentDto>)NotFound() : (ActionResult<DocumentDto>)Ok(_mapper.Map<DocumentDto>(document));
     }
 
     #endregion
@@ -109,9 +107,14 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto documentDto)
     {
         if (documentDto.Items == null || !documentDto.Items.Any())
+        {
             ModelState.AddModelError(nameof(documentDto.Items), "Document must have at least one item.");
+        }
 
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         // Mapujemy DTO → ValueObject (DocumentItemDraft)
         var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(
@@ -166,9 +169,14 @@ public class DocumentsController : ControllerBase
         }
 
         if (documentDto.Items == null || !documentDto.Items.Any())
+        {
             ModelState.AddModelError(nameof(documentDto.Items), "Document must have at least one item.");
+        }
 
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         // Mapujemy DTO → ValueObject (DocumentItemDraft)
         var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(
@@ -213,7 +221,10 @@ public class DocumentsController : ControllerBase
     [HttpPut("{documentId}/confirm")]
     public async Task<IActionResult> ConfirmDocument(Guid documentId)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
         // Coś w stylu User.Identity.Name
         try
         {
@@ -235,7 +246,11 @@ public class DocumentsController : ControllerBase
     [HttpPut("{documentId}/cancel")]
     public async Task<IActionResult> CancelDocument(Guid documentId)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         try
         {
             await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext));
@@ -267,7 +282,9 @@ public class DocumentsController : ControllerBase
     {
         if (!Enum.TryParse<Domain.Enums.DocumentType>(type, true, out var docType) ||
             !Enum.TryParse<Domain.Enums.DocumentStatus>(status, true, out var docStatus))
+        {
             return BadRequest("Invalid type or status.");
+        }
 
         var documents = await _queryService.GetByTypeAndStatusAsync(docType, docStatus);
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(documents));

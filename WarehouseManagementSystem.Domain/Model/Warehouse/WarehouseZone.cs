@@ -43,7 +43,9 @@ public class WarehouseZone
     public void SetCode(string code)
     {
         if (string.IsNullOrWhiteSpace(code))
+        {
             throw new ArgumentException("Zone code cannot be empty.");
+        }
 
         Code = code.Trim().ToUpperInvariant();
     }
@@ -51,7 +53,9 @@ public class WarehouseZone
     public void SetName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Zone name cannot be empty.");
+        }
 
         Name = name.Trim();
     }
@@ -70,7 +74,9 @@ public class WarehouseZone
     public void EnsureCanBeRemoved()
     {
         if (ContainsStock())
+        {
             throw new InvalidOperationException(
                 "Zone cannot be removed because it contains stock.");
+        }
     }
 }

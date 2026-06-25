@@ -55,10 +55,7 @@ public class AuditLogsController : ControllerBase
     {
         var log = await _unitOfWork.AuditLogs.FindAsync(id);
 
-        if (log == null)
-            return NotFound();
-
-        return Ok(_mapper.Map<AuditLogDto>(log));
+        return log == null ? (ActionResult<AuditLogDto>)NotFound() : (ActionResult<AuditLogDto>)Ok(_mapper.Map<AuditLogDto>(log));
     }
 
     /// <summary>

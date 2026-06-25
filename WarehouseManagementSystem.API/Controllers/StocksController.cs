@@ -60,10 +60,7 @@ public class StocksController : ControllerBase
     public async Task<ActionResult<StockDto>> GetStock(Guid stockId, CancellationToken ct)
     {
         var stock = await _stockQuery.GetStockDetailsAsync(stockId, ct);
-        if (stock is null)
-            return NotFound();
-
-        return Ok(stock);
+        return stock is null ? (ActionResult<StockDto>)NotFound() : (ActionResult<StockDto>)Ok(stock);
     }
 
     /// <summary>

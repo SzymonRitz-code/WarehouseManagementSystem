@@ -41,13 +41,19 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
             var query = _context.AuditLogs.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(entityName))
+            {
                 query = query.Where(x => x.EntityName == entityName);
+            }
 
             if (entityId.HasValue)
+            {
                 query = query.Where(x => x.EntityId == entityId.Value);
+            }
 
             if (performedById.HasValue)
+            {
                 query = query.Where(x => x.PerformedById == performedById.Value);
+            }
 
             return await query.AsNoTracking()
                 .OrderByDescending(x => x.PerformedAt)

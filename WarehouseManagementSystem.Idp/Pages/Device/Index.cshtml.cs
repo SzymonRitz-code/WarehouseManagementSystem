@@ -67,7 +67,10 @@ public class Index : PageModel
     public async Task<IActionResult> OnPost()
     {
         var request = await _interaction.GetAuthorizationContextAsync(Input.UserCode);
-        if (request == null) return RedirectToPage("/Home/Error/Index");
+        if (request == null)
+        {
+            return RedirectToPage("/Home/Error/Index");
+        }
 
         ConsentResponse grantedConsent = null;
 
@@ -132,12 +135,7 @@ public class Index : PageModel
     private async Task<ViewModel> BuildViewModelAsync(string userCode, InputModel model = null)
     {
         var request = await _interaction.GetAuthorizationContextAsync(userCode);
-        if (request != null)
-        {
-            return CreateConsentViewModel(model, request);
-        }
-
-        return null;
+        return request != null ? CreateConsentViewModel(model, request) : null;
     }
 
     private ViewModel CreateConsentViewModel(InputModel model, DeviceFlowAuthorizationRequest request)

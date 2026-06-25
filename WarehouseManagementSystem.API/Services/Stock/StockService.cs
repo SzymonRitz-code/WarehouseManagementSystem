@@ -30,7 +30,9 @@ public class StockService : IStockService
             .GetByProductAndWarehouseAsync(productId, warehouseId, warehouseZoneId, batchId);
 
         if (stock != null)
+        {
             return stock;
+        }
 
         stock = new Stock(productId, warehouseId, warehouseZoneId, batchId, 0m);
 
@@ -152,7 +154,9 @@ public class StockService : IStockService
         {
             var stock = await _unitOfWork.Stocks.FindAsync(reservation.StockId);
             if (stock == null)
+            {
                 continue;
+            }
 
             stock.ExpireReservation(reservation.Id);
         }
@@ -179,12 +183,16 @@ public class StockService : IStockService
     private static void EnsureReservationExists(Stock stock, Guid reservationId)
     {
         if (!stock.Reservations.Any(r => r.Id == reservationId))
+        {
             throw new ReservationNotFoundException(reservationId);
+        }
     }
 
     private static void EnsurePositiveQuantity(decimal quantity)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be greater than zero.", nameof(quantity));
+        }
     }
 }

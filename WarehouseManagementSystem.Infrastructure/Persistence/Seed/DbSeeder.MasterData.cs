@@ -56,9 +56,9 @@ public static partial class DbSeeder
                 faker.Address.StreetAddress(),
                 PickUser(random));
 
-            foreach (var zone in GenerateZoneDefinitions(zoneTemplates, zonesPerWarehouse))
+            foreach (var (Code, Name, Temperature, Picking) in GenerateZoneDefinitions(zoneTemplates, zonesPerWarehouse))
             {
-                warehouse.AddZone(zone.Code, zone.Name, zone.Temperature, zone.Picking);
+                warehouse.AddZone(Code, Name, Temperature, Picking);
             }
 
             warehouses.Add(warehouse);
@@ -252,16 +252,16 @@ public static partial class DbSeeder
 
             for (var i = 0; i < rowCount; i++)
             {
-                var candidate = candidates[i];
-                var key = (product.Id, candidate.WarehouseId, candidate.Zone.Id, candidate.BatchId);
+                var (WarehouseId, Zone, BatchId) = candidates[i];
+                var key = (product.Id, WarehouseId, Zone.Id, BatchId);
                 if (!keys.Add(key)) { continue; }
 
                 result.Add(new Stock(
                     product.Id,
-                    candidate.WarehouseId,
-                    candidate.Zone.Id,
-                    candidate.BatchId,
-                    GenerateStockQuantity(random, product.Unit, candidate.Zone)));
+                    WarehouseId,
+                    Zone.Id,
+                    BatchId,
+                    GenerateStockQuantity(random, product.Unit, Zone)));
             }
         }
 
@@ -307,17 +307,15 @@ public static partial class DbSeeder
 
     private static TemperatureType GetRequiredTemperature(Product product)
     {
-        if (product.Name.Contains("Frozen", StringComparison.OrdinalIgnoreCase))
-        { return TemperatureType.Frozen; }
-
-        if (product.Name.Contains("Yogurt", StringComparison.OrdinalIgnoreCase)
+        return product.Name.Contains("Frozen", StringComparison.OrdinalIgnoreCase)
+            ? TemperatureType.Frozen
+            : product.Name.Contains("Yogurt", StringComparison.OrdinalIgnoreCase)
             || product.Name.Contains("Butter", StringComparison.OrdinalIgnoreCase)
             || product.Name.Contains("Cheese", StringComparison.OrdinalIgnoreCase)
             || product.Name.Contains("Ham", StringComparison.OrdinalIgnoreCase)
-            || product.Name.Contains("Sausage", StringComparison.OrdinalIgnoreCase))
-        { return TemperatureType.Cold; }
-
-        return TemperatureType.Ambient;
+            || product.Name.Contains("Sausage", StringComparison.OrdinalIgnoreCase)
+            ? TemperatureType.Cold
+            : TemperatureType.Ambient;
     }
 
     private static decimal GenerateStockQuantity(Random random, UnitOfMeasure unit, WarehouseZone zone)

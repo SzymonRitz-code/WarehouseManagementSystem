@@ -422,16 +422,15 @@ public static partial class DbSeeder
 
     private static DocumentType PickDocumentType(Random random, StockSeedIndex availableStockStates)
     {
-        if (!availableStockStates.HasAvailableStock)
-        { return random.Next(100) < 85 ? DocumentType.PZ : DocumentType.ADJ; }
-
-        return random.Next(100) switch
-        {
-            < 42 => DocumentType.WZ,
-            < 70 => DocumentType.PZ,
-            < 92 => DocumentType.MM,
-            _ => DocumentType.ADJ
-        };
+        return !availableStockStates.HasAvailableStock
+            ? random.Next(100) < 85 ? DocumentType.PZ : DocumentType.ADJ
+            : random.Next(100) switch
+            {
+                < 42 => DocumentType.WZ,
+                < 70 => DocumentType.PZ,
+                < 92 => DocumentType.MM,
+                _ => DocumentType.ADJ
+            };
     }
 
     #endregion
@@ -449,17 +448,14 @@ public static partial class DbSeeder
 
     private static Warehouse PickWarehouseForDocument(Random random, IReadOnlyList<Warehouse> warehouses)
     {
-        if (warehouses.Count == 1)
-        {
-            return warehouses[0];
-        }
-
-        return random.Next(100) switch
-        {
-            < 55 => warehouses[0],
-            < 80 => warehouses[Math.Min(1, warehouses.Count - 1)],
-            _ => warehouses[random.Next(warehouses.Count)]
-        };
+        return warehouses.Count == 1
+            ? warehouses[0]
+            : random.Next(100) switch
+            {
+                < 55 => warehouses[0],
+                < 80 => warehouses[Math.Min(1, warehouses.Count - 1)],
+                _ => warehouses[random.Next(warehouses.Count)]
+            };
     }
 
     private static Warehouse PickDifferentWarehouse(
@@ -490,12 +486,9 @@ public static partial class DbSeeder
         var eligibleZones = GetEligibleStockZones(zones, product);
         var pickingZones = eligibleZones.Where(x => x.IsPickingZone).ToList();
 
-        if (pickingZones.Count > 0 && random.Next(100) < 35)
-        {
-            return pickingZones[random.Next(pickingZones.Count)];
-        }
-
-        return eligibleZones[random.Next(eligibleZones.Count)];
+        return pickingZones.Count > 0 && random.Next(100) < 35
+            ? pickingZones[random.Next(pickingZones.Count)]
+            : eligibleZones[random.Next(eligibleZones.Count)];
     }
 
     #endregion
@@ -532,12 +525,7 @@ public static partial class DbSeeder
         var maxQuantity = Math.Max(0.01m, Math.Round(available, 2));
         var quantity = Math.Min(desiredQuantity, maxQuantity);
 
-        if (quantity <= 0.01m)
-        {
-            return 0.01m;
-        }
-
-        return Math.Round(quantity, 2);
+        return quantity <= 0.01m ? 0.01m : Math.Round(quantity, 2);
     }
 
     #endregion

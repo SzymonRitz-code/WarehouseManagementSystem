@@ -87,9 +87,7 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<ProductDetailsDto>> GetProduct(Guid productId, CancellationToken ct)
     {
         var product = await _productQueryService.GetProductAsync(productId, ct);
-        if (product == null) return NotFound();
-
-        return Ok(product);
+        return product == null ? (ActionResult<ProductDetailsDto>)NotFound() : (ActionResult<ProductDetailsDto>)Ok(product);
     }
 
     #endregion
@@ -111,7 +109,10 @@ public class ProductsController : ControllerBase
         {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
         }
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         var product = new Product(
             productDto.Sku,
@@ -162,15 +163,27 @@ public class ProductsController : ControllerBase
     [HttpPut("{productId:guid}")]
     public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, UpdateProductDto productDto)
     {
-        if (productId != productDto.Id) return BadRequest("Route ID and body ID mismatch.");
+        if (productId != productDto.Id)
+        {
+            return BadRequest("Route ID and body ID mismatch.");
+        }
 
         if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku && p.Id != productId))
+        {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
+        }
 
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         var product = await _unitOfWork.Products.FindAsync(productId);
-        if (product == null) return NotFound();
+        if (product == null)
+        {
+            return NotFound();
+        }
+
         var oldProduct = AuditSnapshots.Product(product);
 
         product.SetName(productDto.Name);
@@ -178,12 +191,22 @@ public class ProductsController : ControllerBase
         product.SetUnit(productDto.Unit);
 
         if (productDto.RequiresBatch)
+        {
             product.RequireBatchTracking();
-        else product.DisableBatchTracking();
+        }
+        else
+        {
+            product.DisableBatchTracking();
+        }
 
         if (productDto.IsActive)
+        {
             product.Activate();
-        else product.Deactivate();
+        }
+        else
+        {
+            product.Deactivate();
+        }
 
         product.SetWeight(productDto.Weight);
         product.SetVolume(productDto.Volume);
@@ -231,7 +254,11 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> DeleteProduct(Guid productId)
     {
         var product = await _unitOfWork.Products.FindAsync(productId);
-        if (product == null) return NotFound();
+        if (product == null)
+        {
+            return NotFound();
+        }
+
         var oldProduct = AuditSnapshots.Product(product);
 
         try

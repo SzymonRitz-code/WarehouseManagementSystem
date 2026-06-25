@@ -1,13 +1,13 @@
-﻿namespace WarehouseManagementSystem.API.Extensions
-{
-    using AutoMapper;
-    using WarehouseManagementSystem.API.DTO;
-    using WarehouseManagementSystem.Domain.Model.AuditDomain;
-    using WarehouseManagementSystem.Domain.Model.CatalogDomain;
-    using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
-    using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-    using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
+﻿using AutoMapper;
+using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.Domain.Model.AuditDomain;
+using WarehouseManagementSystem.Domain.Model.CatalogDomain;
+using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
+using WarehouseManagementSystem.Domain.Model.InventoryDomain;
+using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
+namespace WarehouseManagementSystem.API.Extensions
+{
     public static class AutoMapperExtensions
     {
         #region Mapping Registration

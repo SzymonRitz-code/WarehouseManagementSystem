@@ -55,7 +55,9 @@ public class DocumentItem
     public void SetQuantity(decimal quantity)
     {
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be greater than zero.");
+        }
 
         Quantity = quantity;
     }
@@ -63,7 +65,9 @@ public class DocumentItem
     public void IncreaseQuantity(decimal value)
     {
         if (value <= 0)
+        {
             throw new ArgumentException("Increase value must be greater than zero.");
+        }
 
         Quantity += value;
     }
@@ -71,10 +75,14 @@ public class DocumentItem
     public void DecreaseQuantity(decimal value)
     {
         if (value <= 0)
+        {
             throw new ArgumentException("Decrease value must be greater than zero.");
+        }
 
         if (Quantity - value <= 0)
+        {
             throw new InvalidOperationException("Quantity cannot be zero or negative.");
+        }
 
         Quantity -= value;
     }
@@ -82,7 +90,9 @@ public class DocumentItem
     public void SetProduct(Guid productId)
     {
         if (productId == Guid.Empty)
+        {
             throw new ArgumentException("ProductId cannot be empty.");
+        }
 
         ProductId = productId;
     }
@@ -112,17 +122,26 @@ public class DocumentItem
         {
             case DocumentType.PZ:
                 if (TargetZoneId == null)
+                {
                     throw new InvalidOperationException("PZ requires target zone.");
+                }
+
                 break;
 
             case DocumentType.WZ:
                 if (SourceZoneId == null)
+                {
                     throw new InvalidOperationException("WZ requires source zone.");
+                }
+
                 break;
 
             case DocumentType.MM:
                 if (SourceZoneId == null || TargetZoneId == null)
+                {
                     throw new InvalidOperationException("MM requires both source and target zones.");
+                }
+
                 break;
 
             case DocumentType.ADJ:

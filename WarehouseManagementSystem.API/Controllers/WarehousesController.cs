@@ -102,9 +102,7 @@ public class WarehousesController : ControllerBase
     public async Task<ActionResult<WarehouseDetailsDto>> GetWarehouse(Guid warehouseId, CancellationToken ct)
     {
         var warehouse = await _warehouseQueryService.GetWarehouseAsync(warehouseId, ct);
-        if (warehouse == null) return NotFound();
-
-        return Ok(warehouse);
+        return warehouse == null ? (ActionResult<WarehouseDetailsDto>)NotFound() : (ActionResult<WarehouseDetailsDto>)Ok(warehouse);
     }
 
     #endregion
@@ -123,9 +121,14 @@ public class WarehousesController : ControllerBase
     public async Task<ActionResult<WarehouseDetailsDto>> CreateWarehouse(CreateWarehouseDto warehouseDto)
     {
         if (_unitOfWork.Warehouses.Any(w => w.Code == warehouseDto.Code))
+        {
             ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
+        }
 
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         try
         {
@@ -172,11 +175,22 @@ public class WarehousesController : ControllerBase
     [HttpPut("{warehouseId}")]
     public async Task<IActionResult> UpdateWarehouse([FromRoute] Guid warehouseId, UpdateWarehouseDto warehouseDto)
     {
-        if (warehouseId != warehouseDto.Id) return BadRequest("Route ID and body ID mismatch.");
+        if (warehouseId != warehouseDto.Id)
+        {
+            return BadRequest("Route ID and body ID mismatch.");
+        }
 
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
-        if (warehouse == null) return NotFound();
+        if (warehouse == null)
+        {
+            return NotFound();
+        }
+
         var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
 
         warehouse.SetCode(warehouseDto.Code);
@@ -202,7 +216,11 @@ public class WarehousesController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!WarehouseExists(warehouseId)) return NotFound();
+            if (!WarehouseExists(warehouseId))
+            {
+                return NotFound();
+            }
+
             throw;
         }
         catch (Exception ex)
@@ -226,7 +244,11 @@ public class WarehousesController : ControllerBase
     public async Task<IActionResult> DeleteWarehouse(Guid warehouseId)
     {
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
-        if (warehouse == null) return NotFound();
+        if (warehouse == null)
+        {
+            return NotFound();
+        }
+
         var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
 
         try

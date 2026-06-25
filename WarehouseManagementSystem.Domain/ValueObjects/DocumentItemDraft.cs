@@ -16,19 +16,29 @@ public readonly record struct DocumentItemDraft
         Guid? targetZoneId)
     {
         if (productId == Guid.Empty)
+        {
             throw new ArgumentException("ProductId cannot be empty.");
+        }
 
         if (productBatchId.HasValue && productBatchId == Guid.Empty)
+        {
             throw new ArgumentException("ProductBatchId cannot be empty.");
+        }
 
         if (sourceZoneId.HasValue && sourceZoneId == Guid.Empty)
+        {
             throw new ArgumentException("SourceZoneId cannot be empty.");
+        }
 
         if (targetZoneId.HasValue && targetZoneId == Guid.Empty)
+        {
             throw new ArgumentException("TargetZoneId cannot be empty.");
+        }
 
         if (quantity <= 0)
+        {
             throw new ArgumentException("Quantity must be greater than zero.");
+        }
 
         ProductId = productId;
         Quantity = quantity;

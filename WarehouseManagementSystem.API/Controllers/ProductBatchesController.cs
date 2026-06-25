@@ -71,10 +71,9 @@ public class ProductBatchesController : ControllerBase
     public async Task<ActionResult<ProductBatchDto>> GetBatchByProduct([FromRoute] Guid productId, [FromRoute] Guid batchId, CancellationToken ct)
     {
         var batch = await _productBatchQueryService.GetProductBatchDetails(batchId, ct);
-        if (batch == null) return NotFound();
-        if (batch.ProductId != productId) return NotFound();
-
-        return Ok(batch);
+        return batch == null
+            ? (ActionResult<ProductBatchDto>)NotFound()
+            : batch.ProductId != productId ? (ActionResult<ProductBatchDto>)NotFound() : (ActionResult<ProductBatchDto>)Ok(batch);
     }
 
     /// <summary>
@@ -106,9 +105,7 @@ public class ProductBatchesController : ControllerBase
             pb => pb.Id == batchId, ct);
 
         var result = batch.FirstOrDefault();
-        if (result == default) return NotFound();
-
-        return Ok(result);
+        return result == default ? (ActionResult<ProductBatchListDto>)NotFound() : (ActionResult<ProductBatchListDto>)Ok(result);
     }
 
     #endregion
@@ -130,7 +127,10 @@ public class ProductBatchesController : ControllerBase
         {
             ModelState.AddModelError(nameof(batchDto.BatchNumber), "BatchNumber already exists");
         }
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         ProductBatch batch;
         try
@@ -187,13 +187,27 @@ public class ProductBatchesController : ControllerBase
     [HttpPut("/api/products/{productId:guid}/batches/{batchId:guid}")]
     public async Task<ActionResult<ProductBatchDto>> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto)
     {
-        if (batchId != batchDto.Id) return BadRequest("Route ID and body ID mismatch.");
+        if (batchId != batchDto.Id)
+        {
+            return BadRequest("Route ID and body ID mismatch.");
+        }
 
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
-        if (batch == null) return NotFound();
-        if (batch.ProductId != productId) return BadRequest("Product batch does not belong to the route product.");
+        if (batch == null)
+        {
+            return NotFound();
+        }
+
+        if (batch.ProductId != productId)
+        {
+            return BadRequest("Product batch does not belong to the route product.");
+        }
+
         var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         batch.SetBatchNumber(batchDto.BatchNumber);
@@ -236,7 +250,11 @@ public class ProductBatchesController : ControllerBase
     public async Task<IActionResult> DeleteProductBatch(Guid batchId)
     {
         var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
-        if (batch == null) return NotFound();
+        if (batch == null)
+        {
+            return NotFound();
+        }
+
         var oldBatch = AuditSnapshots.ProductBatch(batch);
 
         try

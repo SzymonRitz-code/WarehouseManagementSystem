@@ -56,7 +56,9 @@ public class Product
     public void SetSku(string sku)
     {
         if (string.IsNullOrWhiteSpace(sku))
+        {
             throw new ArgumentException("SKU cannot be empty.");
+        }
 
         SKU = sku.Trim().ToUpperInvariant();
     }
@@ -64,7 +66,9 @@ public class Product
     public void SetName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException("Name is required.");
+        }
 
         Name = name.Trim();
     }
@@ -84,7 +88,9 @@ public class Product
     public void SetWeight(decimal? weight)
     {
         if (weight < 0)
+        {
             throw new ArgumentException("Weight cannot be negative.");
+        }
 
         Weight = weight;
     }
@@ -92,7 +98,9 @@ public class Product
     public void SetVolume(decimal? volume)
     {
         if (volume < 0)
+        {
             throw new ArgumentException("Volume cannot be negative.");
+        }
 
         Volume = volume;
     }
