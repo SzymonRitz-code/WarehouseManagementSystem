@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Documents;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -21,6 +20,8 @@ namespace WarehouseManagementSystem.API.Controllers;
 [Route("api/[controller]")]
 public class DocumentsController : ControllerBase
 {
+    #region Fields and Constructor
+
     private readonly IDocumentCommandService _commandService;
     private readonly IDocumentQueryService _queryService;
     private readonly IMapper _mapper;
@@ -40,6 +41,11 @@ public class DocumentsController : ControllerBase
         _userService = userService;
         _logger = logger;
     }
+
+    #endregion
+
+    #region Query Actions
+
     /// <summary>
     /// Gets a paginated list of documents using the provided filters.
     /// </summary>
@@ -85,6 +91,10 @@ public class DocumentsController : ControllerBase
 
         return Ok(_mapper.Map<DocumentDto>(document));
     }
+
+    #endregion
+
+    #region Create and Update Actions
 
     /// <summary>
     /// Creates a new document with its items.
@@ -190,6 +200,11 @@ public class DocumentsController : ControllerBase
         }
         return NoContent();
     }
+
+    #endregion
+
+    #region Workflow Actions
+
     /// <summary>
     /// Confirms the document and triggers the resulting domain changes.
     /// </summary>
@@ -232,6 +247,10 @@ public class DocumentsController : ControllerBase
         }
         return NoContent();
     }
+
+    #endregion
+
+    #region Specialized Query Actions
 
     /// <summary>
     /// Gets documents matching the specified type and status.
@@ -282,6 +301,10 @@ public class DocumentsController : ControllerBase
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(recent));
     }
 
+    #endregion
+
+    #region Options Action
+
     /// <summary>
     /// Returns the available HTTP methods supported by the documents controller.
     /// </summary>
@@ -292,4 +315,6 @@ public class DocumentsController : ControllerBase
         Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, OPTIONS");
         return Ok();
     }
+
+    #endregion
 }

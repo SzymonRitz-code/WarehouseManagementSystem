@@ -9,12 +9,19 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 
 public class DocumentQueryService : IDocumentQueryService
 {
+    #region Fields and Constructor
+
     private readonly WarehouseManagementSystemDbContext _context;
 
     public DocumentQueryService(WarehouseManagementSystemDbContext context)
     {
         _context = context;
     }
+
+    #endregion
+
+    #region Paged Query Operations
+
     public async Task<PagedResult<DocumentListDto>> GetDocumentsPageAsync(DocumentListQuery query, CancellationToken ct = default)
     {
         var documents = BuildDocumentListQuery();
@@ -62,6 +69,10 @@ public class DocumentQueryService : IDocumentQueryService
             TotalItems = totalItems
         };
     }
+
+    #endregion
+
+    #region Document Lookup Operations
 
     public async Task<Document?> GetByIdAsync(Guid documentId, CancellationToken ct = default)
     {
@@ -153,6 +164,10 @@ public class DocumentQueryService : IDocumentQueryService
         return await _context.Documents.AsNoTracking()
             .AnyAsync(d => d.Id == documentId, ct);
     }
+
+    #endregion
+
+    #region Status and Workflow Query Operations
 
     public async Task<IReadOnlyList<Document>> GetByTypeAndStatusAsync(
         DocumentType type,
@@ -284,6 +299,10 @@ public class DocumentQueryService : IDocumentQueryService
         ).AnyAsync(ct);
     }
 
+    #endregion
+
+    #region Recent Query Operations
+
     public async Task<IReadOnlyList<Document>> GetRecentAsync(
         int take,
         CancellationToken ct = default)
@@ -294,6 +313,10 @@ public class DocumentQueryService : IDocumentQueryService
             .AsNoTracking()
             .ToListAsync(ct);
     }
+
+    #endregion
+
+    #region Query Helpers
 
     private IQueryable<DocumentListQueryRow> BuildDocumentListQuery()
     {
@@ -404,5 +427,7 @@ public class DocumentQueryService : IDocumentQueryService
         public DateTimeOffset CreatedAt { get; init; }
         public DateTimeOffset? ApprovedAt { get; init; }
     }
+
+    #endregion
 
 }

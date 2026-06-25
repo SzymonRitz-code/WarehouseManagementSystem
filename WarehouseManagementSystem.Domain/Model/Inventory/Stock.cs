@@ -6,6 +6,8 @@ namespace WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 public class Stock
 {
+    #region Properties and Fields
+
     public Guid Id { get; private set; }
 
     private decimal _quantityTotal;
@@ -35,6 +37,10 @@ public class Stock
     private readonly List<StockReservation> _reservations = new();
     public IReadOnlyCollection<StockReservation> Reservations => _reservations;
 
+    #endregion
+
+    #region Constructors
+
     private Stock() { }
 
     public Stock(
@@ -58,6 +64,10 @@ public class Stock
 
         LastUpdated = DateTimeOffset.UtcNow;
     }
+
+    #endregion
+
+    #region Quantity Operations
 
     public void Increase(decimal quantity)
     {
@@ -109,6 +119,10 @@ public class Stock
 
         Touch();
     }
+
+    #endregion
+
+    #region Reservation Operations
 
     public StockReservation CreateReservation(
         decimal quantity,
@@ -213,6 +227,10 @@ public class Stock
         }
     }
 
+    #endregion
+
+    #region Helper Methods
+
     private StockReservation GetReservation(Guid reservationId)
     {
         var reservation = _reservations.FirstOrDefault(x => x.Id == reservationId);
@@ -236,4 +254,6 @@ public class Stock
     {
         LastUpdated = DateTimeOffset.UtcNow;
     }
+
+    #endregion
 }

@@ -17,9 +17,6 @@ using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Services;
 
-// TODO refactor testów pod nowy przepływ Dokumentów - Dokumenty wykonują transfer w Confirm. StartTransferAsync jest wywoływane w Confirm.
-
-
 /// <summary>
 /// Tests for DocumentCommandService orchestration.
 /// Domain invariant tests (pure) live in DocumentDomainTests.
@@ -61,9 +58,7 @@ public class DocumentCommandServiceOrchestrationTests
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
 
-    // =========================================================
-    // Helpers / Builders
-    // =========================================================
+    #region Helpers and Builders
 
     private DocumentItemDraft AnyItemDraft(
         Guid? productId = null,
@@ -112,10 +107,13 @@ public class DocumentCommandServiceOrchestrationTests
         .Setup(x => x.Documents.FindAsync(doc.Id))
         .ReturnsAsync(doc);
 
-    // =========================================================
-    // CreateDocumentAsync
-    // =========================================================
+    #endregion
 
+    #region CreateDocumentAsync Tests
+
+    /// <summary>
+    /// Verifies that CreateDocumentAsync throws ArgumentException when items collection is empty.
+    /// </summary>
     [Fact]
     public async Task CreateDocument_Throws_WhenItemsEmpty()
     {
@@ -127,6 +125,9 @@ public class DocumentCommandServiceOrchestrationTests
             .WithMessage("*at least one item*");
     }
 
+    /// <summary>
+    /// Verifies that CreateDocumentAsync returns a document in Draft status with null Number property.
+    /// </summary>
     [Fact]
     public async Task CreateDocument_ReturnsDocumentInDraft_WithNullNumber()
     {
@@ -143,6 +144,9 @@ public class DocumentCommandServiceOrchestrationTests
         doc.Items.Should().HaveCount(1);
     }
 
+    /// <summary>
+    /// Verifies that CreateDocumentAsync persists the document to the repository exactly once.
+    /// </summary>
     [Fact]
     public async Task CreateDocument_PersistsDocument_ExactlyOnce()
     {
@@ -155,6 +159,9 @@ public class DocumentCommandServiceOrchestrationTests
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that CreateDocumentAsync stores the creator as a snapshot with correct user information.
+    /// </summary>
     [Fact]
     public async Task CreateDocument_StoresCreatorSnapshot_Correctly()
     {
@@ -173,10 +180,13 @@ public class DocumentCommandServiceOrchestrationTests
         doc.CreatedByUser.Email.Should().Be("Testomir.Testowski@gmail.com");
     }
 
-    // =========================================================
-    // ConfirmDocumentAsync — Number lifecycle
-    // =========================================================
+    #endregion
 
+    #region ConfirmDocumentAsync - Number Lifecycle Tests
+
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync assigns a document number from the number generator.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocumentAsync_ShouldAssignNumber_FromGenerator()
     {
@@ -192,6 +202,9 @@ public class DocumentCommandServiceOrchestrationTests
         doc.Number.Should().Be("PZ/2024/001");
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync changes document status from Draft to Confirmed.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_SetsStatusToConfirmed()
     {
@@ -204,6 +217,9 @@ public class DocumentCommandServiceOrchestrationTests
         doc.Status.Should().Be(DocumentStatus.Confirmed);
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync stores the confirming user as a snapshot with correct user information.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_StoresConfirmedBySnapshot()
     {
@@ -219,6 +235,9 @@ public class DocumentCommandServiceOrchestrationTests
         doc.ConfirmedByUser.Email.Should().Be("Testomir.Testowski@gmail.com");
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync throws DocumentNotFoundException when document is not found.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_Throws_WhenDocumentNotFound()
     {
@@ -230,6 +249,9 @@ public class DocumentCommandServiceOrchestrationTests
             .WithMessage("*was not found*");
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync throws DocumentNotInDraftStateException when attempting to confirm an already-confirmed document.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_Throws_WhenAlreadyConfirmed()
     {
@@ -246,10 +268,13 @@ public class DocumentCommandServiceOrchestrationTests
             .WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
-    // =========================================================
-    // ConfirmDocumentAsync — Stock operations
-    // =========================================================
+    #endregion
 
+    #region ConfirmDocumentAsync - Stock Operations Tests
+
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync increases stock quantity for PZ (intake) documents.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_IncreasesStock_ForPZ()
     {
@@ -267,6 +292,9 @@ public class DocumentCommandServiceOrchestrationTests
         _stockServiceMock.Verify(s => s.IncreaseStockAsync(productId, warehouseId, zoneId, 5, null), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync decreases stock quantity for WZ (withdrawal) documents.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_DecreasesStock_ForWZ()
     {
@@ -284,6 +312,9 @@ public class DocumentCommandServiceOrchestrationTests
         _stockServiceMock.Verify(s => s.DecreaseStockAsync(productId, warehouseId, zoneId, 10, null), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync moves stock between source and target warehouses for MM (transfer) documents.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_MovesStock_ForMM()
     {
@@ -304,6 +335,9 @@ public class DocumentCommandServiceOrchestrationTests
             productId, sourceWare, sourceZone, targetWare, targetZone, 3, null), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync throws MissingTargetWarehouseForMmDocumentException when MM document lacks target warehouse.
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_Throws_ForMM_WhenTargetWarehouseMissing()
     {
@@ -319,6 +353,9 @@ public class DocumentCommandServiceOrchestrationTests
             .WithMessage($"Document {doc.Id} requires a target warehouse for MM confirmation.");
     }
 
+    /// <summary>
+    /// Verifies that ConfirmDocumentAsync calls the number generator with correct parameters (document type, warehouse, date).
+    /// </summary>
     [Fact]
     public async Task ConfirmDocument_CallsNumberGenerator_WithCorrectParameters()
     {
@@ -338,70 +375,13 @@ public class DocumentCommandServiceOrchestrationTests
             documentDate), Times.Once);
     }
 
-    // =========================================================
-    // StartTransferAsync
-    // =========================================================
+    #endregion
 
-    //[Fact]
-    //public async Task StartTransfer_Throws_WhenDocumentInDraft()
-    //{
-    //    var doc = DraftDocumentWithItem();
-    //    SetupDocumentGetDocumentWithItems(doc);
+    #region CancelDocumentAsync Tests
 
-    //    Func<Task> act = () => _service.StartTransferAsync(doc.Id, Guid.NewGuid());
-
-    //    await act.Should().ThrowAsync<DocumentNotInDraftStateException>()
-    //        .WithMessage($"Document {doc.Id} is not in Draft state.");
-    //}
-
-    //[Fact]
-    //public async Task StartTransfer_SetsStatusToTransfer_WhenConfirmed()
-    //{
-    //    var doc = DraftDocumentWithItem();
-    //    doc.SetNumber("PZ/2024/001"); // simulate prior confirm (number must be set)
-    //    doc.Confirm(_userServiceMock.Object.GetUser(default));
-    //    SetupDocumentGetDocumentWithItems(doc);
-
-    //    var now = DateTimeOffset.UtcNow;
-    //    _clockMock.Setup(c => c.UtcNow).Returns(now);
-
-    //    await _service.StartTransferAsync(doc.Id, Guid.NewGuid());
-
-    //    doc.Status.Should().Be(DocumentStatus.Transfer);
-    //    doc.TransferStartedAt.Should().Be(now);
-    //}
-
-    //[Fact]
-    //public async Task StartTransfer_Throws_WhenDocumentCancelled()
-    //{
-    //    var doc = DraftDocumentWithItem();
-    //    doc.Cancel(_userServiceMock.Object.GetUser(default));
-    //    SetupDocumentGetDocumentWithItems(doc);
-
-    //    Func<Task> act = () => _service.StartTransferAsync(doc.Id, Guid.NewGuid());
-
-    //    await act.Should().ThrowAsync<DocumentNotInDraftStateException>()
-    //        .WithMessage($"Document {doc.Id} is not in Draft state.");
-    //}
-
-    //[Fact]
-    //public async Task StartTransfer_SavesChanges_ExactlyOnce()
-    //{
-    //    var doc = DraftDocumentWithItem();
-    //    doc.SetNumber("PZ/2024/001");
-    //    doc.Confirm(_userServiceMock.Object.GetUser(default));
-    //    SetupDocumentGetDocumentWithItems(doc);
-    //    _clockMock.Setup(c => c.UtcNow).Returns(DateTimeOffset.UtcNow);
-
-    //    await _service.StartTransferAsync(doc.Id, Guid.NewGuid());
-
-    //    _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    //}
-
-    // =========================================================
-    // CancelDocumentAsync
-    // =========================================================
-
+    /// <summary>
+    /// Verifies that CancelDocumentAsync changes document status to Cancelled.
+    /// </summary>
     [Fact]
     public async Task CancelDocument_SetsStatusToCancelled()
     {
@@ -415,6 +395,9 @@ public class DocumentCommandServiceOrchestrationTests
         doc.Status.Should().Be(DocumentStatus.Cancelled);
     }
 
+    /// <summary>
+    /// Verifies that CancelDocumentAsync releases stock reservations for WZ (withdrawal) documents.
+    /// </summary>
     [Fact]
     public async Task CancelDocument_ReleasesReservations_ForWZ()
     {
@@ -433,6 +416,9 @@ public class DocumentCommandServiceOrchestrationTests
         doc.Status.Should().Be(DocumentStatus.Cancelled);
     }
 
+    /// <summary>
+    /// Verifies that CancelDocumentAsync does not attempt to release reservations when none exist.
+    /// </summary>
     [Fact]
     public async Task CancelDocument_UsesSerializableTransaction_AndCommits()
     {
@@ -465,6 +451,9 @@ public class DocumentCommandServiceOrchestrationTests
             s.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
     }
 
+    /// <summary>
+    /// Verifies that CancelDocumentAsync throws DocumentAlreadyCancelledException when attempting to cancel an already-cancelled document.
+    /// </summary>
     [Fact]
     public async Task CancelDocument_Throws_WhenAlreadyCancelled()
     {
@@ -480,6 +469,9 @@ public class DocumentCommandServiceOrchestrationTests
             .WithMessage($"Document {doc.Id} is already cancelled.");
     }
 
+    /// <summary>
+    /// Verifies that CancelDocumentAsync throws DocumentNotInDraftStateException when attempting to cancel a confirmed document.
+    /// </summary>
     [Fact]
     public async Task CancelDocument_Throws_WhenConfirmed()
     {
@@ -495,4 +487,6 @@ public class DocumentCommandServiceOrchestrationTests
         await act.Should().ThrowAsync<DocumentNotInDraftStateException>()
             .WithMessage($"Document {doc.Id} is not in Draft state.");
     }
+
+    #endregion
 }

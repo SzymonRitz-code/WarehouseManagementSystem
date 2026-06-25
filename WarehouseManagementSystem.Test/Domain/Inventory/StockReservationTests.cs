@@ -9,6 +9,9 @@ using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain;
 
+/// <summary>
+/// Tests for the <see cref="StockReservation"/> class in the domain model, focusing on its behavior and state transitions.
+/// </summary>
 public class StockReservationTests
 {
     private readonly Guid _stockId = Guid.NewGuid();
@@ -22,6 +25,15 @@ public class StockReservationTests
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
 
+    #region Helper Methods
+
+    /// <summary>
+    /// Creates a new instance of <see cref="StockReservation"/> with the specified parameters for testing purposes.
+    /// </summary>
+    /// <param name="quantity">The quantity to set for the reservation.</param>
+    /// <param name="source">The source of the reservation.</param>
+    /// <param name="expires">The expiration date of the reservation.</param>
+    /// <returns>A new instance of <see cref="StockReservation"/> with the specified parameters.</returns>
     private StockReservation CreateReservation(
         decimal quantity = 10,
         string source = "ORDER",
@@ -35,6 +47,13 @@ public class StockReservationTests
             expires);
     }
 
+    #endregion
+
+    #region Constructor and Validation Tests
+
+    /// <summary>
+    /// Tests the constructor of the <see cref="StockReservation"/> class to ensure it creates a reservation with valid data.
+    /// </summary>
     [Fact]
     public void Constructor_Should_CreateReservation_WithValidData()
     {
@@ -47,6 +66,10 @@ public class StockReservationTests
         reservation.CreatedByUser.Should().Be(_userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
     }
 
+    /// <summary>
+    /// Tests the constructor of the <see cref="StockReservation"/> class to ensure it throws an exception when the quantity is zero.
+    /// </summary>
+    /// 
     [Fact]
     public void Constructor_Should_Throw_WhenQuantityIsZero()
     {
@@ -56,6 +79,10 @@ public class StockReservationTests
             .WithMessage("*greater than zero*");
     }
 
+    /// <summary>
+    /// Tests the constructor of the <see cref="StockReservation"/> class to ensure it throws an exception when the quantity is negative.
+    /// </summary>
+    /// 
     [Fact]
     public void Constructor_Should_Throw_WhenQuantityIsNegative()
     {
@@ -64,6 +91,9 @@ public class StockReservationTests
         act.Should().Throw<ArgumentException>();
     }
 
+    /// <summary>
+    /// Tests the constructor of the <see cref="StockReservation"/> class to ensure it throws an exception when the reservation source is empty.
+    /// </summary>
     [Fact]
     public void SetReservationSource_Should_SetSource_WhenValid()
     {
@@ -74,6 +104,9 @@ public class StockReservationTests
         reservation.ReservationSource.Should().Be("TRANSFER");
     }
 
+    /// <summary>
+    /// Tests the constructor of the <see cref="StockReservation"/> class to ensure it throws an exception when the reservation source is empty.
+    /// </summary>
     [Fact]
     public void SetReservationSource_Should_Throw_WhenEmpty()
     {
@@ -85,6 +118,9 @@ public class StockReservationTests
             .WithMessage("*required*");
     }
 
+    /// <summary>
+    /// Tests the constructor of the <see cref="StockReservation"/> class to ensure it throws an exception when the reservation source exceeds the maximum length.
+    /// </summary>
     [Fact]
     public void SetReservationSource_Should_Throw_WhenTooLong()
     {
@@ -98,6 +134,13 @@ public class StockReservationTests
             .WithMessage("*too long*");
     }
 
+    #endregion
+
+    #region Quantity Modification Tests
+
+    /// <summary>
+    /// Tests the Increase method of the <see cref="StockReservation"/> class to ensure it correctly adds to the quantity.
+    /// </summary>
     [Fact]
     public void Increase_Should_AddQuantity()
     {
@@ -108,6 +151,9 @@ public class StockReservationTests
         reservation.Quantity.Should().Be(15);
     }
 
+    /// <summary>
+    /// Tests the Increase method of the <see cref="StockReservation"/> class to ensure it throws an exception when a negative quantity is provided.
+    /// </summary>
     [Fact]
     public void Increase_Should_Throw_WhenQuantityNegative()
     {
@@ -118,6 +164,9 @@ public class StockReservationTests
         act.Should().Throw<ArgumentException>();
     }
 
+    /// <summary>
+    /// Tests the Decrease method of the <see cref="StockReservation"/> class to ensure it correctly subtracts from the quantity.
+    /// </summary>
     [Fact]
     public void Decrease_Should_SubtractQuantity()
     {
@@ -128,6 +177,9 @@ public class StockReservationTests
         reservation.Quantity.Should().Be(7);
     }
 
+    /// <summary>
+    /// Tests the Decrease method of the <see cref="StockReservation"/> class to ensure it throws an exception when a negative quantity is provided.
+    /// </summary>
     [Fact]
     public void Decrease_Should_Throw_WhenTooMuch()
     {
@@ -139,6 +191,13 @@ public class StockReservationTests
             .WithMessage("*more than reserved*");
     }
 
+    #endregion
+
+    #region Status Transition Tests
+
+    /// <summary>
+    /// Tests the Release method of the <see cref="StockReservation"/> class to ensure it correctly sets the status to Released.
+    /// </summary>
     [Fact]
     public void Release_Should_SetStatusReleased()
     {
@@ -149,6 +208,9 @@ public class StockReservationTests
         reservation.Status.Should().Be(ReservationStatus.Released);
     }
 
+    /// <summary>
+    /// Tests the Fulfill method of the <see cref="StockReservation"/> class to ensure it correctly sets the status to Fulfilled.
+    /// </summary>
     [Fact]
     public void Fulfill_Should_SetStatusFulfilled()
     {
@@ -159,6 +221,9 @@ public class StockReservationTests
         reservation.Status.Should().Be(ReservationStatus.Fulfilled);
     }
 
+    /// <summary>
+    /// Tests the Cancel method of the <see cref="StockReservation"/> class to ensure it correctly sets the status to Cancelled.
+    /// </summary>
     [Fact]
     public void Cancel_Should_SetStatusCancelled()
     {
@@ -169,6 +234,9 @@ public class StockReservationTests
         reservation.Status.Should().Be(ReservationStatus.Cancelled);
     }
 
+    /// <summary>
+    /// Tests the Expire method of the <see cref="StockReservation"/> class to ensure it correctly sets the status to Expired when the reservation is active.
+    /// </summary>
     [Fact]
     public void Expire_Should_SetStatusExpired_WhenActive()
     {
@@ -179,6 +247,9 @@ public class StockReservationTests
         reservation.Status.Should().Be(ReservationStatus.Expired);
     }
 
+    /// <summary>
+    /// Tests the Expire method of the <see cref="StockReservation"/> class to ensure it does nothing when the reservation is not active (e.g., already released).
+    /// </summary>
     [Fact]
     public void Expire_Should_DoNothing_WhenNotActive()
     {
@@ -191,6 +262,13 @@ public class StockReservationTests
         reservation.Status.Should().Be(ReservationStatus.Released);
     }
 
+    #endregion
+
+    #region Expiration Tests
+
+    /// <summary>
+    /// Tests the IsExpired method of the <see cref="StockReservation"/> class to ensure it returns false when there is no expiration date set.
+    /// </summary>
     [Fact]
     public void IsExpired_Should_ReturnFalse_WhenNoExpiration()
     {
@@ -199,6 +277,9 @@ public class StockReservationTests
         reservation.IsExpired(_clockMock.Object.UtcNow).Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests the IsExpired method of the <see cref="StockReservation"/> class to ensure it returns false when the expiration date has not yet passed.
+    /// </summary>
     [Fact]
     public void IsExpired_Should_ReturnTrue_WhenDatePassed()
     {
@@ -219,6 +300,9 @@ public class StockReservationTests
         result.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests the SetExpiration method of the <see cref="StockReservation"/> class to ensure it correctly sets the expiration date when a valid date is provided.
+    /// </summary>
     [Fact]
     public void SetExpiration_Should_SetDate_WhenValid()
     {
@@ -231,6 +315,10 @@ public class StockReservationTests
         reservation.ExpiresAt.Should().Be(expires);
     }
 
+    /// <summary>
+    /// Tests the SetExpiration method of the <see cref="StockReservation"/> class to ensure it throws an exception 
+    /// when the provided expiration date is earlier than the creation date.
+    /// </summary>
     [Fact]
     public void SetExpiration_Should_Throw_WhenEarlierThanCreated()
     {
@@ -243,4 +331,6 @@ public class StockReservationTests
         act.Should().Throw<ArgumentException>()
             .WithMessage("*later than creation*");
     }
+
+    #endregion
 }

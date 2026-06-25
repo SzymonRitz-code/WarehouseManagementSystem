@@ -2,6 +2,7 @@
 using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.InventoryDomain;
+
 public class StockReservation
 {
     public Guid Id { get; private set; }

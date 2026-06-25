@@ -5,6 +5,8 @@ namespace WarehouseManagementSystem.Domain.Model.CatalogDomain;
 
 public class Product
 {
+    #region Constructors
+
     private Product() { } // EF
 
     public Product(
@@ -31,6 +33,10 @@ public class Product
         CreatedByUser = createdByUser;
     }
 
+    #endregion
+
+    #region Properties
+
     public Guid Id { get; private set; }
     public string SKU { get; private set; }
     public string Name { get; private set; }
@@ -43,7 +49,9 @@ public class Product
     public DateTimeOffset CreatedAt { get; private set; }
     public UserSnapshot CreatedByUser { get; private set; }
 
-    // ===== setters =====
+    #endregion
+
+    #region Setters and Status Operations
 
     public void SetSku(string sku)
     {
@@ -94,4 +102,6 @@ public class Product
 
     public void RequireBatchTracking() => RequiresBatch = true;
     public void DisableBatchTracking() => RequiresBatch = false;
+
+    #endregion
 }

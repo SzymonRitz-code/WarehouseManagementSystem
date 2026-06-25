@@ -35,7 +35,7 @@ export class DocumentItemsFormComponent implements OnChanges, OnInit {
   ngOnInit(): void {
     this.itemForm = this.fb.group({
       productId: [this.item?.productId ?? null, Validators.required],
-      productName: ['', Validators.required],
+      productName: [''],
       quantity: [this.item?.quantity ?? 1, [Validators.required, Validators.min(1)]],
       sourceZoneId: [this.item?.sourceZoneId ?? null],
       sourceZoneName: [''],

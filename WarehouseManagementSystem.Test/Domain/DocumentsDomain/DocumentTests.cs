@@ -11,6 +11,9 @@ using Document = WarehouseManagementSystem.Domain.Model.DocumentsDomain.Document
 
 namespace WarehouseManagementSystem.Tests.Domain.DocumentsDomain;
 
+/// <summary>
+/// Tests for the <see cref="Document"/> class in the Documents domain.
+/// </summary>
 public class DocumentTests
 {
     private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
@@ -21,13 +24,23 @@ public class DocumentTests
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
 
+    #region Helper Methods
+
+    /// <summary>
+    /// Creates a draft document with one item for testing purposes.
+    /// </summary>
+    /// <returns>A draft <see cref="Document"/> with one item.</returns>
     private Document DraftWithItem()
     {
         var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default), Guid.NewGuid());
         doc.AddItem(new DocumentItem(Guid.NewGuid(), 1, null, Guid.NewGuid(), null));
         return doc;
     }
-    // ================= Constructor & Properties =================
+
+    #endregion
+
+    #region Constructor and Properties Tests
+
     [Fact]
     public void Constructor_Should_Set_Properties_Correctly()
     {
@@ -48,15 +61,18 @@ public class DocumentTests
         doc.Items.Should().BeEmpty();
     }
 
-    // ================= Number & Notes Validations =================
-[Theory]
-[ClassData(typeof(InvalidRequiredStringTestData))]
-public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
-{
-    var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
-    Action act = () => doc.SetNumber(invalidNumber!);
-    act.Should().Throw<ArgumentException>().WithMessage("Document number cannot be empty.");
-}
+    #endregion
+
+    #region Number and Notes Validation Tests
+
+    [Theory]
+    [ClassData(typeof(InvalidRequiredStringTestData))]
+    public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
+    {
+        var doc = new Document(DateTime.UtcNow, DocumentType.PZ, _userServiceMock.Object.GetUser(default));
+        Action act = () => doc.SetNumber(invalidNumber!);
+        act.Should().Throw<ArgumentException>().WithMessage("Document number cannot be empty.");
+    }
 
     [Fact]
     public void SetNumber_Should_Throw_If_Too_Long()
@@ -76,7 +92,10 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         act.Should().Throw<ArgumentException>().WithMessage("Notes cannot exceed 1000 characters.");
     }
 
-    // ================= Draft Operations =================
+    #endregion
+
+    #region Draft Operations Tests
+
     [Fact]
     public void ChangeDate_Should_Work_Only_In_Draft()
     {
@@ -123,7 +142,10 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
-    // ================= Confirm =================
+    #endregion
+
+    #region Confirm Operation Tests
+
     [Fact]
     public void Confirm_Should_Work_Correctly()
     {
@@ -146,7 +168,10 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         act.Should().Throw<CannotConfirmEmptyDocumentException>().WithMessage($"Document {doc.Id} cannot be confirmed without items.");
     }
 
-    // ================= Cancel =================
+    #endregion
+
+    #region Cancel Operation Tests
+
     [Fact]
     public void Cancel_Should_Work_From_Draft()
     {
@@ -171,7 +196,10 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
-    // ================= Transfer =================
+    #endregion
+
+    #region Transfer Operation Tests
+
     [Fact]
     public void Draft_Cannot_StartTransfer()
     {
@@ -264,6 +292,11 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
             .Should().Throw<InvalidOperationException>()
             .WithMessage("Only transferred document can be completed.");
     }
+
+    #endregion
+
+    #region Number Lifecycle Tests
+
     [Fact]
     public void NewDocument_HasNullNumber()
     {
@@ -295,7 +328,9 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         act.Should().Throw<ArgumentException>();
     }
 
-    // --- Lifecycle ---
+    #endregion
+
+    #region Document Lifecycle Tests
 
     [Fact]
     public void Confirm_SetsStatusToConfirmed_WhenDraftWithItems()
@@ -361,7 +396,9 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
-    // --- Item invariants ---
+    #endregion
+
+    #region Item Invariants Tests
 
     [Fact]
     public void ReplaceItems_ReplacesAllItems_NotAppends()
@@ -422,7 +459,9 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         act.Should().Throw<DocumentNotInDraftStateException>().WithMessage($"Document {doc.Id} is not in Draft state.");
     }
 
-    // --- UserSnapshot ---
+    #endregion
+
+    #region UserSnapshot Tests
 
     [Fact]
     public void CreatedBySnapshot_IsImmutable_AfterCreation()
@@ -445,4 +484,6 @@ public void SetNumber_Should_Throw_On_Empty(string? invalidNumber)
         doc.ConfirmedByUser.Name.Should().Be("Piotr Wiśniewski");
         doc.ConfirmedByUser.Email.Should().Be("piotr@wms.pl");
     }
+
+    #endregion
 }

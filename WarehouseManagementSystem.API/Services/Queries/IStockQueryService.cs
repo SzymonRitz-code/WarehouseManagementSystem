@@ -9,6 +9,8 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 /// </summary>
 public interface IStockQueryService
 {
+    #region Stock DTO Queries
+
     /// <summary>
     /// Gets a paginated list of stock records using the provided filters.
     /// </summary>
@@ -34,6 +36,10 @@ public interface IStockQueryService
     /// <returns>Stock record details, or <c>null</c> if the stock record does not exist.</returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task<StockDto?> GetStockDetailsAsync(Guid stockId, CancellationToken ct = default);
+
+    #endregion
+
+    #region Stock Lookup Queries
 
     /// <summary>
     /// Gets a stock aggregate by identifier.
@@ -85,6 +91,10 @@ public interface IStockQueryService
         Guid warehouseId,
         CancellationToken ct = default);
 
+    #endregion
+
+    #region Quantity and Classification Queries
+
     /// <summary>
     /// Gets the available, unreserved product quantity in a warehouse and optionally in a batch or zone.
     /// </summary>
@@ -126,6 +136,10 @@ public interface IStockQueryService
         TemperatureType temperatureType,
         CancellationToken ct = default);
 
+    #endregion
+
+    #region Warehouse Location Queries
+
     /// <summary>
     /// Gets stock records for the selected warehouse.
     /// </summary>
@@ -156,4 +170,6 @@ public interface IStockQueryService
     Task<IReadOnlyList<Stock>> GetAvailableForPickingAsync(
         Guid warehouseId,
         CancellationToken ct = default);
+
+    #endregion
 }

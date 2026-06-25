@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Infrastructure.Services;
-using Xunit;
 
 namespace WarehouseManagementSystem.Tests.Services;
 
@@ -35,6 +34,9 @@ public class ReservationExpirationJobTests
             _loggerMock.Object);
     }
 
+    /// <summary>
+    /// Verifies that RunAsync resolves the reservation service and calls ExpireReservationsAsync.
+    /// </summary>
     [Fact]
     public async Task RunAsync_ShouldResolveReservationService_AndExpireReservations()
     {
@@ -50,6 +52,9 @@ public class ReservationExpirationJobTests
             Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that RunAsync creates a service scope before resolving dependencies.
+    /// </summary>
     [Fact]
     public async Task RunAsync_ShouldCreateServiceScope()
     {
@@ -60,6 +65,9 @@ public class ReservationExpirationJobTests
         _scopeFactoryMock.Verify(x => x.CreateScope(), Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that RunAsync resolves IStockReservationService from the service provider.
+    /// </summary>
     [Fact]
     public async Task RunAsync_ShouldResolveServiceFromProvider()
     {
@@ -72,6 +80,9 @@ public class ReservationExpirationJobTests
             Times.Once);
     }
 
+    /// <summary>
+    /// Verifies that RunAsync logs information about the reservation expiration job execution.
+    /// </summary>
     [Fact]
     public async Task RunAsync_ShouldLogInformation()
     {

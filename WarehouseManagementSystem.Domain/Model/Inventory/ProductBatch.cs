@@ -5,6 +5,8 @@ namespace WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 public class ProductBatch
 {
+    #region Properties
+
     public Guid Id { get; private set; }
 
     private string _batchNumber = null!;
@@ -19,6 +21,10 @@ public class ProductBatch
     public Guid ProductId { get; private set; }
 
     public virtual Product Product { get; private set; }
+
+    #endregion
+
+    #region Constructors
 
     // EF Core
     private ProductBatch() { }
@@ -40,9 +46,9 @@ public class ProductBatch
         CreatedByUser = createdByUser;
     }
 
-    // ========================
-    // DOMAIN BEHAVIOR
-    // ========================
+    #endregion
+
+    #region Domain Behavior
 
     public void SetBatchNumber(string batchNumber)
     {
@@ -89,4 +95,6 @@ public class ProductBatch
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         return ExpirationDate.Value <= today.AddDays(daysThreshold);
     }
+
+    #endregion
 }

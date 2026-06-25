@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.AuditDomain;
 
@@ -16,12 +16,12 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 
         public void Add(AuditLog entity)
         {
-           _context.Add(entity);
+            _context.Add(entity);
         }
 
         public bool Any(Expression<Func<AuditLog, bool>> predicate)
         {
-           return _context.AuditLogs.Any(predicate);
+            return _context.AuditLogs.Any(predicate);
         }
         public AuditLog Find(Guid id)
         {

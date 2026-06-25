@@ -3,15 +3,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using WarehouseManagementSystem.API.Services.User;
-using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 using WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
-using Xunit;
 
 namespace WarehouseManagementSystem.Tests.Infrastructure.Repositories;
 
+/// <summary>
+/// Tests for the <see cref="StockRepository"/> class in the Infrastructure layer, focusing on data access and retrieval of stock and stock reservations.
+/// </summary>
 public class StockRepositoryTests
 {
     private readonly Mock<IUserService> _userServiceMock = new Mock<IUserService>();
@@ -21,6 +22,10 @@ public class StockRepositoryTests
             .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
     }
 
+    /// <summary>
+    /// Creates a new instance of the <see cref="WarehouseManagementSystemDbContext"/> using an in-memory database for testing purposes.
+    /// </summary>
+    /// <returns>A new instance of <see cref="WarehouseManagementSystemDbContext"/>.</returns>
     private WarehouseManagementSystemDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<WarehouseManagementSystemDbContext>()
@@ -30,6 +35,10 @@ public class StockRepositoryTests
         return new TestDbContext(options);
     }
 
+    /// <summary>
+    /// Tests the GetByProductAndWarehouseAsync method of the StockRepository to ensure it returns the correct stock based on product and warehouse identifiers.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetByProductAndWarehouseAsync_Should_ReturnCorrectStock()
     {
@@ -55,6 +64,10 @@ public class StockRepositoryTests
         result!.Id.Should().Be(stock.Id);
     }
 
+    /// <summary>
+    /// Tests the GetActiveReservationsAsync method of the StockRepository to ensure it returns only active reservations sorted by their creation date.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetActiveReservationsAsync_Should_ReturnOnlyActiveSortedByCreatedAt()
     {
@@ -80,6 +93,10 @@ public class StockRepositoryTests
         result.First().CreatedAt.Should().BeBefore(result.Last().CreatedAt);
     }
 
+    /// <summary>
+    /// Tests the GetExpiredReservationsAsync method of the StockRepository to ensure it returns only expired reservations based on the provided current time.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetExpiredReservationsAsync_Should_ReturnOnlyExpired()
     {
@@ -106,6 +123,10 @@ public class StockRepositoryTests
         result.First().Id.Should().Be(expired.Id);
     }
 
+    /// <summary>
+    /// Tests the FindReservationsByStockIdAsync method of the StockRepository to ensure it returns all reservations associated with a specific stock ID.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task FindReservationsByStockIdAsync_Should_ReturnReservationsForStock()
     {

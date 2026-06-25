@@ -1,11 +1,10 @@
-﻿using WarehouseManagementSystem.Domain.Model.SecurityDomain;
-using WarehouseManagementSystem.Domain.ValueObjects;
+﻿using WarehouseManagementSystem.Domain.ValueObjects;
 
 namespace WarehouseManagementSystem.Domain.Model.AuditDomain
 {
     public class AuditLog
     {
-        public Guid Id { get; set; }   
+        public Guid Id { get; set; }
         public string EntityName { get; set; }
         public Guid EntityId { get; set; }
         public string Operation { get; set; }

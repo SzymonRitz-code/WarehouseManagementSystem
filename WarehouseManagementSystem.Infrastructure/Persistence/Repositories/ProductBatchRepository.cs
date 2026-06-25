@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
@@ -41,17 +41,17 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 
         public ProductBatch Find(Guid id)
         {
-            return _context.ProductBatches.Find(id);   
+            return _context.ProductBatches.Find(id);
         }
 
         public async Task<ProductBatch> FindAsync(Guid id)
         {
-            return await  _context.ProductBatches.FindAsync(id);
+            return await _context.ProductBatches.FindAsync(id);
         }
 
         public ProductBatch Update(ProductBatch entity)
         {
-             return _context.ProductBatches.Update(entity).Entity;
+            return _context.ProductBatches.Update(entity).Entity;
         }
 
         public void UpdateRange(IEnumerable<ProductBatch> entities)

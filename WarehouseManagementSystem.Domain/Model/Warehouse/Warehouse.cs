@@ -7,6 +7,8 @@ namespace WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
 public class Warehouse
 {
+    #region Fields and Constructors
+
     private readonly List<WarehouseZone> _zones = new();
 
     private Warehouse() { } // EF Core
@@ -29,6 +31,10 @@ public class Warehouse
         CreatedByUser = createdByUser;
     }
 
+    #endregion
+
+    #region Properties
+
     public Guid Id { get; private set; }
     public string Code { get; private set; }
     public string Name { get; private set; }
@@ -45,7 +51,9 @@ public class Warehouse
     public ICollection<Document> TargetDocuments { get; set; }
     public ICollection<Stock> Stocks { get; set; }
 
-    // ===== Business Methods =====
+    #endregion
+
+    #region Business Methods
 
     public void SetCode(string code)
     {
@@ -102,7 +110,9 @@ public class Warehouse
         IsActive = false;
     }
 
-    // ===== Zones Management =====
+    #endregion
+
+    #region Zone Management
 
     public WarehouseZone AddZone(
         string code,
@@ -118,7 +128,7 @@ public class Warehouse
             name,
             temperatureType,
             isPickingZone,
-            Id, 
+            Id,
             new UserSnapshot(CreatedByUser.Id, CreatedByUser.Email, CreatedByUser.Name));
 
         _zones.Add(zone);
@@ -147,4 +157,6 @@ public class Warehouse
 
         return zone;
     }
+
+    #endregion
 }

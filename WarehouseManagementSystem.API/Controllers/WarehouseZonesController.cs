@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
@@ -17,6 +16,8 @@ namespace WarehouseManagementSystem.API.Controllers;
 [Route("api/zones")]
 public class WarehouseZonesController : ControllerBase
 {
+    #region Fields and Constructor
+
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IWarehouseQueryService _warehouseQueryService;
@@ -39,6 +40,10 @@ public class WarehouseZonesController : ControllerBase
         _logger = logger;
         _userService = userService;
     }
+
+    #endregion
+
+    #region Query Actions
 
     /// <summary>
     /// Gets the warehouse zone list.
@@ -70,6 +75,10 @@ public class WarehouseZonesController : ControllerBase
 
         return Ok(zone);
     }
+
+    #endregion
+
+    #region Create, Update and Delete Actions
 
     /// <summary>
     /// Updates an existing warehouse zone.
@@ -209,10 +218,18 @@ public class WarehouseZonesController : ControllerBase
         return NoContent();
     }
 
+    #endregion
+
+    #region Helper Methods
+
     private bool WarehouseZoneExists(Guid warehouseZoneId)
     {
         return _unitOfWork.WarehouseZones.Any(z => z.Id == warehouseZoneId);
     }
+
+    #endregion
+
+    #region Options Action
 
     /// <summary>
     /// Returns the available HTTP methods supported by the warehouse zones controller.
@@ -224,4 +241,6 @@ public class WarehouseZonesController : ControllerBase
         Response.Headers.Append("Allow", "GET, HEAD, POST, PUT, DELETE, OPTIONS");
         return Ok();
     }
+
+    #endregion
 }

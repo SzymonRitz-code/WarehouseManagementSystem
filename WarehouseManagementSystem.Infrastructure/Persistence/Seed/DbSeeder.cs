@@ -11,6 +11,8 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Seed;
 /// </summary>
 public static partial class DbSeeder
 {
+    #region Constants and Seed Users
+
     private const int DefaultSeed = 42;
     private const int SaveBatchSize = 2_000;
 
@@ -42,6 +44,10 @@ public static partial class DbSeeder
         new(Guid.Parse("20202020-2020-2020-2020-202020202020"), "kevin.walker@northwind-warehouse.com", "Kevin Walker")
     ];
 
+    #endregion
+
+    #region Seed Options and Results
+
     public sealed record Options(
         int ProductCount = 12_000,
         int WarehouseCount = 3,
@@ -69,6 +75,11 @@ public static partial class DbSeeder
         int DocumentItems,
         int DocumentSequences,
         bool Skipped);
+
+    #endregion
+
+    #region Master Data Seeding
+
     /// <summary>
     /// Seeds master data (warehouses, zones, products, product batches, and stocks) into the database.
     /// </summary>
@@ -158,6 +169,11 @@ public static partial class DbSeeder
             db.ChangeTracker.AutoDetectChangesEnabled = originalAutoDetectChanges;
         }
     }
+
+    #endregion
+
+    #region Operational Data Seeding
+
     /// <summary>
     /// Seeds operational data (documents and document items) into the database.
     /// </summary>
@@ -236,6 +252,10 @@ public static partial class DbSeeder
         }
     }
 
+    #endregion
+
+    #region Seed Validation
+
     private static async Task<bool> HasMasterDataAsync(
         WarehouseManagementSystemDbContext db,
         CancellationToken cancellationToken)
@@ -299,6 +319,11 @@ public static partial class DbSeeder
             throw new ArgumentOutOfRangeException(nameof(options.SaveDocumentBatchSize), "Save document batch size must be greater than zero.");
         }
     }
+
+    #endregion
+
+    #region Persistence Helpers
+
     /// <summary>
     /// Saves entities in batches to the database.
     /// </summary>
@@ -344,4 +369,6 @@ public static partial class DbSeeder
             db.ChangeTracker.Clear();
         }
     }
+
+    #endregion
 }

@@ -8,12 +8,19 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 
 public class StockQueryService : IStockQueryService
 {
+    #region Fields and Constructor
+
     private readonly WarehouseManagementSystemDbContext _context;
 
     public StockQueryService(WarehouseManagementSystemDbContext context)
     {
         _context = context;
     }
+
+    #endregion
+
+    #region Stock DTO Query Operations
+
     public async Task<PagedResult<StockDto>> GetStocksAsync(StockListQuery query, CancellationToken ct = default)
     {
         var stocks = BuildStockListQuery();
@@ -118,6 +125,11 @@ public class StockQueryService : IStockQueryService
             })
             .FirstOrDefaultAsync(ct);
     }
+
+    #endregion
+
+    #region Stock Lookup Operations
+
     public async Task<Stock?> GetByIdAsync(Guid stockId, CancellationToken ct = default)
     {
         return await _context.Stocks
@@ -190,6 +202,10 @@ public class StockQueryService : IStockQueryService
             .ToListAsync(ct);
     }
 
+    #endregion
+
+    #region Quantity and Availability Operations
+
     public async Task<decimal> GetAvailableQuantityAsync(
         Guid productId,
         Guid? batchId,
@@ -254,6 +270,10 @@ public class StockQueryService : IStockQueryService
         return available >= requiredQuantity;
     }
 
+    #endregion
+
+    #region Reservation and Picking Query Operations
+
     public async Task<IReadOnlyList<Stock>> GetStocksWithActiveReservationsAsync(
         CancellationToken ct = default)
     {
@@ -286,6 +306,10 @@ public class StockQueryService : IStockQueryService
             .OrderByDescending(s => s.QuantityTotal - s.QuantityReserved)
             .ToListAsync(ct);
     }
+
+    #endregion
+
+    #region Query Helpers
 
     private IQueryable<Stock> BuildStockListQuery()
     {
@@ -353,5 +377,7 @@ public class StockQueryService : IStockQueryService
                 : stocks.OrderBy(s => s.LastUpdated)
         };
     }
+
+    #endregion
 
 }

@@ -6,9 +6,16 @@ using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.WarehouseDomain;
 
- [Trait("Category", "Warehouse_Zone")]
+/// <summary>
+/// Tests for the <see cref="WarehouseZone"/> class in the Warehouse domain, focusing on its properties, methods, and behaviors.
+/// </summary>
+/// <param name="fixture">The test fixture providing user for the tests.</param>
+[Trait("Category", "Warehouse_Zone")]
 public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
+    /// <summary>
+    /// Tests that the constructor of the <see cref="WarehouseZone"/> class initializes
+    /// </summary>
     [Fact]
     public void Constructor_ShouldInitializePropertiesCorrectly()
     {
@@ -25,6 +32,10 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         zone.Stocks.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.SetCode(string)"/> method throws an exception when an invalid code is provided.
+    /// </summary>
+    /// <param name="code">The invalid code to test.</param>
     [Theory]
     [ClassData(typeof(InvalidRequiredStringTestData))]
     public void SetCode_ShouldThrow_WhenCodeIsInvalid(string? code)
@@ -34,6 +45,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         act.Should().Throw<ArgumentException>().WithMessage("*cannot be empty*");
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.SetCode(string)"/> method trims whitespace and converts the code to uppercase.
+    /// </summary>
     [Fact]
     public void SetCode_ShouldTrimAndUppercaseCode()
     {
@@ -42,6 +56,10 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         zone.Code.Should().Be("Z02");
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.SetName(string)"/> method throws an exception when an invalid name is provided.
+    /// </summary>
+    /// <param name="name">The invalid name to test.</param>
     [Theory]
     [ClassData(typeof(InvalidRequiredStringTestData))]
     public void SetName_ShouldThrow_WhenNameIsInvalid(string? name)
@@ -51,6 +69,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         act.Should().Throw<ArgumentException>().WithMessage("*cannot be empty*");
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.SetName(string)"/> method trims whitespace from the name.
+    /// </summary>
     [Fact]
     public void SetName_ShouldTrimName()
     {
@@ -59,6 +80,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         zone.Name.Should().Be("New Zone");
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.SetTemperatureType(TemperatureType)"/> method correctly updates the temperature type.
+    /// </summary>
     [Fact]
     public void SetPickingZone_ShouldChangeFlag()
     {
@@ -70,6 +94,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         zone.IsPickingZone.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.SetTemperatureType(TemperatureType)"/> method correctly updates the temperature type.
+    /// </summary>
     [Fact]
     public void ContainsStock_ShouldReturnFalse_WhenNoStocks()
     {
@@ -77,6 +104,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         zone.ContainsStock().Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.ContainsStock()"/> method returns true when the zone has stocks.
+    /// </summary>
     [Fact]
     public void ContainsStock_ShouldReturnTrue_WhenHasStocks()
     {
@@ -85,6 +115,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         zone.ContainsStock().Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.EnsureCanBeRemoved()"/> method throws an exception when the zone contains stocks.
+    /// </summary>
     [Fact]
     public void EnsureCanBeRemoved_ShouldThrow_WhenContainsStocks()
     {
@@ -95,6 +128,9 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         act.Should().Throw<InvalidOperationException>().WithMessage("*contains stock*");
     }
 
+    /// <summary>
+    /// Tests that the <see cref="WarehouseZone.EnsureCanBeRemoved()"/> method does not throw an exception when the zone has no stocks.
+    /// </summary>
     [Fact]
     public void EnsureCanBeRemoved_ShouldNotThrow_WhenNoStocks()
     {
@@ -103,6 +139,15 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// Creates a new instance of <see cref="WarehouseZone"/> with the specified parameters for testing purposes.
+    /// </summary>
+    /// <param name="code">The code of the warehouse zone.</param>
+    /// <param name="name">The name of the warehouse zone.</param>
+    /// <param name="temperatureType">The temperature type of the warehouse zone.</param>
+    /// <param name="isPickingZone">Indicates whether the warehouse zone is a picking zone.</param>
+    /// <param name="warehouseId">The ID of the warehouse.</param>
+    /// <returns>A new instance of <see cref="WarehouseZone"/>.</returns>
     private WarehouseZone CreateZone(
         string code = "Z01",
         string name = "Zone 1",
@@ -111,6 +156,12 @@ public class WarehouseZoneTests(DomainTestFixture fixture) : IClassFixture<Domai
         Guid? warehouseId = null)
         => new(code, name, temperatureType, isPickingZone, warehouseId ?? Guid.NewGuid(), fixture.User);
 
+    /// <summary>
+    /// Creates a new instance of <see cref="Stock"/> associated with the specified <see cref="WarehouseZone"/> for testing purposes.
+    /// </summary>
+    /// <param name="zone">The warehouse zone to associate with the stock.</param>
+    /// <param name="quantity">The quantity of the stock.</param>
+    /// <returns>A new instance of <see cref="Stock"/>.</returns>
     private static Stock CreateStock(WarehouseZone zone, decimal quantity = 10m)
         => new(Guid.NewGuid(), zone.WarehouseId, zone.Id, null, quantity);
 }

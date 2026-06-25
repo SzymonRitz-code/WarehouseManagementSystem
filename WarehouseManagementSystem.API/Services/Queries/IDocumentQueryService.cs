@@ -10,6 +10,8 @@ namespace WarehouseManagementSystem.API.Services.Queries;
 /// </summary>
 public interface IDocumentQueryService
 {
+    #region Document List and Lookup Queries
+
     /// <summary>
     /// Gets a paginated list of documents using the provided filters.
     /// </summary>
@@ -36,6 +38,10 @@ public interface IDocumentQueryService
     /// <returns>Document, or <c>null</c> if a document with the specified number does not exist.</returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task<Document?> GetByNumberAsync(string number, CancellationToken ct = default);
+
+    #endregion
+
+    #region Status and Workflow Queries
 
     /// <summary>
     /// Gets documents matching the specified type and status.
@@ -75,6 +81,10 @@ public interface IDocumentQueryService
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task<IReadOnlyList<DocumentListDto>> GetPendingDocumentsAsync(CancellationToken ct = default);
 
+    #endregion
+
+    #region Warehouse and Reservation Queries
+
     /// <summary>
     /// Gets documents related to a warehouse as either source or target warehouse.
     /// </summary>
@@ -108,6 +118,10 @@ public interface IDocumentQueryService
         Guid documentId,
         CancellationToken ct = default);
 
+    #endregion
+
+    #region Recent and Paged Queries
+
     /// <summary>
     /// Gets recent documents.
     /// </summary>
@@ -131,4 +145,6 @@ public interface IDocumentQueryService
         int page,
         int pageSize,
         CancellationToken ct = default);
+
+    #endregion
 }

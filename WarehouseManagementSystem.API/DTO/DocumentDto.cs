@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using WarehouseManagementSystem.Domain.Enums;
+﻿using WarehouseManagementSystem.Domain.Enums;
 
 namespace WarehouseManagementSystem.API.DTO;
 

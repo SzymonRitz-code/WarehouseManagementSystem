@@ -66,6 +66,49 @@ describe('ProductFormComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/products/detail/prod-created');
   });
 
+  it('lets a user fill and submit the create form from the rendered UI', async () => {
+    await setup();
+    productService.addProduct.mockReturnValue(of({ id: 'prod-created', ...validProductPayload(), isActive: true }));
+
+    setInputValue('app-input-field[formcontrolname="name"] input', 'Steel Screw');
+    setInputValue('app-input-field[formcontrolname="sku"] input', 'SKU-001');
+    setSelectValue('app-input-select[formcontrolname="unit"] select', UnitOfMeasure.Piece);
+    setInputValue('app-input-field[formcontrolname="weight"] input', '0.1');
+    setInputValue('app-input-field[formcontrolname="volume"] input', '0.01');
+    setTextAreaValue('app-text-area[formcontrolname="description"] textarea', 'Warehouse consumable');
+    fixture.detectChanges();
+
+    clickButton('Save');
+    await fixture.whenStable();
+
+    expect(productService.addProduct).toHaveBeenCalledWith({
+      name: 'Steel Screw',
+      sku: 'SKU-001',
+      description: 'Warehouse consumable',
+      unit: UnitOfMeasure.Piece,
+      requiresBatch: true,
+      weight: '0.1',
+      volume: '0.01'
+    });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/products/detail/prod-created');
+  });
+
+  it('keeps save disabled in the rendered UI until required fields are filled', async () => {
+    await setup();
+
+    setInputValue('app-input-field[formcontrolname="name"] input', '');
+    setInputValue('app-input-field[formcontrolname="sku"] input', '');
+    setSelectValue('app-input-select[formcontrolname="unit"] select', '');
+    fixture.detectChanges();
+
+    const saveButton = buttonByText('Save');
+    expect(saveButton.disabled).toBe(true);
+
+    saveButton.click();
+
+    expect(productService.addProduct).not.toHaveBeenCalled();
+  });
+
   it('loads existing product into edit form', async () => {
     const existingProduct = productFixture();
     await setup('prod-1', {
@@ -203,5 +246,36 @@ describe('ProductFormComponent', () => {
       id: 'prod-1',
       ...validProductPayload()
     };
+  }
+
+  function setInputValue(selector: string, value: string): void {
+    const input = fixture.nativeElement.querySelector(selector) as HTMLInputElement;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function setTextAreaValue(selector: string, value: string): void {
+    const textarea = fixture.nativeElement.querySelector(selector) as HTMLTextAreaElement;
+    textarea.value = value;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function setSelectValue(selector: string, value: string): void {
+    const select = fixture.nativeElement.querySelector(selector) as HTMLSelectElement;
+    select.value = value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function clickButton(text: string): void {
+    buttonByText(text).click();
+  }
+
+  function buttonByText(text: string): HTMLButtonElement {
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const button = buttons.find(candidate => candidate.textContent?.trim() === text);
+    if (!button) {
+      throw new Error(`Button "${text}" was not found.`);
+    }
+    return button;
   }
 });

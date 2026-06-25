@@ -6,11 +6,18 @@ using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.WarehouseDomain;
 
+/// <summary>
+/// Tests for the <see cref="Warehouse"/> aggregate in the Warehouse domain, focusing on the flow of operations such as adding/removing zones, activating/deactivating the warehouse, and managing stocks.
+/// </summary>
+/// <param name="fixture">The test fixture providing user for the tests.</param>
 [Trait("Category", "Warehouse_Aggregate")]
 public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
     private readonly Guid _productId = Guid.NewGuid();
 
+    /// <summary>
+    /// Tests that the constructor of the <see cref="Warehouse"/> class initializes the warehouse correctly with the provided parameters and sets default values for properties like IsActive and Zones.
+    /// </summary>
     [Fact]
     public void Constructor_ShouldInitializeWarehouseCorrectly()
     {
@@ -30,7 +37,9 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         warehouse.IsActive.Should().BeTrue();
         zones.Should().BeEmpty();
     }
-
+    /// <summary>
+    /// Tests that adding a zone to the warehouse works correctly, and that the zone can be retrieved by its ID. It also verifies that the zone is added to the warehouse's collection of zones.
+    /// </summary>
     [Fact]
     public void AddZone_ShouldAddAndRetrieveZoneCorrectly()
     {
@@ -47,7 +56,9 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         warehouse.Zones.Should().Contain(zone);
         retrieved.Should().Be(zone);
     }
-
+    /// <summary>
+    /// Tests that adding a zone with a duplicate code throws an InvalidOperationException, ensuring that zone codes are unique within the warehouse.
+    /// </summary>
     [Fact]
     public void AddZone_ShouldThrow_WhenDuplicateCode()
     {
@@ -61,7 +72,9 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         // Assert
         act.Should().Throw<InvalidOperationException>().WithMessage("*already exists*");
     }
-
+    /// <summary>
+    /// Tests that removing a zone from the warehouse works correctly, and that the zone is no longer present in the warehouse's collection of zones after removal.
+    /// </summary>
     [Fact]
     public void RemoveZone_ShouldRemoveZoneCorrectly()
     {
@@ -75,7 +88,9 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         // Assert
         warehouse.Zones.Should().BeEmpty();
     }
-
+    /// <summary>
+    /// Tests that attempting to remove a zone that contains stock throws an InvalidOperationException, ensuring that zones with existing stock cannot be removed from the warehouse.
+    /// </summary>
     [Fact]
     public void RemoveZone_ShouldThrow_WhenContainsStock()
     {
@@ -92,7 +107,10 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*containing stock*");
     }
-
+    /// <summary>
+    /// Tests that deactivating the warehouse throws an InvalidOperationException when there are active zones present, 
+    /// ensuring that a warehouse cannot be deactivated while it still has zones.
+    /// </summary>
     [Fact]
     public void Deactivate_ShouldThrow_WhenZonesExist()
     {
@@ -107,7 +125,10 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*active zones*");
     }
-
+    /// <summary>
+    /// Tests that deactivating the warehouse throws an InvalidOperationException when there are stocks present, 
+    /// ensuring that a warehouse cannot be deactivated while it still has stock in any of its zones.
+    /// </summary>
     [Fact]
     public void Deactivate_ShouldThrow_WhenStocksExist()
     {
@@ -122,7 +143,9 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*containing stock*");
     }
-
+    /// <summary>
+    /// Tests that deactivating the warehouse sets the IsActive property to false, indicating that the warehouse is no longer active.
+    /// </summary>
     [Fact]
     public void Activate_ShouldSetIsActiveToTrue()
     {
@@ -137,6 +160,9 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         warehouse.IsActive.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that updating the warehouse properties (code, name, and location) works correctly, and that the updated values are reflected in the warehouse's properties.
+    /// </summary>
     [Fact]
     public void UpdateWarehouseProperties_ShouldWorkCorrectly()
     {
@@ -156,6 +182,10 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         warehouse.Address.Should().Be("Street 123");
     }
 
+    /// <summary>
+    /// Tests that attempting to retrieve a zone that does not exist in the warehouse throws an InvalidOperationException, 
+    /// ensuring that the GetZone method correctly handles cases where the specified zone ID is not found.
+    /// </summary>
     [Fact]
     public void GetZone_ShouldThrow_WhenNotFound()
     {
@@ -169,6 +199,10 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
         act.Should().Throw<InvalidOperationException>().WithMessage("*not found*");
     }
 
+    /// <summary>
+    /// Creates a new instance of the <see cref="Warehouse"/> class with predefined properties for testing purposes.
+    /// </summary>
+    /// <returns>A new instance of the <see cref="Warehouse"/> class.</returns>
     private Warehouse CreateWarehouse()
         => new(
             "WH01",
@@ -178,6 +212,12 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
             "ul. Example 1",
             fixture.User);
 
+    /// <summary>
+    /// Creates a new instance of the <see cref="Stock"/> class with predefined properties for testing purposes.
+    /// </summary>
+    /// <param name="warehouseId">The ID of the warehouse to which the stock belongs.</param>
+    /// <param name="zoneId">The ID of the zone to which the stock belongs.</param>
+    /// <returns>A new instance of the <see cref="Stock"/> class.</returns>
     private Stock CreateStock(Guid warehouseId, Guid zoneId)
         => new(_productId, warehouseId, zoneId, null, 10);
 }

@@ -7,6 +7,8 @@ namespace WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 
 public class Document
 {
+    #region Fields and Constructors
+
     private const int MaxNumberLength = 50;
     private const int MaxNotesLength = 1000;
 
@@ -33,6 +35,10 @@ public class Document
         CreatedAt = DateTimeOffset.UtcNow;
     }
 
+    #endregion
+
+    #region Properties
+
     public Guid Id { get; private set; }
     public string? Number { get; private set; }
     public DateTime DocumentDate { get; private set; }
@@ -58,7 +64,9 @@ public class Document
 
     public IReadOnlyCollection<DocumentItem> Items => _items.AsReadOnly();
 
-    // ===== Business Methods =====
+    #endregion
+
+    #region Metadata Operations
 
     public void SetNumber(string number)
     {
@@ -78,6 +86,10 @@ public class Document
 
         Notes = notes;
     }
+
+    #endregion
+
+    #region Draft Item Operations
 
     public void ChangeDate(DateTime newDate)
     {
@@ -114,6 +126,11 @@ public class Document
 
         _items.Remove(item);
     }
+
+    #endregion
+
+    #region Workflow Operations
+
     public void StartTransfer(DateTimeOffset now)
     {
         if (Status == DocumentStatus.Cancelled)
@@ -162,6 +179,10 @@ public class Document
         CancelledByUser = cancelledByUser;
     }
 
+    #endregion
+
+    #region Warehouse and Type Operations
+
     private void EnsureDraft()
     {
         if (Status != DocumentStatus.Draft)
@@ -185,4 +206,6 @@ public class Document
         EnsureDraft();
         Type = type;
     }
+
+    #endregion
 }

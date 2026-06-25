@@ -4,6 +4,10 @@ using WarehouseManagementSystem.Tests.Support;
 
 namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain;
 
+/// <summary>
+/// Tests for the <see cref="Stock"/> class in the Inventory domain, focusing on stock reservation behaviors.
+/// </summary>
+/// <param name="fixture">The domain test fixture used for setting up test dependencies.</param>
 [Trait("Category", "Inventory_StockReservation")]
 public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFixture<DomainTestFixture>
 {
@@ -11,6 +15,9 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
     private readonly Guid _warehouseId = Guid.NewGuid();
     private readonly Guid _zoneId = Guid.NewGuid();
 
+    /// <summary>
+    /// Test to ensure that creating a reservation correctly reserves the specified quantity and updates the stock's reserved and available quantities accordingly.
+    /// </summary>
     [Fact]
     public void CreateReservation_ShouldReserveQuantity()
     {
@@ -26,6 +33,9 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         stock.Available.Should().Be(30m);
     }
 
+    /// <summary>
+    /// Test to ensure that attempting to create a reservation that exceeds the available stock throws an InvalidOperationException.
+    /// </summary>
     [Fact]
     public void CreateReservation_ShouldThrow_WhenExceedingAvailable()
     {
@@ -40,6 +50,9 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         act.Should().Throw<InvalidOperationException>().WithMessage("*Not enough stock*");
     }
 
+    /// <summary>
+    /// Test to ensure that releasing a reservation correctly updates the stock's reserved and available quantities.
+    /// </summary>
     [Fact]
     public void MultipleReservations_ShouldSumReservedCorrectly()
     {
@@ -56,6 +69,9 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         stock.Available.Should().Be(40m);
     }
 
+    /// <summary>
+    /// Test to ensure that adjusting the total stock quantity to a value lower than the sum of active reservations throws an InvalidOperationException.
+    /// </summary>
     [Fact]
     public void AdjustTotal_ShouldThrow_WhenLowerThanSumOfReservations()
     {
@@ -71,6 +87,9 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         act.Should().Throw<InvalidOperationException>().WithMessage("*lower than reserved*");
     }
 
+    /// <summary>
+    /// Test to ensure that adjusting the total stock quantity to a value above the sum of active reservations correctly updates the stock's total and available quantities.
+    /// </summary>
     [Fact]
     public void AdjustTotal_ShouldWork_WhenAboveReserved()
     {
@@ -86,6 +105,11 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         stock.Available.Should().Be(10m);
     }
 
+    /// <summary>
+    /// Test to ensure that creating a reservation with a zero or negative quantity throws an ArgumentException, 
+    /// validating that only positive quantities are allowed for reservations.
+    /// </summary>
+    /// <param name="quantity">The quantity to test for reservation creation.</param>
     [Theory]
     [ClassData(typeof(InvalidPositiveDecimalTestData))]
     public void CreateReservation_ShouldThrow_WhenQuantityZeroOrNegative(decimal quantity)
@@ -99,7 +123,10 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         // Assert
         act.Should().Throw<ArgumentException>().WithMessage("*cannot be negative*");
     }
-
+    /// <summary>
+    /// Test to ensure that the system can handle edge cases for reservation quantities, including very small and very large values, 
+    /// without losing precision or causing errors.
+    /// </summary>
     [Fact]
     public void EdgeQuantities_ShouldHandleMinimalAndLargeValues()
     {
@@ -115,6 +142,10 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         stock.QuantityReserved.Should().Be(500_000.0001m);
     }
 
+    /// <summary>
+    /// Test to ensure that fulfilling a reservation correctly decreases both the total stock quantity and the reserved quantity, 
+    /// reflecting the fulfillment of the reserved items.
+    /// </summary>
     [Fact]
     public void FulfillReservation_ShouldDecreaseTotalAndReserved()
     {
@@ -130,6 +161,9 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         stock.QuantityReserved.Should().Be(0m);
     }
 
+    /// <summary>
+    /// Test to ensure that canceling a reservation correctly decreases the reserved quantity without affecting the total stock quantity,
+    /// </summary>
     [Fact]
     public void CancelReservation_ShouldDecreaseReservedWithoutChangingTotal()
     {
@@ -145,6 +179,9 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         stock.QuantityTotal.Should().Be(100m);
     }
 
+    /// <summary>
+    /// Test to ensure that expiring a reservation only affects active reservations and does not change the status of already released reservations.
+    /// </summary>
     [Fact]
     public void ExpireReservation_ShouldOnlyExpireActive()
     {
@@ -160,6 +197,11 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
         r1.Status.Should().Be(WarehouseManagementSystem.Domain.Enums.ReservationStatus.Released);
     }
 
+    /// <summary>
+    /// Test to ensure that creating a stock instance with a specified initial quantity correctly sets the total and available quantities,
+    /// </summary>
+    /// <param name="initialQuantity">The initial quantity to set for the stock instance.</param>
+    /// <returns>A new stock instance with the specified initial quantity.</returns>
     private Stock CreateStock(decimal initialQuantity = 100m)
         => new(_productId, _warehouseId, _zoneId, null, initialQuantity);
 }

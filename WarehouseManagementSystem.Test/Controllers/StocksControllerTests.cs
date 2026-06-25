@@ -8,11 +8,17 @@ using WarehouseManagementSystem.API.Services.Queries;
 
 namespace WarehouseManagementSystem.Tests.Controllers;
 
+/// <summary>
+/// Tests for the <see cref="StocksController"/> class in the API controllers.
+/// </summary>
 public class StocksControllerTests
 {
     private readonly Mock<IStockQueryService> _stockQuery = new();
     private readonly StocksController _controller;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StocksControllerTests"/> class.
+    /// </summary>
     public StocksControllerTests()
     {
         _controller = new StocksController(_stockQuery.Object)
@@ -23,7 +29,10 @@ public class StocksControllerTests
             }
         };
     }
-
+    /// <summary>
+    /// Tests that the GetStocks method returns a paged result from the query service.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetStocks_ShouldReturnPagedResultFromQueryService()
     {
@@ -41,7 +50,10 @@ public class StocksControllerTests
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeSameAs(expected);
     }
-
+    /// <summary>
+    /// Tests that the GetStock method returns a stock detail from the query service when the stock exists.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetStock_ShouldReturnNotFound_WhenStockDoesNotExist()
     {
@@ -57,7 +69,10 @@ public class StocksControllerTests
         // Assert
         result.Result.Should().BeOfType<NotFoundResult>();
     }
-
+    /// <summary>
+    /// Tests that the GetStockAvailability method returns a list of stock availability from the query service.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task GetStockAvailability_ShouldReturnAvailabilityList()
     {
@@ -74,7 +89,9 @@ public class StocksControllerTests
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeSameAs(expected);
     }
-
+    /// <summary>
+    /// Tests that the GetOptions method sets the Allow header correctly.
+    /// </summary>
     [Fact]
     public void GetOptions_ShouldSetAllowHeader()
     {
@@ -87,7 +104,12 @@ public class StocksControllerTests
         result.Should().BeOfType<OkResult>();
         _controller.Response.Headers.Allow.ToString().Should().Be("GET, HEAD, OPTIONS");
     }
-
+    /// <summary>
+    /// Creates a paged result of stocks with the specified page and page size.
+    /// </summary>
+    /// <param name="page">The page number.</param>
+    /// <param name="pageSize">The number of items per page.</param>
+    /// <returns>A paged result of StockDto.</returns>
     private static PagedResult<StockDto> CreatePagedStocksResult(int page, int pageSize) => new()
     {
         Items = [],
@@ -95,7 +117,10 @@ public class StocksControllerTests
         PageSize = pageSize,
         TotalItems = 0
     };
-
+    /// <summary>
+    /// Creates a sample StockDto object for testing purposes.
+    /// </summary>
+    /// <returns>A sample StockDto object.</returns>
     private static StockDto CreateStockDto() => new(
         Guid.NewGuid(),
         null,

@@ -59,6 +59,8 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
 
     public class AuditLogService : IAuditLogService
     {
+        #region Fields and Constructor
+
         private const int MaxAuditValueLength = 500;
 
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -73,6 +75,10 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
         {
             _unitOfWork = unitOfWork;
         }
+
+        #endregion
+
+        #region Audit Log Operations
 
         public async Task LogAsync(
             string entityName,
@@ -114,6 +120,10 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
             AddLog(entityName, entityId, operation, performedById, oldValues, newValues, ipAddress);
             await Task.CompletedTask;
         }
+
+        #endregion
+
+        #region Helper Methods
 
         private void AddLog(
             string entityName,
@@ -183,5 +193,7 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs
             return JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonOptions)
                    ?? new Dictionary<string, object?>();
         }
+
+        #endregion
     }
 }
