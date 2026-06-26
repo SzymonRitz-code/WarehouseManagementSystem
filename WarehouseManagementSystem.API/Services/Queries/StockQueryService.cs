@@ -126,6 +126,37 @@ public class StockQueryService : IStockQueryService
             .FirstOrDefaultAsync(ct);
     }
 
+    public async Task<IReadOnlyList<StockDto>> GetProductStocksAsync(Guid productId, CancellationToken ct = default)
+    {
+        return await (
+            from stock in _context.Stocks.AsNoTracking()
+            join product in _context.Products.AsNoTracking() on stock.ProductId equals product.Id
+            join warehouse in _context.Warehouses.AsNoTracking() on stock.WarehouseId equals warehouse.Id
+            join zone in _context.WarehouseZones.AsNoTracking() on stock.WarehouseZoneId equals zone.Id
+            join batch in _context.ProductBatches.AsNoTracking() on stock.ProductBatchId equals batch.Id into batches
+            from batch in batches.DefaultIfEmpty()
+            where stock.ProductId == productId
+            orderby warehouse.Name, zone.Name, batch.BatchNumber
+            select new StockDto
+            {
+                Id = stock.Id,
+                ProductBatchNumber = batch != null ? batch.BatchNumber : null,
+                QuantityTotal = stock.QuantityTotal,
+                QuantityReserved = stock.QuantityReserved,
+                QuantityAvailable = stock.QuantityTotal - stock.QuantityReserved,
+                LastUpdated = stock.LastUpdated,
+                ProductId = stock.ProductId,
+                ProductSku = product.SKU,
+                ProductName = product.Name,
+                WarehouseId = stock.WarehouseId,
+                WarehouseName = warehouse.Name,
+                ZoneId = stock.WarehouseZoneId,
+                ZoneName = zone.Name,
+                Unit = product.Unit.ToString()
+            })
+            .ToListAsync(ct);
+    }
+
     #endregion
 
     #region Stock Lookup Operations

@@ -37,6 +37,15 @@ public interface IStockQueryService
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
     Task<StockDto?> GetStockDetailsAsync(Guid stockId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Gets stock records for the selected product as list DTOs.
+    /// </summary>
+    /// <param name="productId">Product identifier.</param>
+    /// <param name="ct">Operation cancellation token.</param>
+    /// <returns>List of stock records for the selected product.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
+    Task<IReadOnlyList<StockDto>> GetProductStocksAsync(Guid productId, CancellationToken ct = default);
+
     #endregion
 
     #region Stock Lookup Queries

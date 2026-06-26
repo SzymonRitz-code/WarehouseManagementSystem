@@ -299,10 +299,15 @@ public class ProductsController : ControllerBase
     [HttpHead("{productId:guid}/stocks")]
     [HttpGet("{productId:guid}/stocks")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
-    public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksForProduct(Guid productId)
+    public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksForProduct(Guid productId, CancellationToken ct)
     {
-        var stocks = await _stockQueryService.GetByProductAsync(productId);
-        return Ok(_mapper.Map<IEnumerable<StockDto>>(stocks));
+        if (!ProductExists(productId))
+        {
+            return NotFound();
+        }
+
+        var stocks = await _stockQueryService.GetProductStocksAsync(productId, ct);
+        return Ok(stocks);
     }
 
     /// <summary>
