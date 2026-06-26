@@ -9,27 +9,49 @@ import { InputDetailComponent } from "../../../../shared/components/form/input/i
 import { DetailActionsComponent } from "../../../../shared/components/form/detail-actions/detail-actions.component";
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
 import { CommonModule } from '@angular/common';
-import { catchError, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
+import { TableComponent } from '../../../../shared/components/table/table.component';
+import { Stock } from '../../../stocks/model/stock';
+
+interface ProductDetailViewModel {
+  product: Product;
+  stocks: Stock[];
+}
 
 
 @Component({
   selector: 'app-product-detail',
-  imports: [CommonModule, LabelComponent, ComponentCardComponent, PageBreadcrumbComponent, InputDetailComponent, DetailActionsComponent, TextAreaComponent],
+  imports: [CommonModule, LabelComponent, ComponentCardComponent, PageBreadcrumbComponent, InputDetailComponent, DetailActionsComponent, TextAreaComponent, TableComponent],
   templateUrl: './product-detail.component.html'
 })
 export class ProductDetailComponent implements OnInit {
 
   constructor(private activatedRoute: ActivatedRoute, private router: Router, private productService: ProductService) { }
   id!: string;
-  product$!: Observable<Product | undefined>;
+  vm$!: Observable<ProductDetailViewModel | undefined>;
+  readonly stockColumns = [
+    { key: 'warehouseName', label: 'Warehouse', sortable: true },
+    { key: 'zoneName', label: 'Zone', sortable: true },
+    { key: 'productBatchNumber', label: 'Batch', sortable: true },
+    { key: 'quantityAvailable', label: 'Available Qty', sortable: true },
+    { key: 'quantityReserved', label: 'Reserved Qty', sortable: true },
+    { key: 'quantityTotal', label: 'Total Qty', sortable: true },
+    { key: 'unit', label: 'Unit', sortable: true },
+    { key: 'lastUpdated', label: 'Last Updated', sortable: true, type: 'date' }
+  ];
 
   ngOnInit(): void {
-    this.product$ = this.activatedRoute.paramMap.pipe(
+    this.vm$ = this.activatedRoute.paramMap.pipe(
       map(params => params.get('id')!),
       tap(id => this.id = id),
-      switchMap(id => this.productService.getProduct(id).pipe(
-        catchError(() => of(undefined))
-      )),
+      switchMap(id =>
+        forkJoin({
+          product: this.productService.getProduct(id),
+          stocks: this.productService.getProductStocks(id)
+        }).pipe(
+          catchError(() => of(undefined))
+        )
+      ),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }

@@ -2,45 +2,55 @@
   <app-page-breadcrumb pageTitle="Product Details" />
 
   <app-component-card title="Product Information">
-    <ng-container *ngIf="product$ | async as product">
+    <ng-container *ngIf="vm$ | async as vm">
     <div class="space-y-6">
       <div>
         <app-label for="productName">Name</app-label>
-        <app-input-detail id="productName" [value]="product?.name">
+        <app-input-detail id="productName" [value]="vm.product.name">
         </app-input-detail>
       </div>
 
       <div>
         <app-label for="productSku">SKU</app-label>
-        <app-input-detail id="productSku" [value]="product?.sku">
+        <app-input-detail id="productSku" [value]="vm.product.sku">
         </app-input-detail>
       </div>
     </div>
     <div>
       <app-label for="inputUnit">Unit</app-label>
-      <app-input-detail id="inputUnit" name="unit" [value]="product?.unit"></app-input-detail>
+      <app-input-detail id="inputUnit" name="unit" [value]="vm.product.unit"></app-input-detail>
     </div>
     <div>
       <app-label for="inputisRequiresBatch">Requires Batch</app-label>
       <app-input-detail id="inputisRequiresBatch" name="requiresBatch"
-        [value]="product?.requiresBatch"></app-input-detail>
+        [value]="vm.product.requiresBatch"></app-input-detail>
     </div>
     <div>
       <app-label for="inputisActive">Is Active</app-label>
-      <app-input-detail id="inputisActive" name="isActive"[type]="'boolean'" [value]="product?.isActive"></app-input-detail>
+      <app-input-detail id="inputisActive" name="isActive"[type]="'boolean'" [value]="vm.product.isActive"></app-input-detail>
     </div>
     <div>
       <app-label for="inputWeight">Weight</app-label>
-      <app-input-detail id="weight" name="weight" [value]="product?.weight"></app-input-detail>
+      <app-input-detail id="weight" name="weight" [value]="vm.product.weight"></app-input-detail>
     </div>
     <div>
       <app-label for="inputVolume">Volume</app-label>
-      <app-input-detail id="inputVolume" name="volume" [value]="product?.volume"></app-input-detail>
+      <app-input-detail id="inputVolume" name="volume" [value]="vm.product.volume"></app-input-detail>
     </div>
     <div>
       <app-label for="description">Description</app-label>
-      <app-text-area id="InputDescription" [value]="product?.description ??''" [disabled]="true">
+      <app-text-area id="InputDescription" [value]="vm.product.description" [disabled]="true">
       </app-text-area>
+    </div>
+
+    <div>
+      <app-label>Stock</app-label>
+      <app-table
+        [columns]="stockColumns"
+        [data]="vm.stocks"
+        [filterable]="false"
+        [pageSize]="10">
+      </app-table>
     </div>
 
     <!-- sekcja akcji -->

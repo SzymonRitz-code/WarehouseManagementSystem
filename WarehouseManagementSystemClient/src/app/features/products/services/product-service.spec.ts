@@ -91,6 +91,15 @@ describe('ProductService', () => {
     req.flush({ id: 'prod-1' });
   });
 
+  it('gets product stocks by product id', () => {
+    service.getProductStocks('prod-1').subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/products/prod-1/stocks`);
+
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
   it('posts and puts product payloads for create/update', () => {
     const payload: CreateProduct = {
       name: 'Steel Screw',

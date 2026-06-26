@@ -5,16 +5,21 @@ import { UnitOfMeasure } from '../../../../core/enums/unitOfMeasure';
 import { Product } from '../../model/product';
 import { ProductService } from '../../services/product-service';
 import { ProductDetailComponent } from './product-detail.component';
+import { Stock } from '../../../stocks/model/stock';
 
 describe('ProductDetailComponent', () => {
   let component: ProductDetailComponent;
   let fixture: ComponentFixture<ProductDetailComponent>;
-  let productService: { getProduct: ReturnType<typeof vi.fn> };
+  let productService: {
+    getProduct: ReturnType<typeof vi.fn>;
+    getProductStocks: ReturnType<typeof vi.fn>;
+  };
   let router: { navigateByUrl: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     productService = {
-      getProduct: vi.fn().mockReturnValue(of(productFixture()))
+      getProduct: vi.fn().mockReturnValue(of(productFixture())),
+      getProductStocks: vi.fn().mockReturnValue(of(stockFixture()))
     };
     router = { navigateByUrl: vi.fn() };
 
@@ -39,11 +44,15 @@ describe('ProductDetailComponent', () => {
   });
 
   it('loads product details from route id', async () => {
-    const product = await firstProductEmission();
+    const vm = await firstViewModelEmission();
 
     expect(productService.getProduct).toHaveBeenCalledWith('prod-1');
+    expect(productService.getProductStocks).toHaveBeenCalledWith('prod-1');
     expect(component.id).toBe('prod-1');
-    expect(product).toEqual(productFixture());
+    expect(vm).toEqual({
+      product: productFixture(),
+      stocks: stockFixture()
+    });
   });
 
   it('returns undefined for the detail stream when API fails', async () => {
@@ -53,9 +62,9 @@ describe('ProductDetailComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
 
-    const product = await firstProductEmission();
+    const vm = await firstViewModelEmission();
 
-    expect(product).toBeUndefined();
+    expect(vm).toBeUndefined();
   });
 
   it('navigates back to list and to edit form', () => {
@@ -68,9 +77,9 @@ describe('ProductDetailComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/products/form/prod-1');
   });
 
-  function firstProductEmission(): Promise<Product | undefined> {
+  function firstViewModelEmission(): Promise<{ product: Product; stocks: Stock[] } | undefined> {
     return new Promise(resolve => {
-      component.product$.subscribe(product => resolve(product));
+      component.vm$.subscribe(vm => resolve(vm));
     });
   }
 
@@ -86,5 +95,25 @@ describe('ProductDetailComponent', () => {
       weight: 0.1,
       volume: 0.01
     };
+  }
+
+  function stockFixture(): Stock[] {
+    return [
+      {
+        id: 'stock-1',
+        productId: 'prod-1',
+        productSku: 'SKU-001',
+        productName: 'Steel Screw',
+        warehouseId: 'warehouse-1',
+        warehouseName: 'Main Warehouse',
+        zoneId: 'zone-1',
+        zoneName: 'Picking',
+        unit: UnitOfMeasure.Piece,
+        quantityTotal: 100,
+        quantityReserved: 20,
+        quantityAvailable: 80,
+        lastUpdated: new Date('2026-01-01T00:00:00Z')
+      }
+    ];
   }
 });

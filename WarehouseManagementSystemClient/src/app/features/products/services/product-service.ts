@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable } from 'rxjs';
+import { Stock } from '../../stocks/model/stock';
 
 export interface PagedResult<T> {
   items: T[];
@@ -56,6 +57,10 @@ export class ProductService {
 
   getProduct(id: string) {
     return this.http.get<Product>(`${this.apiUrl}/products/${id}`);
+  }
+
+  getProductStocks(id: string): Observable<Stock[]> {
+    return this.http.get<Stock[]>(`${this.apiUrl}/products/${id}/stocks`);
   }
 
   addProduct(product: CreateProduct) {
