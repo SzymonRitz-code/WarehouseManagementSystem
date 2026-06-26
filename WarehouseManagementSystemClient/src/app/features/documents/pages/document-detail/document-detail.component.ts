@@ -10,10 +10,10 @@ import { DocumentService } from '../../services/document-service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TextAreaComponent } from "../../../../shared/components/form/input/text-area.component";
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
-import { DocumentItemsDetailComponent } from '../document-items/document-items-detail/document-items-detail.component';
 import { ZoneService } from '../../../zones/services/zone-service';
 import { ProductService } from '../../../products/services/product-service';
 import { catchError, forkJoin, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
+import { TableComponent } from '../../../../shared/components/table/table.component';
 
 @Component({
   selector: 'app-document-detail',
@@ -26,7 +26,7 @@ import { catchError, forkJoin, map, Observable, of, shareReplay, switchMap, tap 
     InputDetailComponent,
     DetailActionsComponent,
     TextAreaComponent,
-    DocumentItemsDetailComponent
+    TableComponent
   ],
   templateUrl: './document-detail.component.html'
 })
@@ -34,6 +34,13 @@ export class DocumentDetailComponent implements OnInit {
 
   id!: string;
   document$!: Observable<Document | undefined>;
+  readonly itemColumns = [
+    { key: 'productName', label: 'Product', sortable: true },
+    { key: 'productBatchNumber', label: 'Batch', sortable: true },
+    { key: 'quantity', label: 'Quantity', sortable: true },
+    { key: 'sourceZoneName', label: 'From Zone', sortable: true },
+    { key: 'targetZoneName', label: 'To Zone', sortable: true }
+  ];
 
   constructor(
     private documentService: DocumentService,

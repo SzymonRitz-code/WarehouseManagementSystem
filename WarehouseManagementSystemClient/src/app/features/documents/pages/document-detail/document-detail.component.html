@@ -71,7 +71,16 @@
             </div>
 
         </div>
-        <app-document-items-detail [documentItems]="document.items"></app-document-items-detail>
+
+        <div>
+            <app-label>Document Items</app-label>
+            <app-table
+                [columns]="itemColumns"
+                [data]="document.items"
+                [filterable]="false"
+                [pageSize]="10">
+            </app-table>
+        </div>
 
         <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()">
         </app-detail-actions>
