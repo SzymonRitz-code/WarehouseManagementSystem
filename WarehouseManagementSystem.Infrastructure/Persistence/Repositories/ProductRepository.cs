@@ -21,12 +21,12 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 
         public async Task<IEnumerable<Product>> AllAsync()
         {
-            return await _context.Products.ToListAsync();
+            return await _context.Products.AsNoTracking().ToListAsync();
         }
 
         public bool Any(Expression<Func<Product, bool>> predicate)
         {
-            return _context.Products.Any(predicate);
+            return _context.Products.AsNoTracking().Any(predicate);
         }
 
         public void Delete(Product entity)

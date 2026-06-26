@@ -203,11 +203,11 @@ public class DocumentQueryService : IDocumentQueryService
     public async Task<IReadOnlyList<DocumentListDto>> GetPendingDocumentsAsync(CancellationToken ct = default)
     {
         return await (
-            from document in _context.Documents
-            join item in _context.DocumentItems on document.Id equals item.DocumentId into itemJoin
+            from document in _context.Documents.AsNoTracking()
+            join item in _context.DocumentItems.AsNoTracking() on document.Id equals item.DocumentId into itemJoin
             from item in itemJoin.DefaultIfEmpty()
-            join sourceWarehouse in _context.Warehouses on document.SourceWarehouseId equals sourceWarehouse.Id
-            join targetWarehouse in _context.Warehouses on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
+            join sourceWarehouse in _context.Warehouses.AsNoTracking() on document.SourceWarehouseId equals sourceWarehouse.Id
+            join targetWarehouse in _context.Warehouses.AsNoTracking() on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
             from targetWarehouse in targetJoin.DefaultIfEmpty()
             where document.Status == DocumentStatus.Draft
             group new { document, item, sourceWarehouse, targetWarehouse }
@@ -248,13 +248,13 @@ public class DocumentQueryService : IDocumentQueryService
         CancellationToken ct = default)
     {
         return await (
-            from item in _context.DocumentItems
-            join stock in _context.Stocks
+            from item in _context.DocumentItems.AsNoTracking()
+            join stock in _context.Stocks.AsNoTracking()
                 on new { item.ProductId, item.ProductBatchId }
                 equals new { stock.ProductId, stock.ProductBatchId }
-            join reservation in _context.StockReservations
+            join reservation in _context.StockReservations.AsNoTracking()
                 on stock.Id equals reservation.StockId
-            join document in _context.Documents
+            join document in _context.Documents.AsNoTracking()
                 on item.DocumentId equals document.Id
             where item.DocumentId == documentId
                   && reservation.Status == ReservationStatus.Active

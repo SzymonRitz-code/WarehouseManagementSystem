@@ -21,17 +21,17 @@ namespace WarehouseManagementSystem.Infrastructure.Persistence.Repositories
 
         public IEnumerable<ProductBatch> All()
         {
-            return _context.ProductBatches;
+            return _context.ProductBatches.AsNoTracking();
         }
 
         public async Task<IEnumerable<ProductBatch>> AllAsync()
         {
-            return await _context.ProductBatches.ToListAsync();
+            return await _context.ProductBatches.AsNoTracking().ToListAsync();
         }
 
         public bool Any(Expression<Func<ProductBatch, bool>> predicate)
         {
-            return _context.ProductBatches.Any(predicate);
+            return _context.ProductBatches.AsNoTracking().Any(predicate);
         }
 
         public void Delete(ProductBatch entity)

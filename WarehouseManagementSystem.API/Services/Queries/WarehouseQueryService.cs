@@ -23,9 +23,10 @@ public class WarehouseQueryService : IWarehouseQueryService
                 w.Name,
                 w.Country,
                 w.Address,
-                _context.WarehouseZones.Count(z => z.WarehouseId == w.Id),
-                _context.Stocks.Count(s => s.WarehouseId == w.Id),
+                _context.WarehouseZones.AsNoTracking().Count(z => z.WarehouseId == w.Id),
+                _context.Stocks.AsNoTracking().Count(s => s.WarehouseId == w.Id),
                 _context.Stocks
+                    .AsNoTracking()
                     .Where(s => s.WarehouseId == w.Id)
                     .Select(s => (decimal?)s.QuantityTotal)
                     .Sum() ?? 0m,
@@ -65,6 +66,7 @@ public class WarehouseQueryService : IWarehouseQueryService
                 z.WarehouseId,
                 z.Warehouse.Name,
                 _context.Stocks
+                    .AsNoTracking()
                     .Where(s => s.WarehouseZoneId == z.Id)
                     .Select(s => (decimal?)s.QuantityTotal)
                     .Sum() ?? 0m,

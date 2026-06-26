@@ -99,13 +99,13 @@ public class StockRepository : IStockRepository
     public async Task<IReadOnlyList<StockReservation>> GetActiveReservationsByDocumentIdAsync(Guid documentId)
     {
         var reservations = await (
-            from item in _context.DocumentItems
-            join stock in _context.Stocks
+            from item in _context.DocumentItems.AsNoTracking()
+            join stock in _context.Stocks.AsNoTracking()
                 on new { item.ProductId, item.ProductBatchId, WarehouseZoneId = item.SourceZoneId ?? Guid.Empty }
                    equals new { stock.ProductId, stock.ProductBatchId, WarehouseZoneId = stock.WarehouseZoneId }
                 into stockJoin
             from stock in stockJoin.DefaultIfEmpty()
-            join reservation in _context.StockReservations
+            join reservation in _context.StockReservations.AsNoTracking()
                 on stock.Id equals reservation.StockId
             where item.DocumentId == documentId
                   && reservation.Status == ReservationStatus.Active
