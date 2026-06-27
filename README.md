@@ -53,13 +53,82 @@ Likely first bottlenecks:
 - `Contains` search patterns over large text fields.
 - Document item joins and audit payload size on high-volume data.
 
+## Docker quick start
+
+Minimal development stack contains:
+
+- `client`: Angular SPA served by Nginx, exposed at `https://localhost:4201`.
+- `api`: WMS ASP.NET Core API, exposed at `https://localhost:8081`.
+- `idp`: Duende IdentityServer, exposed at `https://localhost:8091`.
+- `sqlserver`: SQL Server 2022, exposed on host port `14333`.
+
+Useful commands:
+
+Create and trust the shared localhost certificate once before starting the stack:
+
+```powershell
+dotnet dev-certs https --trust
+New-Item -ItemType Directory -Force .certs | Out-Null
+dotnet dev-certs https -ep .certs\localhost.pfx -p wms-local-dev
+dotnet dev-certs https -ep .certs\localhost.pem --format Pem --no-password
+```
+
+The PEM export creates both `.certs\localhost.pem` and `.certs\localhost.key`.
+
+```powershell
+docker compose up -d --build
+```
+
+Builds API and IDP images, starts SQL Server, waits until SQL Server is healthy, then starts the API.
+
+```powershell
+docker compose ps
+```
+
+Shows running containers and published ports.
+
+```powershell
+docker compose logs -f api
+docker compose logs -f idp
+```
+
+Streams logs for the selected service.
+
+```powershell
+docker compose down
+```
+
+Stops and removes containers, keeping the SQL Server volume.
+
+```powershell
+docker compose down -v
+```
+
+Stops containers and removes the SQL Server volume. Use this only when you want a clean development database.
+
+Smoke-test URLs:
+
+- Angular client: `https://localhost:4201`
+- API Swagger: `https://localhost:8081/swagger/index.html`
+- IDP discovery: `https://localhost:8091/.well-known/openid-configuration`
+
+Ports `4200`, `8080`, and `8090` are HTTP entry points used for automatic redirects to the HTTPS addresses above. All containers mount the same host-trusted development certificate from `.certs`, so the browser does not show a certificate warning.
+
+### Docker HTTPS and login fix
+
+The Docker setup previously mixed browser-visible addresses with Docker-internal service names and sent plain HTTP traffic to HTTPS-only ports. This caused Nginx `400 Bad Request`, empty API/IDP responses, rejected JWT issuers, and an OIDC login flow that did not return reliably to the Angular application.
+
+The current setup separates HTTP redirect ports from HTTPS application ports, uses one trusted `localhost` certificate for Nginx and Kestrel, configures the public IdentityServer issuer independently from its internal Docker address, permits the Docker client origin in CORS/OIDC, and completes `checkAuth()` on the Angular callback route before navigation.
+
+`Database__MigrateOnStartup` is disabled in Docker Compose because the current EF migration chain fails on a clean SQL Server database while dropping `PK_Users` before removing the dependent `FK_Documents_Users_TransferStartedById` foreign key.
+
 ## Development auth workaround
 
-The API currently has a development-only JWT/certificate workaround for the local IdentityServer at `https://localhost:44380`.
+The API has a development-only JWT/certificate workaround for IdentityServer.
 
 Known technical debt:
 
-- authority, metadata address, issuer and audience are still hardcoded in `Program.cs`;
+- local Docker auth settings are provided through environment variables in `docker-compose.yml`;
 - JWKS keys are resolved manually;
 - local certificate validation is bypassed in development;
 - auth diagnostics still use console output.
