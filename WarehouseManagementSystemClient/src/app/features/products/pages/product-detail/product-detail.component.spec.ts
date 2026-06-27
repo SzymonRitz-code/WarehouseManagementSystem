@@ -6,6 +6,8 @@ import { Product } from '../../model/product';
 import { ProductService } from '../../services/product-service';
 import { ProductDetailComponent } from './product-detail.component';
 import { Stock } from '../../../stocks/model/stock';
+import { ProductBatchService } from '../../services/product-batch-service';
+import { BatchList } from '../../model/product-batch';
 
 describe('ProductDetailComponent', () => {
   let component: ProductDetailComponent;
@@ -15,6 +17,7 @@ describe('ProductDetailComponent', () => {
     getProductStocks: ReturnType<typeof vi.fn>;
   };
   let router: { navigateByUrl: ReturnType<typeof vi.fn> };
+  let productBatchService: { getBatches: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     productService = {
@@ -22,11 +25,13 @@ describe('ProductDetailComponent', () => {
       getProductStocks: vi.fn().mockReturnValue(of(stockFixture()))
     };
     router = { navigateByUrl: vi.fn() };
+    productBatchService = { getBatches: vi.fn().mockReturnValue(of([])) };
 
     await TestBed.configureTestingModule({
       imports: [ProductDetailComponent],
       providers: [
         { provide: ProductService, useValue: productService },
+        { provide: ProductBatchService, useValue: productBatchService },
         { provide: Router, useValue: router },
         {
           provide: ActivatedRoute,
@@ -51,7 +56,8 @@ describe('ProductDetailComponent', () => {
     expect(component.id).toBe('prod-1');
     expect(vm).toEqual({
       product: productFixture(),
-      stocks: stockFixture()
+      stocks: stockFixture(),
+      batches: []
     });
   });
 
@@ -77,7 +83,7 @@ describe('ProductDetailComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/products/form/prod-1');
   });
 
-  function firstViewModelEmission(): Promise<{ product: Product; stocks: Stock[] } | undefined> {
+  function firstViewModelEmission(): Promise<{ product: Product; stocks: Stock[]; batches: BatchList[] } | undefined> {
     return new Promise(resolve => {
       component.vm$.subscribe(vm => resolve(vm));
     });

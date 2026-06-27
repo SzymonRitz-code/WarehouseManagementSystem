@@ -12,10 +12,13 @@ import { CommonModule } from '@angular/common';
 import { catchError, forkJoin, map, Observable, of, shareReplay, switchMap, tap } from 'rxjs';
 import { TableComponent } from '../../../../shared/components/table/table.component';
 import { Stock } from '../../../stocks/model/stock';
+import { ProductBatchService } from '../../services/product-batch-service';
+import { BatchList } from '../../model/product-batch';
 
 interface ProductDetailViewModel {
   product: Product;
   stocks: Stock[];
+  batches: BatchList[];
 }
 
 
@@ -26,7 +29,8 @@ interface ProductDetailViewModel {
 })
 export class ProductDetailComponent implements OnInit {
 
-  constructor(private activatedRoute: ActivatedRoute, private router: Router, private productService: ProductService) { }
+  constructor(private activatedRoute: ActivatedRoute, private router: Router, private productService: ProductService,
+    private productBatchService: ProductBatchService) { }
   id!: string;
   vm$!: Observable<ProductDetailViewModel | undefined>;
   readonly stockColumns = [
@@ -39,6 +43,14 @@ export class ProductDetailComponent implements OnInit {
     { key: 'unit', label: 'Unit', sortable: true },
     { key: 'lastUpdated', label: 'Last Updated', sortable: true, type: 'date' }
   ];
+  readonly batchColumns = [
+    { key: 'batchNumber', label: 'Batch number', sortable: true },
+    { key: 'manufacturedDate', label: 'Manufactured', sortable: true, type: 'date' },
+    { key: 'expirationDate', label: 'Expiration', sortable: true, type: 'date' },
+    { key: 'availableQty', label: 'Available Qty', sortable: true },
+    { key: 'reservedQty', label: 'Reserved Qty', sortable: true },
+    { key: 'quantity', label: 'Total Qty', sortable: true }
+  ];
 
   ngOnInit(): void {
     this.vm$ = this.activatedRoute.paramMap.pipe(
@@ -47,7 +59,8 @@ export class ProductDetailComponent implements OnInit {
       switchMap(id =>
         forkJoin({
           product: this.productService.getProduct(id),
-          stocks: this.productService.getProductStocks(id)
+          stocks: this.productService.getProductStocks(id),
+          batches: this.productBatchService.getBatches(id)
         }).pipe(
           catchError(() => of(undefined))
         )

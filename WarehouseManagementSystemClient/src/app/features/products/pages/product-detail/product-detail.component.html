@@ -53,7 +53,11 @@
       </app-table>
     </div>
 
-    <!-- sekcja akcji -->
+    <div *ngIf="vm.product.requiresBatch">
+      <app-label>Product batches</app-label>
+      <app-table [columns]="batchColumns" [data]="vm.batches" [filterable]="false" [pageSize]="10"></app-table>
+    </div>
+
     <app-detail-actions backLabel="Back" saveLabel="Edit" (back)="onBack()" (action)="onEdit()"> </app-detail-actions>
     </ng-container>
 

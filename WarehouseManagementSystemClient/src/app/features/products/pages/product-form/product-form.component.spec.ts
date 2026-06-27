@@ -5,6 +5,7 @@ import { UnitOfMeasure } from '../../../../core/enums/unitOfMeasure';
 import { Product } from '../../model/product';
 import { ProductService } from '../../services/product-service';
 import { ProductFormComponent } from './product-form.component';
+import { ProductBatchService } from '../../services/product-batch-service';
 
 describe('ProductFormComponent', () => {
   let component: ProductFormComponent;
@@ -15,6 +16,11 @@ describe('ProductFormComponent', () => {
     updateProduct: ReturnType<typeof vi.fn>;
   };
   let router: { navigateByUrl: ReturnType<typeof vi.fn> };
+  let productBatchService: {
+    getBatches: ReturnType<typeof vi.fn>;
+    createBatch: ReturnType<typeof vi.fn>;
+    updateBatch: ReturnType<typeof vi.fn>;
+  };
 
   it('builds a form with required business fields and unit options', async () => {
     await setup();
@@ -158,6 +164,28 @@ describe('ProductFormComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/products/detail/prod-1');
   });
 
+  it('creates an added batch after saving the product', async () => {
+    await setup();
+    productService.addProduct.mockReturnValue(of({ id: 'prod-created', ...validProductPayload(), isActive: true }));
+    fillValidForm();
+    component.addBatch();
+    component.batches.at(0).patchValue({
+      batchNumber: 'BATCH-001',
+      manufacturedDate: '2026-01-10',
+      expirationDate: '2027-01-10'
+    });
+
+    component.onSave();
+
+    expect(productBatchService.createBatch).toHaveBeenCalledWith('prod-created', {
+      batchNumber: 'BATCH-001',
+      productId: 'prod-created',
+      manufacturedDate: new Date('2026-01-10'),
+      expirationDate: new Date('2027-01-10')
+    });
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/products/detail/prod-created');
+  });
+
   it('maps backend validation errors onto product form controls', async () => {
     await setup();
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -199,11 +227,17 @@ describe('ProductFormComponent', () => {
       ...(options?.productServiceOverrides ?? {})
     };
     router = { navigateByUrl: vi.fn() };
+    productBatchService = {
+      getBatches: vi.fn().mockReturnValue(of([])),
+      createBatch: vi.fn().mockReturnValue(of({ id: 'batch-created' })),
+      updateBatch: vi.fn().mockReturnValue(of({ id: 'batch-updated' }))
+    };
 
     await TestBed.configureTestingModule({
       imports: [ProductFormComponent],
       providers: [
         { provide: ProductService, useValue: productService },
+        { provide: ProductBatchService, useValue: productBatchService },
         { provide: Router, useValue: router },
         {
           provide: ActivatedRoute,

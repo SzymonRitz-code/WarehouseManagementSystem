@@ -7,7 +7,7 @@ import { FormActionsComponent } from "../../../../shared/components/form/form-ac
 import { ActivatedRoute, isActive, Router } from '@angular/router';
 import { Product } from '../../model/product';
 import { CreateProduct } from '../../model/create-product';
-import { FormGroup, ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
+import { FormArray, FormGroup, ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ProductService } from '../../services/product-service';
 import { InputSelectComponent } from "../../../../shared/components/form/input/input-select/input-select.component";
@@ -16,7 +16,9 @@ import { CheckboxComponent } from "../../../../shared/components/form/input/chec
 import { TextAreaComponent } from '../../../../shared/components/form/input/text-area.component';
 import { setServerErrors } from '../../../../core/helpers/validation-helper.helper';
 import { ValidationSummaryComponent } from '../../../../shared/components/form/validation-summary/validation-summary.component';
-import { take } from 'rxjs';
+import { forkJoin, of, switchMap, take } from 'rxjs';
+import { ProductBatchService } from '../../services/product-batch-service';
+import { BatchList } from '../../model/product-batch';
 
 @Component({
   selector: 'app-product-form',
@@ -42,7 +44,8 @@ export class ProductFormComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private fb: FormBuilder,
-    private productService: ProductService) { }
+    private productService: ProductService,
+    private productBatchService: ProductBatchService) { }
 
   id: string | null = '';
   product!: Product | CreateProduct;
@@ -61,7 +64,8 @@ export class ProductFormComponent implements OnInit {
       requiresBatch: [true],
       isActive: [true],
       weight: [1, [Validators.required, Validators.min(0)]],
-      volume: [1, [Validators.required, Validators.min(0)]]
+      volume: [1, [Validators.required, Validators.min(0)]],
+      batches: this.fb.array([])
     })
 
     if (this.id) {
@@ -83,8 +87,31 @@ export class ProductFormComponent implements OnInit {
         error: () => this.router.navigateByUrl('/products')
       });
 
+      this.productBatchService.getBatches(this.id).pipe(take(1)).subscribe({
+        next: batches => batches.forEach(batch => this.addBatch(batch))
+      });
+
     }
     this.unitOptions = Object.values(UnitOfMeasure).map(d => ({ value: d, label: d }))
+  }
+
+  get batches(): FormArray {
+    return this.productForm.get('batches') as FormArray;
+  }
+
+  addBatch(batch?: Partial<BatchList>): void {
+    this.batches.push(this.fb.group({
+      id: [batch?.id ?? null],
+      batchNumber: [batch?.batchNumber ?? '', [Validators.required, Validators.maxLength(100)]],
+      manufacturedDate: [this.toDateInput(batch?.manufacturedDate)],
+      expirationDate: [this.toDateInput(batch?.expirationDate)]
+    }));
+  }
+
+  removeUnsavedBatch(index: number): void {
+    if (!this.batches.at(index).get('id')?.value) {
+      this.batches.removeAt(index);
+    }
   }
 
   onSave() {
@@ -112,7 +139,31 @@ export class ProductFormComponent implements OnInit {
         volume: formValue.volume
       });
 
-    request$.pipe(take(1)).subscribe({
+    request$.pipe(
+      switchMap((response: Product) => {
+        const productId = response?.id ?? this.id;
+        if (!productId || !formValue.requiresBatch || this.batches.length === 0) {
+          return of(response);
+        }
+
+        const batchRequests = this.batches.controls.map(control => {
+          const batch = control.getRawValue();
+          const payload = {
+            batchNumber: batch.batchNumber,
+            productId,
+            manufacturedDate: batch.manufacturedDate ? new Date(batch.manufacturedDate) : null,
+            expirationDate: batch.expirationDate ? new Date(batch.expirationDate) : null
+          };
+
+          return batch.id
+            ? this.productBatchService.updateBatch(productId, batch.id, { ...payload, id: batch.id })
+            : this.productBatchService.createBatch(productId, payload);
+        });
+
+        return forkJoin(batchRequests).pipe(switchMap(() => of(response)));
+      }),
+      take(1)
+    ).subscribe({
       next: (response: Product) => {
         // Trzeba dodać response.id, bo w przypadku tworzenia produktu id jest generowane po stronie serwera
         // a w przypadku aktualizacji produktu id jest już dostępne w productForm.getRawValue()
@@ -126,6 +177,10 @@ export class ProductFormComponent implements OnInit {
   }
   onBack() {
     this.router.navigateByUrl('/products');
+  }
+
+  private toDateInput(value?: Date): string | null {
+    return value ? new Date(value).toISOString().slice(0, 10) : null;
   }
 
 

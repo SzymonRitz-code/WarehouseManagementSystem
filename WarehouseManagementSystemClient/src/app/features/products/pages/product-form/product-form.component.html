@@ -65,6 +65,22 @@
             {{ productForm.get('description')?.errors?.['server'] }}
           </div>
         </div>
+
+        <div *ngIf="productForm.get('requiresBatch')?.value" formArrayName="batches" class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div><h3 class="text-lg font-semibold">Product batches</h3><p class="text-sm text-gray-500">Add batches available for warehouse documents.</p></div>
+            <button type="button" class="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white" (click)="addBatch()">+ Add batch</button>
+          </div>
+          <div *ngFor="let batch of batches.controls; let i = index" [formGroupName]="i" class="grid gap-3 rounded-lg border border-gray-200 p-4 md:grid-cols-4 dark:border-gray-800">
+            <div><app-label [for]="'batchNumber-' + i">Batch number</app-label><app-input-field [id]="'batchNumber-' + i" formControlName="batchNumber" [required]="true" [maxlength]="100"></app-input-field></div>
+            <div><app-label [for]="'manufacturedDate-' + i">Manufactured date</app-label><app-input-field [id]="'manufacturedDate-' + i" type="date" formControlName="manufacturedDate"></app-input-field></div>
+            <div><app-label [for]="'expirationDate-' + i">Expiration date</app-label><app-input-field [id]="'expirationDate-' + i" type="date" formControlName="expirationDate"></app-input-field></div>
+            <div class="flex items-end">
+              <button *ngIf="!batch.get('id')?.value" type="button" class="px-3 py-2 text-sm text-red-500" (click)="removeUnsavedBatch(i)">Remove</button>
+              <span *ngIf="batch.get('id')?.value" class="px-3 py-2 text-xs text-gray-500">Existing batch</span>
+            </div>
+          </div>
+        </div>
       </div>
       <app-form-actions backLabel="Back" saveLabel="Save" (back)="onBack()" [disabled]="productForm.invalid" />
     </form>
