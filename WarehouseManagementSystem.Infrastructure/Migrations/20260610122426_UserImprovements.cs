@@ -10,6 +10,21 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // The navigation properties were removed in
+            // DocumentUpdateUserReferenceRemoved, but that migration only removed
+            // their indexes. SQL Server does not allow the Users primary key to be
+            // dropped while these legacy foreign keys still reference it.
+            migrationBuilder.DropForeignKey(
+                name: "FK_Documents_Users_ConfirmedById",
+                table: "Documents");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Documents_Users_TransferStartedById",
+                table: "Documents");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_AuditLogs_Users_PerformedById",
+                table: "AuditLogs");
 
             migrationBuilder.DropPrimaryKey(
                 name: "PK_Users",
@@ -195,11 +210,23 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                 name: "PK_User",
                 table: "User",
                 column: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AuditLogs_User_PerformedById",
+                table: "AuditLogs",
+                column: "PerformedById",
+                principalTable: "User",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_AuditLogs_User_PerformedById",
+                table: "AuditLogs");
+
             migrationBuilder.DropPrimaryKey(
                 name: "PK_User",
                 table: "User");
@@ -384,6 +411,30 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                 table: "Users",
                 column: "Email",
                 unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Documents_Users_ConfirmedById",
+                table: "Documents",
+                column: "ConfirmedById",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Documents_Users_TransferStartedById",
+                table: "Documents",
+                column: "TransferStartedById",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AuditLogs_Users_PerformedById",
+                table: "AuditLogs",
+                column: "PerformedById",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
 
         }
     }
