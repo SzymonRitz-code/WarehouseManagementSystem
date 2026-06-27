@@ -1,32 +1,34 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-# Depending on the operating system of the host machines(s) that will build or run the containers, the image specified in the FROM statement may need to be changed.
-# For more information, please see https://aka.ms/containercompat
-
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-nanoserver-1809 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 8443
 
-
-# This stage is used to build the service project
-FROM mcr.microsoft.com/dotnet/sdk:8.0-nanoserver-1809 AS build
-ARG BUILD_CONFIGURATION=Release
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Debug
 WORKDIR /src
 COPY ["WarehouseManagementSystem.API/WarehouseManagementSystem.API.csproj", "WarehouseManagementSystem.API/"]
-RUN dotnet restore "./WarehouseManagementSystem.API/WarehouseManagementSystem.API.csproj"
+COPY ["WarehouseManagementSystem.Domain/WarehouseManagementSystem.Domain.csproj", "WarehouseManagementSystem.Domain/"]
+COPY ["WarehouseManagementSystem.Infrastructure/WarehouseManagementSystem.Infrastructure.csproj", "WarehouseManagementSystem.Infrastructure/"]
+RUN dotnet restore "WarehouseManagementSystem.API/WarehouseManagementSystem.API.csproj"
 COPY . .
 WORKDIR "/src/WarehouseManagementSystem.API"
-RUN dotnet build "./WarehouseManagementSystem.API.csproj" -c %BUILD_CONFIGURATION% -o /app/build
+RUN dotnet publish "WarehouseManagementSystem.API.csproj" -c "$BUILD_CONFIGURATION" -o /app/publish /p:UseAppHost=false
 
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./WarehouseManagementSystem.API.csproj" -c %BUILD_CONFIGURATION% -o /app/publish /p:UseAppHost=false
-
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl \
+    && mkdir -p /https \
+    && openssl req -x509 -nodes -days 365 \
+        -newkey rsa:2048 \
+        -keyout /https/localhost.key \
+        -out /https/localhost.crt \
+        -subj "/CN=localhost" \
+        -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" \
+    && openssl pkcs12 -export \
+        -out /https/localhost.pfx \
+        -inkey /https/localhost.key \
+        -in /https/localhost.crt \
+        -passout pass:wms-local-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "WarehouseManagementSystem.API.dll"]

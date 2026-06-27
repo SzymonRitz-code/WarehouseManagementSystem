@@ -22,6 +22,13 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 using WarehouseManagementSystem.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+// Docker supplies internal authority/metadata addresses and the browser-visible issuer separately.
+var authenticationAuthority = builder.Configuration["Authentication:Authority"] ?? "https://localhost:44380";
+var authenticationMetadataAddress = builder.Configuration["Authentication:MetadataAddress"]
+                                    ?? $"{authenticationAuthority.TrimEnd('/')}/.well-known/openid-configuration";
+var authenticationAudience = builder.Configuration["Authentication:Audience"] ?? "wmsApi";
+var authenticationValidIssuer = builder.Configuration["Authentication:ValidIssuer"] ?? authenticationAuthority;
+var authenticationRequireHttpsMetadata = builder.Configuration.GetValue("Authentication:RequireHttpsMetadata", true);
 
 #region MVC and API Behavior
 
@@ -154,7 +161,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWmsClient",
         policy =>
         {
-            policy.WithOrigins("https://localhost:4200")
+            policy.WithOrigins("https://localhost:4200", "https://localhost:4201")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -167,10 +174,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
-        o.Authority = "https://localhost:44380";
-        o.MetadataAddress = "https://localhost:44380/.well-known/openid-configuration";
-        o.RequireHttpsMetadata = true; // tymczasowo można na falce
-        o.Audience = "wmsApi"; // musi być zgodne z aud w tokenie JWT, który jest generowany przez IdentityServer, jeśli nie jest zgodne to będzie błąd 401 Unauthorized
+        o.Authority = authenticationAuthority;
+        o.MetadataAddress = authenticationMetadataAddress;
+        o.RequireHttpsMetadata = authenticationRequireHttpsMetadata; // tymczasowo można na falce
+        o.Audience = authenticationAudience; // musi być zgodne z aud w tokenie JWT, który jest generowany przez IdentityServer, jeśli nie jest zgodne to będzie błąd 401 Unauthorized
         o.MapInboundClaims = false; // wyłączenie mapowania claimów, dzięki temu nazwy claimów w tokenie JWT będą takie same jak w aplikacji,
                                     // bez tego np. "sub" byłby mapowany na ClaimTypes.NameIdentifier, a "role" na ClaimTypes.Role,
                                     // co może powodować problemy z autoryzacją jeśli w tokenie są niestandardowe nazwy claimów
@@ -180,9 +187,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = JwtClaimTypes.Name,
             ValidateIssuerSigningKey = true,
             ValidateIssuer = true,
-            ValidIssuer = "https://localhost:44380",
+            ValidIssuer = authenticationValidIssuer,
             ValidateAudience = true,
-            ValidAudience = "wmsApi",
+            ValidAudience = authenticationAudience,
             IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
             {
                 // Konflikt między System.IdentityModel a Duende IdentityModel
@@ -195,7 +202,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     ServerCertificateCustomValidationCallback = (m, c, ch, e) => true
                 });
-                var json = client.GetStringAsync("https://localhost:44380/.well-known/openid-configuration/jwks").Result;
+                var json = client.GetStringAsync($"{authenticationAuthority.TrimEnd('/')}/.well-known/openid-configuration/jwks").Result;
                 var keys = new JsonWebKeySet(json);
                 return keys.GetSigningKeys();
             }
@@ -246,6 +253,16 @@ builder.Services.AddResponseCaching();
 
 var app = builder.Build();
 
+if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<WarehouseManagementSystemDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
+// Run before Swagger so every HTTP endpoint, including documentation, is redirected to TLS.
+app.UseHttpsRedirection();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -253,7 +270,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowWmsClient");
 app.UseResponseCaching();
 app.UseSerilogRequestLogging();

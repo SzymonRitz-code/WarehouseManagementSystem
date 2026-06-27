@@ -93,11 +93,23 @@ public static class Config
                 RequirePkce = true,
                 RequireClientSecret = false,
 
-                RedirectUris = { "https://localhost:4200/signin-oidc" },
-                FrontChannelLogoutUri = "https://localhost:4200/signout-oidc",
-                PostLogoutRedirectUris = { "https://localhost:4200/signout-callback-oidc" },
+                RedirectUris =
+                {
+                    "https://localhost:4200/signin-oidc",
+                    "https://localhost:4201/signin-oidc"
+                },
+                FrontChannelLogoutUri = "https://localhost:4201/signout-oidc",
+                PostLogoutRedirectUris =
+                {
+                    "https://localhost:4200/signout-callback-oidc",
+                    "https://localhost:4201/signout-callback-oidc"
+                },
 
-                AllowedCorsOrigins = { "https://localhost:4200" },
+                AllowedCorsOrigins =
+                {
+                    "https://localhost:4200",
+                    "https://localhost:4201"
+                },
 
                 AllowedScopes = {"openid","profile","offline_access","wms.api"},
 

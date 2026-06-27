@@ -15,6 +15,8 @@ internal static class HostingExtensions
             options.Events.RaiseInformationEvents = true;
             options.Events.RaiseFailureEvents = true;
             options.Events.RaiseSuccessEvents = true;
+            // Tokens must contain the browser-visible issuer rather than the Docker service name.
+            options.IssuerUri = builder.Configuration["IdentityServer:IssuerUri"];
 
             // Umożliwia rządania na HTTP w dev 
             //options.EmitStaticAudienceClaim = true; 
@@ -40,7 +42,7 @@ internal static class HostingExtensions
             options.AddPolicy("AllowWmsClient",
                 policy =>
                 {
-                    policy.WithOrigins("https://localhost:4200")
+                    policy.WithOrigins("https://localhost:4200", "https://localhost:4201")
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
@@ -78,6 +80,7 @@ internal static class HostingExtensions
             app.UseDeveloperExceptionPage();
         }
 
+        app.UseHttpsRedirection();
         app.UseStaticFiles();
         app.UseRouting();
         app.UseCors("AllowWmsClient");

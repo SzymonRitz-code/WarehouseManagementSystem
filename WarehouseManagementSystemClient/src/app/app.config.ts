@@ -8,10 +8,13 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { environment } from './environments/environment';
 
+// Keep OIDC callbacks on the origin that actually served the SPA (local Angular or Docker).
+const clientOrigin = globalThis.location?.origin ?? 'https://localhost:4200';
+
 export const authConfig = {
   authority: environment.idpUrl,
-  redirectUrl: `https://localhost:4200/signin-oidc`,
-  postLogoutRedirectUri: `https://localhost:4200/signout-callback-oidc`,
+  redirectUrl: `${clientOrigin}/signin-oidc`,
+  postLogoutRedirectUri: `${clientOrigin}/signout-callback-oidc`,
 
   clientId: 'angular_spa',
 

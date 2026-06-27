@@ -1,0 +1,92 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: wms-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Wms_dev_password123!"
+    ports:
+      - "14333:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/localhost/1433' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  idp:
+    build:
+      context: .
+      dockerfile: WarehouseManagementSystem.Idp/Dockerfile
+    container_name: wms-idp
+    environment:
+      # Port 8090 accepts Docker Desktop's HTTP link and redirects to TLS on 8091.
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080;https://+:8443"
+      ASPNETCORE_HTTPS_PORT: "8091"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/localhost.pfx"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "wms-local-dev"
+      IdentityServer__IssuerUri: "https://localhost:8091"
+    ports:
+      - "8090:8080"
+      - "8091:8443"
+    volumes:
+      # Use the host-trusted localhost certificate instead of generating one per image.
+      - ./.certs/localhost.pfx:/https/localhost.pfx:ro
+
+  api:
+    build:
+      context: .
+      dockerfile: WarehouseManagementSystem.API/Dockerfile
+    container_name: wms-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      idp:
+        condition: service_started
+    environment:
+      # Kestrel listens on both protocols so the published HTTP port can redirect to HTTPS.
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080;https://+:8443"
+      ASPNETCORE_HTTPS_PORT: "8081"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/localhost.pfx"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "wms-local-dev"
+      ConnectionStrings__WarehouseManagementSystemConnection: "Server=sqlserver,1433;Database=WarehouseDb;User Id=sa;Password=Wms_dev_password123!;TrustServerCertificate=True;"
+      Authentication__Authority: "https://idp:8443"
+      Authentication__MetadataAddress: "https://idp:8443/.well-known/openid-configuration"
+      # Tokens are issued for the browser-visible IDP address, not its Docker DNS name.
+      Authentication__ValidIssuer: "https://localhost:8091"
+      Authentication__Audience: "wmsApi"
+      Authentication__RequireHttpsMetadata: "true"
+      # The SQL Server container uses its own persistent volume, so a fresh Docker
+      # deployment must initialize that database instead of assuming the host DB.
+      Database__MigrateOnStartup: "true"
+      Seeding__Enabled: "true"
+      Seeding__Profile: "Extreme"
+    ports:
+      - "8080:8080"
+      - "8081:8443"
+    volumes:
+      - ./.certs/localhost.pfx:/https/localhost.pfx:ro
+
+  client:
+    build:
+      context: WarehouseManagementSystemClient
+      dockerfile: Dockerfile
+    container_name: wms-client
+    depends_on:
+      api:
+        condition: service_started
+      idp:
+        condition: service_started
+    ports:
+      - "4200:80"
+      - "4201:443"
+    volumes:
+      # PEM files come from the same trusted development certificate used by Kestrel.
+      - ./.certs/localhost.pem:/etc/nginx/certs/localhost.crt:ro
+      - ./.certs/localhost.key:/etc/nginx/certs/localhost.key:ro
+
+volumes:
+  sqlserver-data:
