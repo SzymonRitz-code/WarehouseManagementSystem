@@ -430,4 +430,6 @@ __screenshots__/
 Thumbs.db
 *.tmp
 *.swp
+
+# temporary files created by popular Visual Studio add-ons	
 /.github/copilot-instructions.md
