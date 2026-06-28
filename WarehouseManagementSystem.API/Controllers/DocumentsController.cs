@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.Documents;
-using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Documents.Command;
+using WarehouseManagementSystem.API.Services.Documents.Query;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;

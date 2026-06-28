@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
-using WarehouseManagementSystem.API.Services.AuditLogs;
-using WarehouseManagementSystem.API.Services.Documents;
+using WarehouseManagementSystem.API.Services.AuditLogs.Command;
+using WarehouseManagementSystem.API.Services.Documents.Command;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Exceptions;
@@ -28,7 +28,7 @@ public class DocumentCommandServiceOrchestrationTests
     private readonly Mock<ISystemClock> _clockMock = new();
     private readonly Mock<IDocumentRepository> _documentRepoMock = new();
     private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
-    private readonly Mock<IAuditLogService> _auditLogService = new();
+    private readonly Mock<IAuditLogCommandService> _auditLogService = new();
     private readonly Mock<IUserService> _userServiceMock = new();
     private readonly Mock<IDocumentNumberGenerator> _numberGeneratorMock = new();
     private readonly Mock<IUnitOfWorkTransaction> _transactionMock = new();

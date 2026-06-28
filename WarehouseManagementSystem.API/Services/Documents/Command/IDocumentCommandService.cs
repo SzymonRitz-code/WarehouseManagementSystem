@@ -3,7 +3,7 @@ using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
 
-namespace WarehouseManagementSystem.API.Services.Documents;
+namespace WarehouseManagementSystem.API.Services.Documents.Command;
 
 /// <summary>
 /// Defines operations that change warehouse document state.

@@ -1,4 +1,5 @@
 using System.Data;
+using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Exceptions;
@@ -9,7 +10,7 @@ using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
 using Document = WarehouseManagementSystem.Domain.Model.DocumentsDomain.Document;
 
-namespace WarehouseManagementSystem.API.Services.Documents;
+namespace WarehouseManagementSystem.API.Services.Documents.Command;
 
 public class DocumentCommandService : IDocumentCommandService
 {
@@ -20,7 +21,7 @@ public class DocumentCommandService : IDocumentCommandService
     private readonly IDocumentNumberGenerator _numberGenerator;
     private readonly ISystemClock _clock;
     private readonly ILogger<DocumentCommandService> _logger;
-    private readonly IAuditLogService _auditLogService;
+    private readonly IAuditLogCommandService _auditLogService;
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
@@ -28,7 +29,7 @@ public class DocumentCommandService : IDocumentCommandService
         IDocumentNumberGenerator numberGenerator,
         ISystemClock systemClock,
         ILogger<DocumentCommandService> logger,
-        IAuditLogService auditLogService)
+        IAuditLogCommandService auditLogService)
     {
         _logger = logger;
         _auditLogService = auditLogService;
