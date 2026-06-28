@@ -1,13 +1,11 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.AuditLogs;
-using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Stocks.Query;
 using WarehouseManagementSystem.API.Services.User;
-using WarehouseManagementSystem.Domain.Interfaces;
-using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
+using WarehouseManagementSystem.API.Services.Warehouses.Command;
+using WarehouseManagementSystem.API.Services.Warehouses.Query;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
@@ -20,27 +18,21 @@ public class WarehousesController : ControllerBase
 
     private readonly IStockQueryService _stockQueryService;
     private readonly IWarehouseQueryService _warehouseQueryService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IWarehouseCommandService _warehouseCommandService;
     private readonly IMapper _mapper;
-    private readonly IAuditLogService _auditLogService;
-    private readonly ILogger<WarehousesController> _logger;
     private readonly IUserService _userService;
 
     public WarehousesController(
         IStockQueryService stockQueryService,
         IWarehouseQueryService warehouseQueryService,
-        IUnitOfWork unitOfWork,
+        IWarehouseCommandService warehouseCommandService,
         IMapper mapper,
-        IAuditLogService auditLogService,
-        ILogger<WarehousesController> logger,
         IUserService userService)
     {
         _stockQueryService = stockQueryService;
         _warehouseQueryService = warehouseQueryService;
-        _unitOfWork = unitOfWork;
+        _warehouseCommandService = warehouseCommandService;
         _mapper = mapper;
-        _auditLogService = auditLogService;
-        _logger = logger;
         _userService = userService;
     }
 
@@ -118,9 +110,9 @@ public class WarehousesController : ControllerBase
     /// <param name="warehouseDto">Warehouse data to create.</param>
     /// <returns>The created warehouse with the URL for retrieving its details.</returns>
     [HttpPost]
-    public async Task<ActionResult<WarehouseDetailsDto>> CreateWarehouse(CreateWarehouseDto warehouseDto)
+    public async Task<ActionResult<WarehouseDetailsDto>> CreateWarehouse(CreateWarehouseDto warehouseDto, CancellationToken ct)
     {
-        if (_unitOfWork.Warehouses.Any(w => w.Code == warehouseDto.Code))
+        if (_warehouseCommandService.CodeExists(warehouseDto.Code))
         {
             ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
         }
@@ -130,36 +122,15 @@ public class WarehousesController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            var warehouse = new Warehouse(
-                warehouseDto.Code,
-                warehouseDto.Name,
-                warehouseDto.Country,
-                warehouseDto.City,
-                warehouseDto.Address, _userService.GetUser(HttpContext));
+        var user = _userService.GetUser(HttpContext);
+        var warehouse = await _warehouseCommandService.CreateAsync(
+            warehouseDto,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-            _unitOfWork.Warehouses.Add(warehouse);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(Warehouse),
-                warehouse.Id,
-                "Create",
-                user.Id,
-                null,
-                AuditSnapshots.Warehouse(warehouse),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Warehouse {WarehouseId} created by {UserId}", warehouse.Id, user.Id);
-
-            var createdDto = _mapper.Map<WarehouseDetailsDto>(warehouse);
-            return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, createdDto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Warehouse create failed for code {Code}", warehouseDto.Code);
-            throw;
-        }
+        var createdDto = _mapper.Map<WarehouseDetailsDto>(warehouse);
+        return CreatedAtAction(nameof(GetWarehouse), new { warehouseId = warehouse.Id }, createdDto);
     }
 
     /// <summary>
@@ -173,11 +144,16 @@ public class WarehousesController : ControllerBase
     /// <param name="warehouseDto">Warehouse data to update.</param>
     /// <returns>A 204 response after a successful update, or a 404 response if the warehouse does not exist.</returns>
     [HttpPut("{warehouseId}")]
-    public async Task<IActionResult> UpdateWarehouse([FromRoute] Guid warehouseId, UpdateWarehouseDto warehouseDto)
+    public async Task<IActionResult> UpdateWarehouse([FromRoute] Guid warehouseId, UpdateWarehouseDto warehouseDto, CancellationToken ct)
     {
         if (warehouseId != warehouseDto.Id)
         {
             return BadRequest("Route ID and body ID mismatch.");
+        }
+
+        if (_warehouseCommandService.CodeExists(warehouseDto.Code, warehouseId))
+        {
+            ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
         }
 
         if (!ModelState.IsValid)
@@ -185,51 +161,15 @@ public class WarehousesController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
-        if (warehouse == null)
-        {
-            return NotFound();
-        }
+        var user = _userService.GetUser(HttpContext);
+        var updated = await _warehouseCommandService.UpdateAsync(
+            warehouseId,
+            warehouseDto,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-        var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
-
-        warehouse.SetCode(warehouseDto.Code);
-        warehouse.SetName(warehouseDto.Name);
-        warehouse.SetLocation(warehouseDto.Country, warehouseDto.City, warehouseDto.Address);
-
-        if (warehouseDto.IsActive) { warehouse.Activate(); }
-        else { warehouse.Deactivate(); }
-
-        try
-        {
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(Warehouse),
-                warehouse.Id,
-                "Update",
-                user.Id,
-                oldWarehouse,
-                AuditSnapshots.Warehouse(warehouse),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Warehouse {WarehouseId} updated by {UserId}", warehouse.Id, user.Id);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!WarehouseExists(warehouseId))
-            {
-                return NotFound();
-            }
-
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Warehouse update failed for warehouse {WarehouseId}", warehouseId);
-            throw;
-        }
-
-        return NoContent();
+        return updated == null ? NotFound() : NoContent();
     }
 
     /// <summary>
@@ -241,47 +181,16 @@ public class WarehousesController : ControllerBase
     /// <param name="warehouseId">Unique identifier of the warehouse to delete.</param>
     /// <returns>A 204 response after a successful delete, or a 404 response if the warehouse does not exist.</returns>
     [HttpDelete("{warehouseId}")]
-    public async Task<IActionResult> DeleteWarehouse(Guid warehouseId)
+    public async Task<IActionResult> DeleteWarehouse(Guid warehouseId, CancellationToken ct)
     {
-        var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
-        if (warehouse == null)
-        {
-            return NotFound();
-        }
+        var user = _userService.GetUser(HttpContext);
+        var deleted = await _warehouseCommandService.DeleteAsync(
+            warehouseId,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-        var oldWarehouse = AuditSnapshots.Warehouse(warehouse);
-
-        try
-        {
-            _unitOfWork.Warehouses.Delete(warehouse);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(Warehouse),
-                warehouse.Id,
-                "Delete",
-                user.Id,
-                oldWarehouse,
-                null,
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Warehouse {WarehouseId} deleted by {UserId}", warehouse.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Warehouse delete failed for warehouse {WarehouseId}", warehouseId);
-            throw;
-        }
-
-        return NoContent();
-    }
-
-    #endregion
-
-    #region Helper Methods
-
-    private bool WarehouseExists(Guid warehouseId)
-    {
-        return _unitOfWork.Warehouses.Any(w => w.Id == warehouseId);
+        return deleted ? NoContent() : NotFound();
     }
 
     #endregion

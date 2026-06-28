@@ -1,6 +1,6 @@
 using WarehouseManagementSystem.API.DTO;
 
-namespace WarehouseManagementSystem.API.Services.Queries;
+namespace WarehouseManagementSystem.API.Services.Warehouses.Query;
 
 /// <summary>
 /// Defines warehouse and warehouse zone read operations.

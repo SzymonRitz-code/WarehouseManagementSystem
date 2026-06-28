@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
-namespace WarehouseManagementSystem.API.Services.Queries;
+namespace WarehouseManagementSystem.API.Services.Warehouses.Query;
 
 public class WarehouseQueryService : IWarehouseQueryService
 {

@@ -3,7 +3,7 @@ using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
-namespace WarehouseManagementSystem.API.Services.Queries;
+namespace WarehouseManagementSystem.API.Services.Products.Query;
 
 public class ProductQueryService : IProductQueryService
 {

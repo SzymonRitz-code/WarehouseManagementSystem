@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using WarehouseManagementSystem.API.Controllers;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Stocks.Query;
 
 namespace WarehouseManagementSystem.Tests.Controllers;
 

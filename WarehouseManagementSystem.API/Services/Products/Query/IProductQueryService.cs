@@ -1,6 +1,6 @@
 using WarehouseManagementSystem.API.DTO;
 
-namespace WarehouseManagementSystem.API.Services.Queries;
+namespace WarehouseManagementSystem.API.Services.Products.Query;
 
 /// <summary>
 /// Defines product read operations.

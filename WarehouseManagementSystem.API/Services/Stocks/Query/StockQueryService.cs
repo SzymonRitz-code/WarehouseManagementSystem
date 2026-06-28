@@ -4,7 +4,7 @@ using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
-namespace WarehouseManagementSystem.API.Services.Queries;
+namespace WarehouseManagementSystem.API.Services.Stocks.Query;
 
 public class StockQueryService : IStockQueryService
 {

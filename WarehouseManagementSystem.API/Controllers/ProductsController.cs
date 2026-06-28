@@ -2,11 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.AuditLogs;
-using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Products.Command;
+using WarehouseManagementSystem.API.Services.Products.Query;
+using WarehouseManagementSystem.API.Services.Stocks.Query;
 using WarehouseManagementSystem.API.Services.User;
-using WarehouseManagementSystem.Domain.Interfaces;
-using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
@@ -17,28 +16,23 @@ public class ProductsController : ControllerBase
 {
     #region Fields and Constructor
 
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IProductCommandService _productCommandService;
     private readonly IMapper _mapper;
     private readonly IProductQueryService _productQueryService;
     private readonly IStockQueryService _stockQueryService;
-    private readonly IAuditLogService _auditLogService;
-    private readonly ILogger<ProductsController> _logger;
     private readonly IUserService _userService;
 
     public ProductsController(
-        IUnitOfWork unitOfWork,
+        IProductCommandService productCommandService,
         IMapper mapper,
         IProductQueryService productQueryService,
         IStockQueryService stockQueryService,
-        IAuditLogService auditLogService,
-        ILogger<ProductsController> logger, IUserService userService)
+        IUserService userService)
     {
-        _unitOfWork = unitOfWork;
+        _productCommandService = productCommandService;
         _mapper = mapper;
         _productQueryService = productQueryService;
         _stockQueryService = stockQueryService;
-        _auditLogService = auditLogService;
-        _logger = logger;
         _userService = userService;
     }
 
@@ -103,48 +97,24 @@ public class ProductsController : ControllerBase
     /// <param name="productDto">Product data to create.</param>
     /// <returns>The created product with the URL for retrieving its details.</returns>
     [HttpPost]
-    public async Task<ActionResult<ProductDetailsDto>> CreateProduct(CreateProductDto productDto)
+    public async Task<ActionResult<ProductDetailsDto>> CreateProduct(CreateProductDto productDto, CancellationToken ct)
     {
-        if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku))
+        if (_productCommandService.SkuExists(productDto.Sku!))
         {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
         }
+
         if (!ModelState.IsValid)
         {
             return ValidationProblem(ModelState);
         }
 
-        var product = new Product(
-            productDto.Sku,
-            productDto.Name,
-            productDto.Unit,
-            productDto.RequiresBatch,
-            _userService.GetUser(HttpContext),
-            productDto.Weight,
-            productDto.Volume,
-            productDto.Description);
-
-        try
-        {
-            _unitOfWork.Products.Add(product);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(Product),
-                product.Id,
-                "Create",
-                user.Id,
-                null,
-                AuditSnapshots.Product(product),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-
-            _logger.LogInformation("Product {ProductId} created by {UserId}", product.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Product create failed for SKU {Sku}", productDto.Sku);
-            throw;
-        }
+        var user = _userService.GetUser(HttpContext);
+        var product = await _productCommandService.CreateProductAsync(
+            productDto,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
         var createdDto = _mapper.Map<ProductDetailsDto>(product);
         return CreatedAtAction(nameof(GetProduct), new { productId = product.Id }, createdDto);
@@ -161,14 +131,14 @@ public class ProductsController : ControllerBase
     /// <param name="productDto">Product data to update.</param>
     /// <returns>A 204 response after a successful update, or a 404 response if the product does not exist.</returns>
     [HttpPut("{productId:guid}")]
-    public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, UpdateProductDto productDto)
+    public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, UpdateProductDto productDto, CancellationToken ct)
     {
         if (productId != productDto.Id)
         {
             return BadRequest("Route ID and body ID mismatch.");
         }
 
-        if (_unitOfWork.Products.Any(p => p.SKU == productDto.Sku && p.Id != productId))
+        if (_productCommandService.SkuExists(productDto.Sku!, productId))
         {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
         }
@@ -178,62 +148,18 @@ public class ProductsController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        var product = await _unitOfWork.Products.FindAsync(productId);
-        if (product == null)
+        var user = _userService.GetUser(HttpContext);
+        var updated = await _productCommandService.UpdateProductAsync(
+            productId,
+            productDto,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
+
+        if (updated == null)
         {
             return NotFound();
         }
-
-        var oldProduct = AuditSnapshots.Product(product);
-
-        product.SetName(productDto.Name);
-        product.SetSku(productDto.Sku);
-        product.SetUnit(productDto.Unit);
-
-        if (productDto.RequiresBatch)
-        {
-            product.RequireBatchTracking();
-        }
-        else
-        {
-            product.DisableBatchTracking();
-        }
-
-        if (productDto.IsActive)
-        {
-            product.Activate();
-        }
-        else
-        {
-            product.Deactivate();
-        }
-
-        product.SetWeight(productDto.Weight);
-        product.SetVolume(productDto.Volume);
-
-        product.SetDescription(productDto.Description);
-
-        try
-        {
-            _unitOfWork.Products.Update(product);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(Product),
-                product.Id,
-                "Update",
-                user.Id,
-                oldProduct,
-                AuditSnapshots.Product(product),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Product {ProductId} updated by {UserId}", product.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Product {ProductId} update failed", productId);
-            throw;
-        }
-
 
         return NoContent();
     }
@@ -251,45 +177,26 @@ public class ProductsController : ControllerBase
     /// <param name="productId">Unique identifier of the product to delete.</param>
     /// <returns>A 204 response after a successful delete, or a 404 response if the product does not exist.</returns>
     [HttpDelete("{productId:guid}")]
-    public async Task<IActionResult> DeleteProduct(Guid productId)
+    public async Task<IActionResult> DeleteProduct(Guid productId, CancellationToken ct)
     {
-        var product = await _unitOfWork.Products.FindAsync(productId);
-        if (product == null)
-        {
-            return NotFound();
-        }
+        var user = _userService.GetUser(HttpContext);
+        var deleted = await _productCommandService.DeleteProductAsync(
+            productId,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-        var oldProduct = AuditSnapshots.Product(product);
-
-        try
-        {
-            _unitOfWork.Products.Delete(product);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(Product),
-                product.Id,
-                "Delete",
-                user.Id,
-                oldProduct,
-                null,
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Product {ProductId} deleted by {UserId}", product.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Product delete failed for product {ProductId}", productId);
-            throw;
-        }
-
-        return NoContent();
+        return deleted ? NoContent() : NotFound();
     }
 
     #endregion
 
     #region Stock Query Actions
 
-    private bool ProductExists(Guid id) => _unitOfWork.Products.Any(p => p.Id == id);
+    private async Task<bool> ProductExistsAsync(Guid id, CancellationToken ct)
+    {
+        return await _productQueryService.GetProductAsync(id, ct) != null;
+    }
 
     /// <summary>
     /// Gets stock records for the specified product.
@@ -301,7 +208,7 @@ public class ProductsController : ControllerBase
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
     public async Task<ActionResult<IEnumerable<StockDto>>> GetStocksForProduct(Guid productId, CancellationToken ct)
     {
-        if (!ProductExists(productId))
+        if (!await ProductExistsAsync(productId, ct))
         {
             return NotFound();
         }

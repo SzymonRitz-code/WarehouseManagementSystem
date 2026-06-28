@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Stocks.Query;
 
 namespace WarehouseManagementSystem.API.Controllers;
 

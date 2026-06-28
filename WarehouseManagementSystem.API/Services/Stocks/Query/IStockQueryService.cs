@@ -2,7 +2,7 @@ using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
-namespace WarehouseManagementSystem.API.Services.Queries;
+namespace WarehouseManagementSystem.API.Services.Stocks.Query;
 
 /// <summary>
 /// Defines stock read operations.
