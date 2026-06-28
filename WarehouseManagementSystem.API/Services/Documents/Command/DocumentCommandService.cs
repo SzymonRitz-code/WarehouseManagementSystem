@@ -179,7 +179,8 @@ public class DocumentCommandService : IDocumentCommandService
                         warehouseId: document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
                         warehouseZoneId: item.SourceZoneId ?? throw new MissingSourceZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
-                        batchId: item.ProductBatchId);
+                        batchId: item.ProductBatchId,
+                        ct: ct);
                 }
 
                 break;
@@ -192,7 +193,8 @@ public class DocumentCommandService : IDocumentCommandService
                         warehouseId: document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
                         warehouseZoneId: item.SourceZoneId ?? throw new MissingSourceZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
-                        batchId: item.ProductBatchId);
+                        batchId: item.ProductBatchId,
+                        ct: ct);
                 }
 
                 break;
@@ -212,7 +214,8 @@ public class DocumentCommandService : IDocumentCommandService
                         targetWarehouseId: document.TargetWarehouseId.Value,
                         targetZoneId: item.TargetZoneId ?? throw new MissingTargetZoneForDocumentException(document.Id),
                         quantity: item.Quantity,
-                        batchId: item.ProductBatchId);
+                        batchId: item.ProductBatchId,
+                        ct: ct);
                 }
 
                 break;
@@ -260,7 +263,7 @@ public class DocumentCommandService : IDocumentCommandService
 
                 foreach (var reservation in reservations)
                 {
-                    await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id);
+                    await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id, ct);
                 }
 
                 break;
@@ -270,7 +273,7 @@ public class DocumentCommandService : IDocumentCommandService
 
                 foreach (var reservation in mmReservations)
                 {
-                    await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id);
+                    await _stockService.ReleaseReservationAsync(reservation.StockId, reservation.Id, ct);
                 }
 
                 break;

@@ -2,12 +2,9 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.AuditLogs.Command;
-using WarehouseManagementSystem.API.Services.AuditLogs;
-using WarehouseManagementSystem.API.Services.Queries;
+  using WarehouseManagementSystem.API.Services.ProductBatches.Command;
+using WarehouseManagementSystem.API.Services.ProductBatches.Query;
 using WarehouseManagementSystem.API.Services.User;
-using WarehouseManagementSystem.Domain.Interfaces;
-using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
@@ -18,25 +15,20 @@ public class ProductBatchesController : ControllerBase
 {
     #region Fields and Constructor
 
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IProductBatchQueryService _productBatchQueryService;
-    private readonly IAuditLogCommandService _auditLogService;
-    private readonly ILogger<ProductBatchesController> _logger;
+    private readonly IProductBatchCommandService _productBatchCommandService;
     private readonly IUserService _userService;
 
     public ProductBatchesController(
-        IUnitOfWork unitOfWork,
         IMapper mapper,
         IProductBatchQueryService productBatchQueryService,
-        IAuditLogCommandService auditLogService,
-        ILogger<ProductBatchesController> logger, IUserService userService)
+        IProductBatchCommandService productBatchCommandService,
+        IUserService userService)
     {
-        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _productBatchQueryService = productBatchQueryService;
-        _auditLogService = auditLogService;
-        _logger = logger;
+        _productBatchCommandService = productBatchCommandService;
         _userService = userService;
     }
 
@@ -55,7 +47,7 @@ public class ProductBatchesController : ControllerBase
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductBatchListDto>>> GetBatchesByProduct([FromRoute] Guid productId, CancellationToken ct)
     {
-        var batches = await _productBatchQueryService.GetProductBatchList(pb => pb.ProductId == productId, ct);
+        var batches = await _productBatchQueryService.GetBatchesByProductAsync(productId, ct);
         return Ok(batches);
     }
 
@@ -71,10 +63,8 @@ public class ProductBatchesController : ControllerBase
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<ProductBatchDto>> GetBatchByProduct([FromRoute] Guid productId, [FromRoute] Guid batchId, CancellationToken ct)
     {
-        var batch = await _productBatchQueryService.GetProductBatchDetails(batchId, ct);
-        return batch == null
-            ? (ActionResult<ProductBatchDto>)NotFound()
-            : batch.ProductId != productId ? (ActionResult<ProductBatchDto>)NotFound() : (ActionResult<ProductBatchDto>)Ok(batch);
+        var batch = await _productBatchQueryService.GetBatchForProductAsync(productId, batchId, ct);
+        return batch == null ? (ActionResult<ProductBatchDto>)NotFound() : (ActionResult<ProductBatchDto>)Ok(batch);
     }
 
     /// <summary>
@@ -87,7 +77,7 @@ public class ProductBatchesController : ControllerBase
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<IEnumerable<ProductBatchListDto>>> GetAllBatches(CancellationToken ct)
     {
-        var batches = await _productBatchQueryService.GetProductBatchList(ct: ct);
+        var batches = await _productBatchQueryService.GetBatchesAsync(ct);
         return Ok(batches);
     }
     // TODO : Finish Get Batches to be consistent with UI implementation
@@ -102,10 +92,7 @@ public class ProductBatchesController : ControllerBase
     [ResponseCache(CacheProfileName = HttpCacheProfiles.ReferenceData)]
     public async Task<ActionResult<ProductBatchListDto>> GetBatch([FromRoute] Guid batchId, CancellationToken ct)
     {
-        var batch = await _productBatchQueryService.GetProductBatchList(
-            pb => pb.Id == batchId, ct);
-
-        var result = batch.FirstOrDefault();
+        var result = await _productBatchQueryService.GetBatchListItemAsync(batchId, ct);
         return result == default ? (ActionResult<ProductBatchListDto>)NotFound() : (ActionResult<ProductBatchListDto>)Ok(result);
     }
 
@@ -122,53 +109,29 @@ public class ProductBatchesController : ControllerBase
     /// <param name="batchDto">Product batch data to create.</param>
     /// <returns>The created product batch with the URL for retrieving its details.</returns>
     [HttpPost("/api/products/{productId:guid}/batches")]
-    public async Task<ActionResult<ProductBatchDto>> CreateProductBatch(CreateProductBatchDto batchDto)
+    public async Task<ActionResult<ProductBatchDto>> CreateProductBatch(Guid productId, CreateProductBatchDto batchDto, CancellationToken ct)
     {
-        if (_unitOfWork.ProductBatches.Any(p => p.BatchNumber == batchDto.BatchNumber))
+        if (productId != batchDto.ProductId)
+        {
+            return BadRequest("Route ID and body Product ID mismatch.");
+        }
+
+        if (await _productBatchCommandService.BatchNumberExistsAsync(batchDto.BatchNumber, null, ct))
         {
             ModelState.AddModelError(nameof(batchDto.BatchNumber), "BatchNumber already exists");
         }
+
         if (!ModelState.IsValid)
         {
             return ValidationProblem(ModelState);
         }
 
-        ProductBatch batch;
-        try
-        {
-            batch = new ProductBatch(
-                batchDto.ProductId,
-                batchDto.BatchNumber,
-                _userService.GetUser(HttpContext),
-                batchDto.ManufacturedDate,
-                batchDto.ExpirationDate);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Product batch create failed for product {ProductId} and batch {BatchNumber}", batchDto.ProductId, batchDto.BatchNumber);
-            throw;
-        }
-
-        try
-        {
-            _unitOfWork.ProductBatches.Add(batch);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(ProductBatch),
-                batch.Id,
-                "Create",
-                user.Id,
-                null,
-                AuditSnapshots.ProductBatch(batch),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Product batch {BatchId} created by {UserId}", batch.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Product batch persistence failed for batch {BatchId}", batch.Id);
-            throw;
-        }
+        var user = _userService.GetUser(HttpContext);
+        var batch = await _productBatchCommandService.CreateAsync(
+            batchDto,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
         var createdDto = _mapper.Map<ProductBatchDto>(batch);
         return CreatedAtAction(nameof(GetBatchByProduct), new { productId = batch.ProductId, batchId = batch.Id }, createdDto);
@@ -186,11 +149,16 @@ public class ProductBatchesController : ControllerBase
     /// <param name="batchDto">Product batch data to update.</param>
     /// <returns>The updated product batch, or a validation response if the data is invalid.</returns>
     [HttpPut("/api/products/{productId:guid}/batches/{batchId:guid}")]
-    public async Task<ActionResult<ProductBatchDto>> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto)
+    public async Task<ActionResult<ProductBatchDto>> UpdateProductBatch(Guid productId, Guid batchId, UpdateProductBatchDto batchDto, CancellationToken ct)
     {
         if (batchId != batchDto.Id)
         {
             return BadRequest("Route ID and body ID mismatch.");
+        }
+
+        if (await _productBatchCommandService.BatchNumberExistsAsync(batchDto.BatchNumber, batchId, ct))
+        {
+            ModelState.AddModelError(nameof(batchDto.BatchNumber), "BatchNumber already exists");
         }
 
         if (!ModelState.IsValid)
@@ -198,44 +166,29 @@ public class ProductBatchesController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
-        if (batch == null)
-        {
-            return NotFound();
-        }
+        var user = _userService.GetUser(HttpContext);
 
-        if (batch.ProductId != productId)
+        try
+        {
+            var updated = await _productBatchCommandService.UpdateAsync(
+                productId,
+                batchId,
+                batchDto,
+                user,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                ct);
+
+            if (updated == null)
+            {
+                return NotFound();
+            }
+        }
+        catch (InvalidOperationException)
         {
             return BadRequest("Product batch does not belong to the route product.");
         }
 
-        var oldBatch = AuditSnapshots.ProductBatch(batch);
-
-        batch.SetBatchNumber(batchDto.BatchNumber);
-        batch.SetManufacturingDates(batchDto.ManufacturedDate, batchDto.ExpirationDate);
-
-        try
-        {
-            _unitOfWork.ProductBatches.Update(batch);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(ProductBatch),
-                batch.Id,
-                "Update",
-                user.Id,
-                oldBatch,
-                AuditSnapshots.ProductBatch(batch),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Product batch {BatchId} updated by {UserId}", batch.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Product batch {BatchId} update failed", batchId);
-            throw;
-        }
-
-        var updatedBatch = await _productBatchQueryService.GetProductBatchDetails(batchId);
+        var updatedBatch = await _productBatchQueryService.GetBatchAsync(batchId, ct);
         return Ok(updatedBatch);
     }
 
@@ -248,38 +201,16 @@ public class ProductBatchesController : ControllerBase
     /// <param name="batchId">Unique identifier of the product batch to delete.</param>
     /// <returns>A 204 response after a successful delete, or a 404 response if the batch does not exist.</returns>
     [HttpDelete("{batchId}")]
-    public async Task<IActionResult> DeleteProductBatch(Guid batchId)
+    public async Task<IActionResult> DeleteProductBatch(Guid batchId, CancellationToken ct)
     {
-        var batch = await _unitOfWork.ProductBatches.FindAsync(batchId);
-        if (batch == null)
-        {
-            return NotFound();
-        }
+        var user = _userService.GetUser(HttpContext);
+        var deleted = await _productBatchCommandService.DeleteAsync(
+            batchId,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-        var oldBatch = AuditSnapshots.ProductBatch(batch);
-
-        try
-        {
-            _unitOfWork.ProductBatches.Delete(batch);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(ProductBatch),
-                batch.Id,
-                "Delete",
-                user.Id,
-                oldBatch,
-                null,
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Product batch {BatchId} deleted by {UserId}", batch.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Product batch delete failed for batch {BatchId}", batchId);
-            throw;
-        }
-
-        return NoContent();
+        return deleted ? NoContent() : NotFound();
     }
 
     #endregion
