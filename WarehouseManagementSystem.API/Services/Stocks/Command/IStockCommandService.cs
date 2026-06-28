@@ -19,7 +19,7 @@ public interface IStockCommandService
     /// <param name="warehouseZoneId">Warehouse zone identifier.</param>
     /// <param name="batchId">Optional product batch identifier.</param>
     /// <returns>The existing or newly created stock record.</returns>
-    Task<Stock> GetOrCreateAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId);
+    Task<Stock> GetOrCreateAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId, CancellationToken ct = default);
 
     /// <summary>
     /// Increases product quantity in the selected warehouse location.
@@ -31,7 +31,7 @@ public interface IStockCommandService
     /// <param name="batchId">Optional product batch identifier.</param>
     /// <returns>A task representing the stock increase operation.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="quantity"/> is less than or equal to zero.</exception>
-    Task IncreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId);
+    Task IncreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId, CancellationToken ct = default);
 
     /// <summary>
     /// Decreases product quantity in the selected warehouse location.
@@ -44,7 +44,7 @@ public interface IStockCommandService
     /// <returns>A task representing the stock decrease operation.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="quantity"/> is less than or equal to zero.</exception>
     /// <exception cref="InsufficientStockException">Thrown when the available quantity is lower than the quantity to subtract.</exception>
-    Task DecreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId);
+    Task DecreaseStockAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, decimal quantity, Guid? batchId, CancellationToken ct = default);
 
     #endregion
 
@@ -67,7 +67,8 @@ public interface IStockCommandService
         decimal quantity,
         string reservationSource,
         UserSnapshot createdBy,
-        DateTimeOffset? expiresAt = null);
+        DateTimeOffset? expiresAt = null,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Releases the specified stock reservation.
@@ -77,7 +78,7 @@ public interface IStockCommandService
     /// <returns>A task representing the reservation release operation.</returns>
     /// <exception cref="StockNotFoundException">Thrown when the stock record with the specified identifier does not exist.</exception>
     /// <exception cref="ReservationNotFoundException">Thrown when the reservation with the specified identifier does not exist in the stock record.</exception>
-    Task ReleaseReservationAsync(Guid stockId, Guid reservationId);
+    Task ReleaseReservationAsync(Guid stockId, Guid reservationId, CancellationToken ct = default);
 
     /// <summary>
     /// Cancels the specified reservation.
@@ -85,7 +86,7 @@ public interface IStockCommandService
     /// <param name="reservationId">Reservation identifier.</param>
     /// <returns>A task representing the reservation cancellation operation.</returns>
     /// <exception cref="ReservationNotFoundException">Thrown when the reservation with the specified identifier does not exist.</exception>
-    Task CancelReservationAsync(Guid reservationId);
+    Task CancelReservationAsync(Guid reservationId, CancellationToken ct = default);
 
     /// <summary>
     /// Confirms the specified reservation.
@@ -94,13 +95,13 @@ public interface IStockCommandService
     /// <returns>A task representing the reservation confirmation operation.</returns>
     /// <exception cref="ReservationNotFoundException">Thrown when the reservation with the specified identifier does not exist.</exception>
     /// <exception cref="InsufficientStockException">Thrown when the available quantity is lower than the reservation quantity.</exception>
-    Task ConfirmReservationAsync(Guid reservationId);
+    Task ConfirmReservationAsync(Guid reservationId, CancellationToken ct = default);
 
     /// <summary>
     /// Expires active reservations whose expiration time has passed.
     /// </summary>
     /// <returns>A task representing the reservation expiration operation.</returns>
-    Task ExpireReservationsAsync();
+    Task ExpireReservationsAsync(CancellationToken ct = default);
 
     #endregion
 
@@ -119,7 +120,7 @@ public interface IStockCommandService
     /// <returns>A task representing the stock movement operation.</returns>
     /// <exception cref="ArgumentException">Thrown when <paramref name="quantity"/> is less than or equal to zero.</exception>
     /// <exception cref="InsufficientStockException">Thrown when the available quantity in the source location is lower than the quantity to move.</exception>
-    Task MoveStockAsync(Guid productId, Guid sourceWarehouseId, Guid sourceZoneId, Guid targetWarehouseId, Guid targetZoneId, decimal quantity, Guid? batchId);
+    Task MoveStockAsync(Guid productId, Guid sourceWarehouseId, Guid sourceZoneId, Guid targetWarehouseId, Guid targetZoneId, decimal quantity, Guid? batchId, CancellationToken ct = default);
 
     #endregion
 }

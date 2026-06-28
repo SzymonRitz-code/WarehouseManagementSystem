@@ -8,6 +8,7 @@ using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
+using WarehouseManagementSystem.API.Services.Stocks.Command;
 using Document = WarehouseManagementSystem.Domain.Model.DocumentsDomain.Document;
 
 namespace WarehouseManagementSystem.API.Services.Documents.Command;
@@ -17,7 +18,7 @@ public class DocumentCommandService : IDocumentCommandService
     #region Fields and Constructor
 
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IStockService _stockService;
+    private readonly IStockCommandService _stockService;
     private readonly IDocumentNumberGenerator _numberGenerator;
     private readonly ISystemClock _clock;
     private readonly ILogger<DocumentCommandService> _logger;
@@ -25,7 +26,7 @@ public class DocumentCommandService : IDocumentCommandService
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
-        IStockService stockService,
+        IStockCommandService stockService,
         IDocumentNumberGenerator numberGenerator,
         ISystemClock systemClock,
         ILogger<DocumentCommandService> logger,

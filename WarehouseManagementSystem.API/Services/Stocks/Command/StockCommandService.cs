@@ -1,13 +1,12 @@
 using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
-using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.API.Services.Stocks.Command;
 
-public class StockCommandService : IStockCommandService, IStockService
+public class StockCommandService : IStockCommandService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISystemClock _clock;
@@ -24,8 +23,11 @@ public class StockCommandService : IStockCommandService, IStockService
         Guid productId,
         Guid warehouseId,
         Guid warehouseZoneId,
-        Guid? batchId)
+        Guid? batchId,
+        CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
+
         var stock = await _unitOfWork.Stocks
             .GetByProductAndWarehouseAsync(productId, warehouseId, warehouseZoneId, batchId);
 
@@ -37,7 +39,6 @@ public class StockCommandService : IStockCommandService, IStockService
         stock = new Stock(productId, warehouseId, warehouseZoneId, batchId, 0m);
 
         _unitOfWork.Stocks.Add(stock);
-        await _unitOfWork.SaveChangesAsync();
 
         return stock;
     }
@@ -51,14 +52,15 @@ public class StockCommandService : IStockCommandService, IStockService
         Guid warehouseId,
         Guid warehouseZoneId,
         decimal quantity,
-        Guid? batchId)
+        Guid? batchId,
+        CancellationToken ct = default)
     {
         EnsurePositiveQuantity(quantity);
 
-        var stock = await GetOrCreateAsync(productId, warehouseId, warehouseZoneId, batchId);
+        var stock = await GetOrCreateAsync(productId, warehouseId, warehouseZoneId, batchId, ct);
         stock.Increase(quantity);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task DecreaseStockAsync(
@@ -66,14 +68,15 @@ public class StockCommandService : IStockCommandService, IStockService
         Guid warehouseId,
         Guid warehouseZoneId,
         decimal quantity,
-        Guid? batchId)
+        Guid? batchId,
+        CancellationToken ct = default)
     {
         EnsurePositiveQuantity(quantity);
 
-        var stock = await GetOrCreateAsync(productId, warehouseId, warehouseZoneId, batchId);
+        var stock = await GetOrCreateAsync(productId, warehouseId, warehouseZoneId, batchId, ct);
         stock.Decrease(quantity);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     public async Task MoveStockAsync(
@@ -83,17 +86,18 @@ public class StockCommandService : IStockCommandService, IStockService
         Guid targetWarehouseId,
         Guid targetZoneId,
         decimal quantity,
-        Guid? batchId)
+        Guid? batchId,
+        CancellationToken ct = default)
     {
         EnsurePositiveQuantity(quantity);
 
-        var sourceStock = await GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, batchId);
-        var targetStock = await GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, batchId);
+        var sourceStock = await GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, batchId, ct);
+        var targetStock = await GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, batchId, ct);
 
         sourceStock.Decrease(quantity);
         targetStock.Increase(quantity);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     #endregion
@@ -105,53 +109,56 @@ public class StockCommandService : IStockCommandService, IStockService
         decimal quantity,
         string reservationSource,
         UserSnapshot createdBy,
-        DateTimeOffset? expiresAt = null)
+        DateTimeOffset? expiresAt = null,
+        CancellationToken ct = default)
     {
         EnsurePositiveQuantity(quantity);
 
-        var stock = await GetStockOrThrowAsync(stockId);
+        var stock = await GetStockOrThrowAsync(stockId, ct);
 
         var reservation = stock.CreateReservation(quantity, reservationSource, createdBy, expiresAt);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
         return reservation;
     }
 
-    public async Task ReleaseReservationAsync(Guid stockId, Guid reservationId)
+    public async Task ReleaseReservationAsync(Guid stockId, Guid reservationId, CancellationToken ct = default)
     {
-        var stock = await GetStockOrThrowAsync(stockId);
+        var stock = await GetStockOrThrowAsync(stockId, ct);
         EnsureReservationExists(stock, reservationId);
 
         stock.ReleaseReservation(reservationId);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task CancelReservationAsync(Guid reservationId)
+    public async Task CancelReservationAsync(Guid reservationId, CancellationToken ct = default)
     {
-        var stock = await GetStockContainingReservationOrThrowAsync(reservationId);
+        var stock = await GetStockContainingReservationOrThrowAsync(reservationId, ct);
 
         stock.CancelReservation(reservationId);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task ConfirmReservationAsync(Guid reservationId)
+    public async Task ConfirmReservationAsync(Guid reservationId, CancellationToken ct = default)
     {
-        var stock = await GetStockContainingReservationOrThrowAsync(reservationId);
+        var stock = await GetStockContainingReservationOrThrowAsync(reservationId, ct);
 
         stock.ConfirmReservation(reservationId);
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
-    public async Task ExpireReservationsAsync()
+    public async Task ExpireReservationsAsync(CancellationToken ct = default)
     {
         var now = _clock.UtcNow;
         var expiredReservations = await _unitOfWork.Stocks.GetExpiredReservationsAsync(now);
 
         foreach (var reservation in expiredReservations)
         {
+            ct.ThrowIfCancellationRequested();
+
             var stock = await _unitOfWork.Stocks.FindAsync(reservation.StockId);
             if (stock == null)
             {
@@ -161,19 +168,23 @@ public class StockCommandService : IStockCommandService, IStockService
             stock.ExpireReservation(reservation.Id);
         }
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 
     #endregion
 
-    private async Task<Stock> GetStockOrThrowAsync(Guid stockId)
+    private async Task<Stock> GetStockOrThrowAsync(Guid stockId, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
+
         return await _unitOfWork.Stocks.FindAsync(stockId)
                ?? throw new StockNotFoundException(stockId);
     }
 
-    private async Task<Stock> GetStockContainingReservationOrThrowAsync(Guid reservationId)
+    private async Task<Stock> GetStockContainingReservationOrThrowAsync(Guid reservationId, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
+
         var stock = (await _unitOfWork.Stocks.All())
             .FirstOrDefault(s => s.Reservations.Any(r => r.Id == reservationId));
 

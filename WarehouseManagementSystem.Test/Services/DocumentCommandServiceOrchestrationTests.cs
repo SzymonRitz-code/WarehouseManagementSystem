@@ -14,6 +14,7 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
+using WarehouseManagementSystem.API.Services.Stocks.Command;
 
 namespace WarehouseManagementSystem.Tests.Services;
 
@@ -24,7 +25,7 @@ namespace WarehouseManagementSystem.Tests.Services;
 public class DocumentCommandServiceOrchestrationTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
-    private readonly Mock<IStockService> _stockServiceMock = new();
+    private readonly Mock<IStockCommandService> _stockServiceMock = new();
     private readonly Mock<ISystemClock> _clockMock = new();
     private readonly Mock<IDocumentRepository> _documentRepoMock = new();
     private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
@@ -298,7 +299,7 @@ public class DocumentCommandServiceOrchestrationTests
 
         await _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
-        _stockServiceMock.Verify(s => s.IncreaseStockAsync(productId, warehouseId, zoneId, 5, null), Times.Once);
+        _stockServiceMock.Verify(s => s.IncreaseStockAsync(productId, warehouseId, zoneId, 5, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -318,7 +319,7 @@ public class DocumentCommandServiceOrchestrationTests
 
         await _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
-        _stockServiceMock.Verify(s => s.DecreaseStockAsync(productId, warehouseId, zoneId, 10, null), Times.Once);
+        _stockServiceMock.Verify(s => s.DecreaseStockAsync(productId, warehouseId, zoneId, 10, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -341,7 +342,7 @@ public class DocumentCommandServiceOrchestrationTests
         await _service.ConfirmDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(s => s.MoveStockAsync(
-            productId, sourceWare, sourceZone, targetWare, targetZone, 3, null), Times.Once);
+            productId, sourceWare, sourceZone, targetWare, targetZone, 3, null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -421,7 +422,7 @@ public class DocumentCommandServiceOrchestrationTests
 
         await _service.CancelDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
-        _stockServiceMock.Verify(s => s.ReleaseReservationAsync(reservation.StockId, reservation.Id), Times.Once);
+        _stockServiceMock.Verify(s => s.ReleaseReservationAsync(reservation.StockId, reservation.Id, It.IsAny<CancellationToken>()), Times.Once);
         doc.Status.Should().Be(DocumentStatus.Cancelled);
     }
 
@@ -457,7 +458,7 @@ public class DocumentCommandServiceOrchestrationTests
         await _service.CancelDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(It.IsAny<HttpContext>()));
 
         _stockServiceMock.Verify(s =>
-            s.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
+            s.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     /// <summary>

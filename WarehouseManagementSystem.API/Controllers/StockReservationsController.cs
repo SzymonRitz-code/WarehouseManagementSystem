@@ -1,8 +1,7 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.Domain.Interfaces;
+using WarehouseManagementSystem.API.Services.Stocks.Query;
 
 namespace WarehouseManagementSystem.API.Controllers
 {
@@ -11,13 +10,11 @@ namespace WarehouseManagementSystem.API.Controllers
     [Route("api/Stocks/{stockId}/[controller]")]
     public class StockReservationsController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        private readonly IStockQueryService _stockQueryService;
 
-        public StockReservationsController(IUnitOfWork unitOfWork, IMapper mapper)
+        public StockReservationsController(IStockQueryService stockQueryService)
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
+            _stockQueryService = stockQueryService;
         }
 
         /// <summary>
@@ -28,11 +25,10 @@ namespace WarehouseManagementSystem.API.Controllers
         [HttpHead]
         [HttpGet]
         [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
-        public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations(Guid stockId)
+        public async Task<ActionResult<IEnumerable<StockReservationDto>>> GetStockReservations(Guid stockId, CancellationToken ct)
         {
-            var reservations = await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId);
-
-            return Ok(_mapper.Map<IEnumerable<StockReservationDto>>(reservations));
+            var reservations = await _stockQueryService.GetReservationsAsync(stockId, ct);
+            return Ok(reservations);
         }
 
         /// <summary>
@@ -46,12 +42,11 @@ namespace WarehouseManagementSystem.API.Controllers
         [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
         public async Task<ActionResult<StockReservationDto>> GetStockReservation(
             Guid stockId,
-            Guid reservationId)
+            Guid reservationId,
+            CancellationToken ct)
         {
-            var reservation = (await _unitOfWork.Stocks.FindReservationsByStockIdAsync(stockId))
-                .FirstOrDefault(r => r.Id == reservationId);
-
-            return reservation == null || reservation.StockId != stockId ? (ActionResult<StockReservationDto>)NotFound() : (ActionResult<StockReservationDto>)Ok(_mapper.Map<StockReservationDto>(reservation));
+            var reservation = await _stockQueryService.GetReservationAsync(stockId, reservationId, ct);
+            return reservation == null ? (ActionResult<StockReservationDto>)NotFound() : (ActionResult<StockReservationDto>)Ok(reservation);
         }
 
         /// <summary>

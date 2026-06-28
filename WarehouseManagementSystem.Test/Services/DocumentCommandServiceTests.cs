@@ -14,13 +14,14 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
+using WarehouseManagementSystem.API.Services.Stocks.Command;
 
 namespace WarehouseManagementSystem.Tests.Services;
 
 public class DocumentCommandServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
-    private readonly Mock<IStockService> _stockServiceMock = new();
+    private readonly Mock<IStockCommandService> _stockServiceMock = new();
     private readonly Mock<IDocumentNumberGenerator> _numberGeneratorMock = new();
     private readonly Mock<ISystemClock> _clockMock = new();
     private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
@@ -207,7 +208,8 @@ public class DocumentCommandServiceTests
             warehouseId,
             zoneId,
             5,
-            null), Times.Once);
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
 
         _unitOfWorkMock.Verify(x => x.Documents.Update(doc), Times.Once);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -245,7 +247,8 @@ public class DocumentCommandServiceTests
             warehouseId,
             zoneId,
             5,
-            null), Times.Once);
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -286,7 +289,8 @@ public class DocumentCommandServiceTests
             targetWarehouse,
             targetZone,
             5,
-            null), Times.Once);
+            null,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -341,7 +345,7 @@ public class DocumentCommandServiceTests
         await _service.CancelDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(x =>
-            x.ReleaseReservationAsync(reservation.StockId, reservation.Id),
+            x.ReleaseReservationAsync(reservation.StockId, reservation.Id, It.IsAny<CancellationToken>()),
             Times.Once);
 
         _unitOfWorkMock.Verify(x => x.Documents.Update(doc), Times.Once);
@@ -373,7 +377,7 @@ public class DocumentCommandServiceTests
         await _service.CancelDocumentAsync(doc.Id, _userServiceMock.Object.GetUser(default));
 
         _stockServiceMock.Verify(
-            x => x.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>()),
+            x => x.ReleaseReservationAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
 
         _unitOfWorkMock.Verify(x => x.Documents.Update(doc), Times.Once);
