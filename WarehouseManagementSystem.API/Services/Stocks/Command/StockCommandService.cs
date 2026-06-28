@@ -5,14 +5,14 @@ using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
 
-namespace WarehouseManagementSystem.API.Services.Stocks;
+namespace WarehouseManagementSystem.API.Services.Stocks.Command;
 
-public class StockService : IStockService
+public class StockCommandService : IStockCommandService, IStockService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISystemClock _clock;
 
-    public StockService(IUnitOfWork unitOfWork, ISystemClock clock)
+    public StockCommandService(IUnitOfWork unitOfWork, ISystemClock clock)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));

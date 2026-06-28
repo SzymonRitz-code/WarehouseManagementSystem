@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Moq;
 using WarehouseManagementSystem.API.Services.Stocks;
+using WarehouseManagementSystem.API.Services.Stocks.Command;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces;
@@ -11,16 +12,16 @@ using WarehouseManagementSystem.Infrastructure.Services;
 
 namespace WarehouseManagementSystem.Tests.Services
 {
-    public class StockServiceTests
+    public class StockCommandServiceTests
     {
         private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
         private readonly Mock<ISystemClock> _clockMock = new();
         private readonly Mock<IUserService> _userServiceMock = new();
-        private readonly StockService _service;
+        private readonly StockCommandService _service;
 
-        public StockServiceTests()
+        public StockCommandServiceTests()
         {
-            _service = new StockService(_unitOfWorkMock.Object, _clockMock.Object);
+            _service = new StockCommandService(_unitOfWorkMock.Object, _clockMock.Object);
             _userServiceMock.Setup(s => s.GetUser(It.IsAny<HttpContext>()))
                 .Returns(new UserSnapshot(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir"));
         }
@@ -80,7 +81,7 @@ namespace WarehouseManagementSystem.Tests.Services
         {
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 5m);
 
-            var serviceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
+            var serviceMock = new Mock<StockCommandService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
             serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
                        .ReturnsAsync(stock);
 
@@ -114,7 +115,7 @@ namespace WarehouseManagementSystem.Tests.Services
         {
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 20m);
 
-            var serviceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
+            var serviceMock = new Mock<StockCommandService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
             serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
                        .ReturnsAsync(stock);
 
@@ -153,7 +154,7 @@ namespace WarehouseManagementSystem.Tests.Services
             var sourceStock = new Stock(productId, sourceWarehouseId, sourceZoneId, null, 20m);
             var targetStock = new Stock(productId, targetWarehouseId, targetZoneId, null, 5m);
 
-            var serviceMock = new Mock<StockService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
+            var serviceMock = new Mock<StockCommandService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
             serviceMock.Setup(s => s.GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, null))
                        .ReturnsAsync(sourceStock);
             serviceMock.Setup(s => s.GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, null))

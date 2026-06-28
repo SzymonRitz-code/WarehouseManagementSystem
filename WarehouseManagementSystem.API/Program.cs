@@ -10,16 +10,23 @@ using Serilog;
 using WarehouseManagementSystem.API;
 using WarehouseManagementSystem.API.Extensions;
 using WarehouseManagementSystem.API.Extensions.Middleware;
-using WarehouseManagementSystem.API.Services.AuditLogs;
-using WarehouseManagementSystem.API.Services.Documents;
-using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Documents.Command;
+using WarehouseManagementSystem.API.Services.Documents.Query;
+using WarehouseManagementSystem.API.Services.Products.Command;
+using WarehouseManagementSystem.API.Services.Products.Query;
 using WarehouseManagementSystem.API.Services.Seed;
-using WarehouseManagementSystem.API.Services.Stocks;
+using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.Warehouses.Command;
+using WarehouseManagementSystem.API.Services.Warehouses.Query;
+using WarehouseManagementSystem.API.Services.Stocks.Command;
+using WarehouseManagementSystem.API.Services.Stocks.Query;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 using WarehouseManagementSystem.Infrastructure.Services;
+using WarehouseManagementSystem.API.Services.AuditLogs.Query;
+using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 
 var builder = WebApplication.CreateBuilder(args);
 // Docker supplies internal authority/metadata addresses and the browser-visible issuer separately.
@@ -126,13 +133,17 @@ builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
 });
 
 // Services
-builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IAuditLogCommandService, AuditLogCommandService>();
+builder.Services.AddScoped<IAuditLogQueryService, AuditLogQueryService>();
 builder.Services.AddScoped<IDocumentCommandService, DocumentCommandService>();
 builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
+builder.Services.AddScoped<IProductCommandService, ProductCommandService>();
 builder.Services.AddScoped<IProductQueryService, ProductQueryService>();
+builder.Services.AddScoped<IWarehouseCommandService, WarehouseCommandService>();
 builder.Services.AddScoped<IWarehouseQueryService, WarehouseQueryService>();
-builder.Services.AddScoped<IStockService, StockService>();
+builder.Services.AddScoped<IStockCommandService, StockCommandService>();
 builder.Services.AddScoped<IStockQueryService, StockQueryService>();
+builder.Services.AddScoped<IStockService, StockCommandService>();
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 builder.Services.AddScoped<IProductBatchQueryService, ProductBatchQueryService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
