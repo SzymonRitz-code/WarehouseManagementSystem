@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.User;
@@ -20,7 +21,7 @@ public class ProductBatchesController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IProductBatchQueryService _productBatchQueryService;
-    private readonly IAuditLogService _auditLogService;
+    private readonly IAuditLogCommandService _auditLogService;
     private readonly ILogger<ProductBatchesController> _logger;
     private readonly IUserService _userService;
 
@@ -28,7 +29,7 @@ public class ProductBatchesController : ControllerBase
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IProductBatchQueryService productBatchQueryService,
-        IAuditLogService auditLogService,
+        IAuditLogCommandService auditLogService,
         ILogger<ProductBatchesController> logger, IUserService userService)
     {
         _unitOfWork = unitOfWork;
@@ -89,7 +90,7 @@ public class ProductBatchesController : ControllerBase
         var batches = await _productBatchQueryService.GetProductBatchList(ct: ct);
         return Ok(batches);
     }
-
+    // TODO : Finish Get Batches to be consistent with UI implementation
     /// <summary>
     /// Gets a product batch by identifier.
     /// </summary>

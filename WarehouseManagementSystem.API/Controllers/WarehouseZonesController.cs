@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
+using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
-using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.User;
+using WarehouseManagementSystem.API.Services.Warehouses.Query;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
@@ -21,7 +22,7 @@ public class WarehouseZonesController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IWarehouseQueryService _warehouseQueryService;
-    private readonly IAuditLogService _auditLogService;
+    private readonly IAuditLogCommandService _auditLogService;
     private readonly ILogger<WarehouseZonesController> _logger;
     private readonly IUserService _userService;
 
@@ -29,7 +30,7 @@ public class WarehouseZonesController : ControllerBase
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IWarehouseQueryService warehouseQueryService,
-        IAuditLogService auditLogService,
+        IAuditLogCommandService auditLogService,
         ILogger<WarehouseZonesController> logger,
         IUserService userService)
     {

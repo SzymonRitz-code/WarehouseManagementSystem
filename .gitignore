@@ -430,3 +430,4 @@ __screenshots__/
 Thumbs.db
 *.tmp
 *.swp
+/.github/copilot-instructions.md

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.Domain.Interfaces;
+using WarehouseManagementSystem.API.Services.AuditLogs.Query;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
@@ -11,12 +11,12 @@ namespace WarehouseManagementSystem.API.Controllers;
 [Route("api/[controller]")]
 public class AuditLogsController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAuditLogQueryService _auditLogQueryService;
     private readonly IMapper _mapper;
 
-    public AuditLogsController(IUnitOfWork unitOfWork, IMapper mapper)
+    public AuditLogsController(IAuditLogQueryService auditLogQueryService, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _auditLogQueryService = auditLogQueryService;
         _mapper = mapper;
     }
 
@@ -35,7 +35,7 @@ public class AuditLogsController : ControllerBase
         [FromQuery] Guid? entityId,
         [FromQuery] Guid? performedById)
     {
-        var logs = await _unitOfWork.AuditLogs.GetFilteredAsync(
+        var logs = await _auditLogQueryService.GetFilteredAsync(
             entityName,
             entityId,
             performedById);
@@ -53,7 +53,7 @@ public class AuditLogsController : ControllerBase
     [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)]
     public async Task<ActionResult<AuditLogDto>> GetAuditLog(Guid id)
     {
-        var log = await _unitOfWork.AuditLogs.FindAsync(id);
+        var log = await _auditLogQueryService.GetByIdAsync(id);
 
         return log == null ? (ActionResult<AuditLogDto>)NotFound() : (ActionResult<AuditLogDto>)Ok(_mapper.Map<AuditLogDto>(log));
     }
