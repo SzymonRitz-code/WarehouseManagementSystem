@@ -169,7 +169,7 @@ public class StockQueryService : IStockQueryService
                 r.Status,
                 r.ExpiresAt,
                 r.CreatedAt,
-                r.CreatedById,
+                r.CreatedByUser.Id,
                 r.StockId))
             .ToListAsync(ct);
     }
@@ -185,7 +185,7 @@ public class StockQueryService : IStockQueryService
                 r.Status,
                 r.ExpiresAt,
                 r.CreatedAt,
-                r.CreatedById,
+                r.CreatedByUser.Id,
                 r.StockId))
             .FirstOrDefaultAsync(ct);
     }
