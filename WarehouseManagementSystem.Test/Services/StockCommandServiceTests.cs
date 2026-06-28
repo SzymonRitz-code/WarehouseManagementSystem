@@ -82,7 +82,7 @@ namespace WarehouseManagementSystem.Tests.Services
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 5m);
 
             var serviceMock = new Mock<StockCommandService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
-            serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
+            serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(stock);
 
             await serviceMock.Object.IncreaseStockAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, 10, null);
@@ -116,7 +116,7 @@ namespace WarehouseManagementSystem.Tests.Services
             var stock = new Stock(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, 20m);
 
             var serviceMock = new Mock<StockCommandService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
-            serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null))
+            serviceMock.Setup(s => s.GetOrCreateAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, null, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(stock);
 
             await serviceMock.Object.DecreaseStockAsync(stock.ProductId, stock.WarehouseId, stock.WarehouseZoneId, 5, null);
@@ -155,9 +155,9 @@ namespace WarehouseManagementSystem.Tests.Services
             var targetStock = new Stock(productId, targetWarehouseId, targetZoneId, null, 5m);
 
             var serviceMock = new Mock<StockCommandService>(_unitOfWorkMock.Object, _clockMock.Object) { CallBase = true };
-            serviceMock.Setup(s => s.GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, null))
+            serviceMock.Setup(s => s.GetOrCreateAsync(productId, sourceWarehouseId, sourceZoneId, null, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(sourceStock);
-            serviceMock.Setup(s => s.GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, null))
+            serviceMock.Setup(s => s.GetOrCreateAsync(productId, targetWarehouseId, targetZoneId, null, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(targetStock);
 
             await serviceMock.Object.MoveStockAsync(productId, sourceWarehouseId, sourceZoneId, targetWarehouseId, targetZoneId, 10, null);

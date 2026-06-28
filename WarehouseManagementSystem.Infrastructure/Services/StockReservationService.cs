@@ -14,8 +14,9 @@ public class StockReservationService : IStockReservationService
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
-    public async Task ExpireReservationsAsync()
+    public async Task ExpireReservationsAsync(CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var now = _clock.UtcNow;
 
         // Pobierz wszystkie aktywne rezerwacje, które już wygasły
@@ -23,6 +24,7 @@ public class StockReservationService : IStockReservationService
 
         foreach (var reservation in expiredReservations)
         {
+            ct.ThrowIfCancellationRequested();
             var stock = await _unitOfWork.Stocks.FindAsync(reservation.StockId);
             if (stock == null)
             {
@@ -33,6 +35,6 @@ public class StockReservationService : IStockReservationService
             stock.ExpireReservation(reservation.Id);
         }
 
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(ct);
     }
 }

@@ -29,8 +29,9 @@ public class ProductCommandService : IProductCommandService
 
     #region Command Operations
 
-    public bool SkuExists(string sku, Guid? excludeProductId = null)
+    public bool SkuExists(string sku, Guid? excludeProductId = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         return excludeProductId.HasValue
             ? _unitOfWork.Products.Any(p => p.SKU == sku && p.Id != excludeProductId.Value)
             : _unitOfWork.Products.Any(p => p.SKU == sku);
@@ -78,6 +79,7 @@ public class ProductCommandService : IProductCommandService
         string? ipAddress = null,
         CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var product = await _unitOfWork.Products.FindAsync(productId);
         if (product == null)
         {
@@ -137,6 +139,7 @@ public class ProductCommandService : IProductCommandService
         string? ipAddress = null,
         CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var product = await _unitOfWork.Products.FindAsync(productId);
         if (product == null)
         {

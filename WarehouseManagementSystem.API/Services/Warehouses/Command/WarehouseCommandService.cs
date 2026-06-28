@@ -23,8 +23,9 @@ public class WarehouseCommandService : IWarehouseCommandService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public bool CodeExists(string code, Guid? excludeWarehouseId = null)
+    public bool CodeExists(string code, Guid? excludeWarehouseId = null, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         return excludeWarehouseId.HasValue
             ? _unitOfWork.Warehouses.Any(w => w.Code == code && w.Id != excludeWarehouseId.Value)
             : _unitOfWork.Warehouses.Any(w => w.Code == code);
@@ -70,6 +71,7 @@ public class WarehouseCommandService : IWarehouseCommandService
         string? ipAddress = null,
         CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
         if (warehouse == null)
         {
@@ -114,6 +116,7 @@ public class WarehouseCommandService : IWarehouseCommandService
         string? ipAddress = null,
         CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         var warehouse = await _unitOfWork.Warehouses.FindAsync(warehouseId);
         if (warehouse == null)
         {

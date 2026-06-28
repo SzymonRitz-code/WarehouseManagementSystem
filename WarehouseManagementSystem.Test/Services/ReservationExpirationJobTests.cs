@@ -48,7 +48,7 @@ public class ReservationExpirationJobTests
 
         // Assert
         _reservationServiceMock.Verify(
-            x => x.ExpireReservationsAsync(),
+            x => x.ExpireReservationsAsync(It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -106,7 +106,7 @@ public class ReservationExpirationJobTests
         var job = CreateJob();
 
         _reservationServiceMock
-            .Setup(x => x.ExpireReservationsAsync())
+            .Setup(x => x.ExpireReservationsAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Test exception"));
 
         // Act

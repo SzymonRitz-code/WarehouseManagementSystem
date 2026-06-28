@@ -14,8 +14,9 @@ public interface IProductCommandService
     /// </summary>
     /// <param name="sku">Product SKU.</param>
     /// <param name="excludeProductId">Optional product id to exclude from uniqueness check.</param>
+    /// <param name="ct">Operation cancellation token.</param>
     /// <returns><c>true</c> when SKU exists; otherwise <c>false</c>.</returns>
-    bool SkuExists(string sku, Guid? excludeProductId = null);
+    bool SkuExists(string sku, Guid? excludeProductId = null, CancellationToken ct = default);
 
     /// <summary>
     /// Creates a new product.

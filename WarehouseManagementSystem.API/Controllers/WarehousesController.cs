@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
@@ -18,17 +19,20 @@ public class WarehousesController : ControllerBase
     private readonly IStockQueryService _stockQueryService;
     private readonly IWarehouseQueryService _warehouseQueryService;
     private readonly IWarehouseCommandService _warehouseCommandService;
+    private readonly IMapper _mapper;
     private readonly IUserService _userService;
 
     public WarehousesController(
         IStockQueryService stockQueryService,
         IWarehouseQueryService warehouseQueryService,
         IWarehouseCommandService warehouseCommandService,
+        IMapper mapper,
         IUserService userService)
     {
         _stockQueryService = stockQueryService;
         _warehouseQueryService = warehouseQueryService;
         _warehouseCommandService = warehouseCommandService;
+        _mapper = mapper;
         _userService = userService;
     }
 
@@ -108,7 +112,7 @@ public class WarehousesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<WarehouseDetailsDto>> CreateWarehouse(CreateWarehouseDto warehouseDto, CancellationToken ct)
     {
-        if (_warehouseCommandService.CodeExists(warehouseDto.Code))
+        if (_warehouseCommandService.CodeExists(warehouseDto.Code, ct: ct))
         {
             ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
         }
@@ -147,7 +151,7 @@ public class WarehousesController : ControllerBase
             return BadRequest("Route ID and body ID mismatch.");
         }
 
-        if (_warehouseCommandService.CodeExists(warehouseDto.Code, warehouseId))
+        if (_warehouseCommandService.CodeExists(warehouseDto.Code, warehouseId, ct))
         {
             ModelState.AddModelError(nameof(warehouseDto.Code), "Code Already exists");
         }

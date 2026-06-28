@@ -99,7 +99,7 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ProductDetailsDto>> CreateProduct(CreateProductDto productDto, CancellationToken ct)
     {
-        if (_productCommandService.SkuExists(productDto.Sku!))
+        if (_productCommandService.SkuExists(productDto.Sku!, ct: ct))
         {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
         }
@@ -138,7 +138,7 @@ public class ProductsController : ControllerBase
             return BadRequest("Route ID and body ID mismatch.");
         }
 
-        if (_productCommandService.SkuExists(productDto.Sku!, productId))
+        if (_productCommandService.SkuExists(productDto.Sku!, productId, ct))
         {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
         }
@@ -226,9 +226,9 @@ public class ProductsController : ControllerBase
     [HttpHead("{productId:guid}/stocks/available")]
     [HttpGet("{productId:guid}/stocks/available")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
-    public async Task<ActionResult<decimal>> GetAvailableQuantityForProduct(Guid productId, [FromQuery] Guid warehouseId)
+    public async Task<ActionResult<decimal>> GetAvailableQuantityForProduct(Guid productId, [FromQuery] Guid warehouseId, CancellationToken ct = default)
     {
-        var available = await _stockQueryService.GetAvailableQuantityAsync(productId, null, warehouseId, null);
+        var available = await _stockQueryService.GetAvailableQuantityAsync(productId, null, warehouseId, null, ct);
         return Ok(available);
     }
 

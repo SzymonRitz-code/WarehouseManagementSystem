@@ -117,7 +117,7 @@ public class DocumentCommandService : IDocumentCommandService
             throw new ArgumentException("Document must have at least one item.", nameof(items));
         }
 
-        var document = await GetDocumentWithItemsOrThrowAsync(documentId);
+        var document = await GetDocumentWithItemsOrThrowAsync(documentId, ct);
         var oldDocument = AuditSnapshots.Document(document);
         _logger.LogInformation("Updating document {DocumentId} by {UserId}", documentId, updatedBy.Id);
 
@@ -159,7 +159,7 @@ public class DocumentCommandService : IDocumentCommandService
     {
         _logger.LogInformation("Confirming document {DocumentId} by {UserId}", documentId, confirmedBy.Id);
 
-        var document = await GetDocumentWithItemsOrThrowAsync(documentId);
+        var document = await GetDocumentWithItemsOrThrowAsync(documentId, ct);
         var oldDocument = AuditSnapshots.Document(document);
 
         // The confirmation transaction starts here because this is the first point where the command
@@ -250,8 +250,7 @@ public class DocumentCommandService : IDocumentCommandService
 
     public async Task CancelDocumentAsync(Guid documentId, UserSnapshot canceledBy, CancellationToken ct = default)
     {
-        var document = await _unitOfWork.Documents.FindAsync(documentId)
-                       ?? throw new DocumentNotFoundException(documentId);
+        var document = await GetDocumentOrThrowAsync(documentId, ct);
         _logger.LogInformation("Canceling document {DocumentId} by {UserId}", documentId, canceledBy.Id);
         var oldDocument = AuditSnapshots.Document(document);
 
@@ -300,9 +299,19 @@ public class DocumentCommandService : IDocumentCommandService
 
     #region Helper Methods
 
-    private async Task<Document> GetDocumentWithItemsOrThrowAsync(Guid documentId)
+    private async Task<Document> GetDocumentWithItemsOrThrowAsync(Guid documentId, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
+
         return await _unitOfWork.Documents.GetDocumentWithItems(documentId)
+               ?? throw new DocumentNotFoundException(documentId);
+    }
+
+    private async Task<Document> GetDocumentOrThrowAsync(Guid documentId, CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        return await _unitOfWork.Documents.FindAsync(documentId)
                ?? throw new DocumentNotFoundException(documentId);
     }
 

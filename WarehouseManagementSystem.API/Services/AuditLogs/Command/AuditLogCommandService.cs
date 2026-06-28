@@ -39,6 +39,7 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs.Command
             string? ipAddress = null,
             CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
             AddLog(entityName, entityId, operation, performedById, oldValues, newValues, ipAddress);
             await Task.CompletedTask;
         }
@@ -53,6 +54,7 @@ namespace WarehouseManagementSystem.API.Services.AuditLogs.Command
             string? ipAddress = null,
             CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
             var oldValues = oldSnapshot;
             var newValues = newSnapshot;
 

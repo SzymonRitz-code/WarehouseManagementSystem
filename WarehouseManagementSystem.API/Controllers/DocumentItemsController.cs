@@ -28,9 +28,9 @@ public class DocumentItemsController : ControllerBase
     [HttpHead]
     [HttpGet]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
-    public async Task<ActionResult<IEnumerable<DocumentItemDto>>> GetAllItems(Guid documentId)
+    public async Task<ActionResult<IEnumerable<DocumentItemDto>>> GetAllItems(Guid documentId, CancellationToken ct = default)
     {
-        var document = await _documentQueryService.GetByIdAsync(documentId);
+        var document = await _documentQueryService.GetByIdAsync(documentId, ct);
         if (document == null)
         {
             return NotFound();
@@ -51,9 +51,9 @@ public class DocumentItemsController : ControllerBase
     [HttpHead("{itemId}")]
     [HttpGet("{itemId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
-    public async Task<ActionResult<DocumentItemDto>> GetItemById(Guid documentId, Guid itemId)
+    public async Task<ActionResult<DocumentItemDto>> GetItemById(Guid documentId, Guid itemId, CancellationToken ct = default)
     {
-        var document = await _documentQueryService.GetByIdAsync(documentId);
+        var document = await _documentQueryService.GetByIdAsync(documentId, ct);
         if (document == null)
         {
             return NotFound();

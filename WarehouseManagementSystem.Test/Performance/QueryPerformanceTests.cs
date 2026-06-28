@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Testcontainers.MsSql;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.Queries;
 using WarehouseManagementSystem.API.Services.Products.Query;
 using WarehouseManagementSystem.API.Services.Stocks.Query;
 using WarehouseManagementSystem.API.Services.Documents.Query;

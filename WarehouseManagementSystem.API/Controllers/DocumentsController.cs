@@ -84,9 +84,9 @@ public class DocumentsController : ControllerBase
     [HttpHead("{documentId}")]
     [HttpGet("{documentId}")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
-    public async Task<ActionResult<DocumentDto>> GetDocumentById(Guid documentId)
+    public async Task<ActionResult<DocumentDto>> GetDocumentById(Guid documentId, CancellationToken ct = default)
     {
-        var document = await _queryService.GetByIdAsync(documentId);
+        var document = await _queryService.GetByIdAsync(documentId, ct);
         return document == null ? (ActionResult<DocumentDto>)NotFound() : (ActionResult<DocumentDto>)Ok(_mapper.Map<DocumentDto>(document));
     }
 
@@ -104,7 +104,7 @@ public class DocumentsController : ControllerBase
     /// <param name="documentDto">Document data and the list of items to create.</param>
     /// <returns>The created document with the URL for retrieving its details.</returns>
     [HttpPost]
-    public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto documentDto)
+    public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto documentDto, CancellationToken ct = default)
     {
         if (documentDto.Items == null || !documentDto.Items.Any())
         {
@@ -136,7 +136,8 @@ public class DocumentsController : ControllerBase
                 items: itemDrafts,
                 documentDate: documentDto.DocumentDate,
                 targetWarehouseId: documentDto.TargetWarehouseId,
-                notes: documentDto.Notes);
+                notes: documentDto.Notes,
+                ct: ct);
         }
         catch (Exception ex)
         {
@@ -161,7 +162,7 @@ public class DocumentsController : ControllerBase
     /// <param name="documentDto">Document data and the list of items to update.</param>
     /// <returns>A 204 response after a successful update, or a validation response when the data is invalid.</returns>
     [HttpPut("{documentId}")]
-    public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] UpdateDocumentDto documentDto)
+    public async Task<ActionResult<DocumentDto>> UpdateDocument([FromRoute] Guid documentId, [FromBody] UpdateDocumentDto documentDto, CancellationToken ct = default)
     {
         if (documentId != documentDto.Id)
         {
@@ -198,7 +199,8 @@ public class DocumentsController : ControllerBase
                 items: itemDrafts,
                 documentDate: documentDto.DocumentDate,
                 targetWarehouseId: documentDto.TargetWarehouseId,
-                notes: documentDto.Notes
+                notes: documentDto.Notes,
+                ct: ct
             );
         }
         catch (Exception ex)
@@ -219,7 +221,7 @@ public class DocumentsController : ControllerBase
     /// <param name="documentId">Unique identifier of the document to confirm.</param>
     /// <returns>A 204 response after the document is successfully confirmed.</returns>
     [HttpPut("{documentId}/confirm")]
-    public async Task<IActionResult> ConfirmDocument(Guid documentId)
+    public async Task<IActionResult> ConfirmDocument(Guid documentId, CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
         {
@@ -228,7 +230,7 @@ public class DocumentsController : ControllerBase
         // Coś w stylu User.Identity.Name
         try
         {
-            await _commandService.ConfirmDocumentAsync(documentId, _userService.GetUser(HttpContext));
+            await _commandService.ConfirmDocumentAsync(documentId, _userService.GetUser(HttpContext), ct);
         }
         catch (Exception ex)
         {
@@ -244,7 +246,7 @@ public class DocumentsController : ControllerBase
     /// <param name="documentId">Unique identifier of the document to cancel.</param>
     /// <returns>A 204 response after the document is successfully canceled.</returns>
     [HttpPut("{documentId}/cancel")]
-    public async Task<IActionResult> CancelDocument(Guid documentId)
+    public async Task<IActionResult> CancelDocument(Guid documentId, CancellationToken ct = default)
     {
         if (!ModelState.IsValid)
         {
@@ -253,7 +255,7 @@ public class DocumentsController : ControllerBase
 
         try
         {
-            await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext));
+            await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext), ct);
         }
         catch (Exception ex)
         {
@@ -278,7 +280,8 @@ public class DocumentsController : ControllerBase
     [ResponseCache(CacheProfileName = HttpCacheProfiles.OperationalData)]
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetByTypeAndStatus(
         [FromQuery] string type,
-        [FromQuery] string status)
+        [FromQuery] string status,
+        CancellationToken ct = default)
     {
         if (!Enum.TryParse<Domain.Enums.DocumentType>(type, true, out var docType) ||
             !Enum.TryParse<Domain.Enums.DocumentStatus>(status, true, out var docStatus))
@@ -286,7 +289,7 @@ public class DocumentsController : ControllerBase
             return BadRequest("Invalid type or status.");
         }
 
-        var documents = await _queryService.GetByTypeAndStatusAsync(docType, docStatus);
+        var documents = await _queryService.GetByTypeAndStatusAsync(docType, docStatus, ct);
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(documents));
     }
 
@@ -297,9 +300,9 @@ public class DocumentsController : ControllerBase
     [HttpHead("drafts")]
     [HttpGet("drafts")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
-    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDrafts()
+    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDrafts(CancellationToken ct = default)
     {
-        var drafts = await _queryService.GetDraftsAsync();
+        var drafts = await _queryService.GetDraftsAsync(ct);
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(drafts));
     }
 
@@ -312,9 +315,9 @@ public class DocumentsController : ControllerBase
     [HttpHead("recent")]
     [HttpGet("recent")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.VolatileData)]
-    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecent([FromQuery] int take = 10)
+    public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecent([FromQuery] int take = 10, CancellationToken ct = default)
     {
-        var recent = await _queryService.GetRecentAsync(take);
+        var recent = await _queryService.GetRecentAsync(take, ct);
         return Ok(_mapper.Map<IEnumerable<DocumentDto>>(recent));
     }
 

@@ -48,7 +48,7 @@ public class ReservationExpirationJob : BackgroundService
             var reservationService =
                 scope.ServiceProvider.GetRequiredService<IStockReservationService>();
 
-            await reservationService.ExpireReservationsAsync();
+            await reservationService.ExpireReservationsAsync(cancellationToken);
 
             _logger.LogInformation("Expired reservations processed");
         }

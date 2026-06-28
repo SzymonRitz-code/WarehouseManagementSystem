@@ -14,8 +14,9 @@ public interface IWarehouseCommandService
     /// </summary>
     /// <param name="code">Warehouse code.</param>
     /// <param name="excludeWarehouseId">Optional warehouse identifier to exclude from check.</param>
+    /// <param name="ct">Operation cancellation token.</param>
     /// <returns><c>true</c> when warehouse code exists; otherwise <c>false</c>.</returns>
-    bool CodeExists(string code, Guid? excludeWarehouseId = null);
+    bool CodeExists(string code, Guid? excludeWarehouseId = null, CancellationToken ct = default);
 
     /// <summary>
     /// Creates a warehouse.
