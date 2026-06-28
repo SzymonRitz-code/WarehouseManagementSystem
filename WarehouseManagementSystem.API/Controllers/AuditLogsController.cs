@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs.Query;
@@ -12,12 +11,10 @@ namespace WarehouseManagementSystem.API.Controllers;
 public class AuditLogsController : ControllerBase
 {
     private readonly IAuditLogQueryService _auditLogQueryService;
-    private readonly IMapper _mapper;
 
-    public AuditLogsController(IAuditLogQueryService auditLogQueryService, IMapper mapper)
+    public AuditLogsController(IAuditLogQueryService auditLogQueryService)
     {
         _auditLogQueryService = auditLogQueryService;
-        _mapper = mapper;
     }
 
     /// <summary>
@@ -33,14 +30,11 @@ public class AuditLogsController : ControllerBase
     public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetAuditLogs(
         [FromQuery] string? entityName,
         [FromQuery] Guid? entityId,
-        [FromQuery] Guid? performedById)
+        [FromQuery] Guid? performedById,
+        CancellationToken ct)
     {
-        var logs = await _auditLogQueryService.GetFilteredAsync(
-            entityName,
-            entityId,
-            performedById);
-
-        return Ok(_mapper.Map<IEnumerable<AuditLogDto>>(logs));
+        var logs = await _auditLogQueryService.GetFilteredAsync(entityName, entityId, performedById, ct);
+        return Ok(logs);
     }
 
     /// <summary>
@@ -51,11 +45,10 @@ public class AuditLogsController : ControllerBase
     [HttpHead("{id}")]
     [HttpGet("{id}", Name = "GetAuditLog")]
     [ResponseCache(CacheProfileName = HttpCacheProfiles.AuditData)]
-    public async Task<ActionResult<AuditLogDto>> GetAuditLog(Guid id)
+    public async Task<ActionResult<AuditLogDto>> GetAuditLog(Guid id, CancellationToken ct)
     {
-        var log = await _auditLogQueryService.GetByIdAsync(id);
-
-        return log == null ? (ActionResult<AuditLogDto>)NotFound() : (ActionResult<AuditLogDto>)Ok(_mapper.Map<AuditLogDto>(log));
+        var log = await _auditLogQueryService.GetByIdAsync(id, ct);
+        return log == null ? (ActionResult<AuditLogDto>)NotFound() : (ActionResult<AuditLogDto>)Ok(log);
     }
 
     /// <summary>

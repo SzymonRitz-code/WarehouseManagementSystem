@@ -1,4 +1,4 @@
-using WarehouseManagementSystem.Domain.Model.AuditDomain;
+using WarehouseManagementSystem.API.DTO;
 
 namespace WarehouseManagementSystem.API.Services.AuditLogs.Query;
 
@@ -14,15 +14,12 @@ public interface IAuditLogQueryService
     /// <param name="entityId">Optional entity identifier filter.</param>
     /// <param name="performedById">Optional user identifier filter.</param>
     /// <returns>Audit logs matching provided filters.</returns>
-    Task<IEnumerable<AuditLog>> GetFilteredAsync(
-        string? entityName,
-        Guid? entityId,
-        Guid? performedById);
-
+    Task<IReadOnlyList<AuditLogDto>> GetFilteredAsync(string? entityName, Guid? entityId, Guid? performedById, CancellationToken ct = default);
+    
     /// <summary>
     /// Gets audit log by identifier.
     /// </summary>
     /// <param name="id">Audit log identifier.</param>
     /// <returns>Audit log, or <c>null</c> when not found.</returns>
-    Task<AuditLog?> GetByIdAsync(Guid id);
+    Task<AuditLogDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
 }
