@@ -30,11 +30,6 @@ public class WarehouseCommandService : IWarehouseCommandService
             : _unitOfWork.Warehouses.Any(w => w.Code == code);
     }
 
-    public bool Exists(Guid warehouseId)
-    {
-        return _unitOfWork.Warehouses.Any(w => w.Id == warehouseId);
-    }
-
     public async Task<Warehouse> CreateAsync(
         CreateWarehouseDto dto,
         UserSnapshot createdBy,

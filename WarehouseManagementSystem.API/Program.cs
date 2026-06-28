@@ -15,7 +15,8 @@ using WarehouseManagementSystem.API.Services.Documents.Query;
 using WarehouseManagementSystem.API.Services.Products.Command;
 using WarehouseManagementSystem.API.Services.Products.Query;
 using WarehouseManagementSystem.API.Services.Seed;
-using WarehouseManagementSystem.API.Services.Queries;
+using WarehouseManagementSystem.API.Services.ProductBatches.Command;
+using WarehouseManagementSystem.API.Services.ProductBatches.Query;
 using WarehouseManagementSystem.API.Services.Warehouses.Command;
 using WarehouseManagementSystem.API.Services.Warehouses.Query;
 using WarehouseManagementSystem.API.Services.Stocks.Command;
@@ -140,12 +141,13 @@ builder.Services.AddScoped<IDocumentQueryService, DocumentQueryService>();
 builder.Services.AddScoped<IProductCommandService, ProductCommandService>();
 builder.Services.AddScoped<IProductQueryService, ProductQueryService>();
 builder.Services.AddScoped<IWarehouseCommandService, WarehouseCommandService>();
+builder.Services.AddScoped<IWarehouseZoneCommandService, WarehouseZoneCommandService>();
 builder.Services.AddScoped<IWarehouseQueryService, WarehouseQueryService>();
 builder.Services.AddScoped<IStockCommandService, StockCommandService>();
 builder.Services.AddScoped<IStockQueryService, StockQueryService>();
-builder.Services.AddScoped<IStockService, StockCommandService>();
 builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 builder.Services.AddScoped<IProductBatchQueryService, ProductBatchQueryService>();
+builder.Services.AddScoped<IProductBatchCommandService, ProductBatchCommandService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 

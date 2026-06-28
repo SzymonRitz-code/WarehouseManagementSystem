@@ -1,14 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.AuditLogs.Command;
-using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.User;
+using WarehouseManagementSystem.API.Services.Warehouses.Command;
 using WarehouseManagementSystem.API.Services.Warehouses.Query;
-using WarehouseManagementSystem.Domain.Interfaces;
-using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
@@ -19,26 +15,20 @@ public class WarehouseZonesController : ControllerBase
 {
     #region Fields and Constructor
 
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IWarehouseQueryService _warehouseQueryService;
-    private readonly IAuditLogCommandService _auditLogService;
-    private readonly ILogger<WarehouseZonesController> _logger;
+    private readonly IWarehouseZoneCommandService _warehouseZoneCommandService;
     private readonly IUserService _userService;
 
     public WarehouseZonesController(
-        IUnitOfWork unitOfWork,
         IMapper mapper,
         IWarehouseQueryService warehouseQueryService,
-        IAuditLogCommandService auditLogService,
-        ILogger<WarehouseZonesController> logger,
+        IWarehouseZoneCommandService warehouseZoneCommandService,
         IUserService userService)
     {
-        _unitOfWork = unitOfWork;
         _mapper = mapper;
         _warehouseQueryService = warehouseQueryService;
-        _auditLogService = auditLogService;
-        _logger = logger;
+        _warehouseZoneCommandService = warehouseZoneCommandService;
         _userService = userService;
     }
 
@@ -90,11 +80,16 @@ public class WarehouseZonesController : ControllerBase
     /// <param name="zoneDto">Warehouse zone data to update.</param>
     /// <returns>A 204 response after a successful update, or a 404 response if the zone does not exist.</returns>
     [HttpPut("{warehouseZoneId}")]
-    public async Task<IActionResult> UpdateWarehouseZone(Guid warehouseZoneId, UpdateWarehouseZoneDto zoneDto)
+    public async Task<IActionResult> UpdateWarehouseZone(Guid warehouseZoneId, UpdateWarehouseZoneDto zoneDto, CancellationToken ct)
     {
         if (warehouseZoneId != zoneDto.Id)
         {
             return BadRequest("Route ID and body ID mismatch.");
+        }
+
+        if (await _warehouseZoneCommandService.CodeExistsAsync(zoneDto.Code, warehouseZoneId, ct))
+        {
+            ModelState.AddModelError(nameof(zoneDto.Code), "Code Already exists");
         }
 
         if (!ModelState.IsValid)
@@ -102,51 +97,15 @@ public class WarehouseZonesController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
-        if (zone == null)
-        {
-            return NotFound();
-        }
+        var user = _userService.GetUser(HttpContext);
+        var updated = await _warehouseZoneCommandService.UpdateAsync(
+            warehouseZoneId,
+            zoneDto,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-        var oldZone = AuditSnapshots.WarehouseZone(zone);
-
-        zone.SetCode(zoneDto.Code);
-        zone.SetName(zoneDto.Name);
-        zone.SetTemperatureType(zoneDto.TemperatureType);
-        zone.SetPickingZone(zoneDto.IsPickingZone);
-        zone.SetWarehouse(zoneDto.WarehouseId);
-
-        try
-        {
-            _unitOfWork.WarehouseZones.Update(zone);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(WarehouseZone),
-                zone.Id,
-                "Update",
-                user.Id,
-                oldZone,
-                AuditSnapshots.WarehouseZone(zone),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Warehouse zone {WarehouseZoneId} updated by {UserId}", zone.Id, user.Id);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!WarehouseZoneExists(warehouseZoneId))
-            {
-                return NotFound();
-            }
-
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Warehouse zone update failed for warehouseZone {WarehouseZoneId}", warehouseZoneId);
-            throw;
-        }
-
-        return NoContent();
+        return updated == null ? NotFound() : NoContent();
     }
 
     /// <summary>
@@ -158,41 +117,27 @@ public class WarehouseZonesController : ControllerBase
     /// <param name="zoneDto">Warehouse zone data to create.</param>
     /// <returns>The created warehouse zone with the URL for retrieving its details.</returns>
     [HttpPost]
-    public async Task<ActionResult<WarehouseZoneDetailsDto>> CreateWarehouseZone(CreateWarehouseZoneDto zoneDto)
+    public async Task<ActionResult<WarehouseZoneDetailsDto>> CreateWarehouseZone(CreateWarehouseZoneDto zoneDto, CancellationToken ct)
     {
-        if (_unitOfWork.WarehouseZones.Any(w => w.Code == zoneDto.Code))
+        if (await _warehouseZoneCommandService.CodeExistsAsync(zoneDto.Code, null, ct))
         {
             ModelState.AddModelError(nameof(zoneDto.Code), "Code Already exists");
         }
+
         if (!ModelState.IsValid)
         {
             return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            var zone = new WarehouseZone(zoneDto.Code, zoneDto.Name, zoneDto.TemperatureType, zoneDto.IsPickingZone, zoneDto.WarehouseId, _userService.GetUser(HttpContext));
-            _unitOfWork.WarehouseZones.Add(zone);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(WarehouseZone),
-                zone.Id,
-                "Create",
-                user.Id,
-                null,
-                AuditSnapshots.WarehouseZone(zone),
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Warehouse zone {WarehouseZoneId} created by {UserId}", zone.Id, user.Id);
+        var user = _userService.GetUser(HttpContext);
+        var zone = await _warehouseZoneCommandService.CreateAsync(
+            zoneDto,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-            var createdDto = _mapper.Map<WarehouseZoneDetailsDto>(zone);
-            return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, createdDto);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Warehouse zone create failed for code {Code}", zoneDto.Code);
-            throw;
-        }
+        var createdDto = _mapper.Map<WarehouseZoneDetailsDto>(zone);
+        return CreatedAtAction(nameof(GetWarehouseZone), new { warehouseZoneId = zone.Id }, createdDto);
     }
 
     /// <summary>
@@ -204,47 +149,16 @@ public class WarehouseZonesController : ControllerBase
     /// <param name="warehouseZoneId">Unique identifier of the warehouse zone to delete.</param>
     /// <returns>A 204 response after a successful delete, or a 404 response if the zone does not exist.</returns>
     [HttpDelete("{warehouseZoneId}")]
-    public async Task<IActionResult> DeleteWarehouseZone(Guid warehouseZoneId)
+    public async Task<IActionResult> DeleteWarehouseZone(Guid warehouseZoneId, CancellationToken ct)
     {
-        var zone = await _unitOfWork.WarehouseZones.FindAsync(warehouseZoneId);
-        if (zone == null)
-        {
-            return NotFound();
-        }
+        var user = _userService.GetUser(HttpContext);
+        var deleted = await _warehouseZoneCommandService.DeleteAsync(
+            warehouseZoneId,
+            user,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            ct);
 
-        var oldZone = AuditSnapshots.WarehouseZone(zone);
-
-        try
-        {
-            _unitOfWork.WarehouseZones.Delete(zone);
-            var user = _userService.GetUser(HttpContext);
-            await _auditLogService.LogChangesAsync(
-                nameof(WarehouseZone),
-                zone.Id,
-                "Delete",
-                user.Id,
-                oldZone,
-                null,
-                HttpContext.Connection.RemoteIpAddress?.ToString());
-            await _unitOfWork.SaveChangesAsync();
-            _logger.LogInformation("Warehouse zone {WarehouseZoneId} deleted by {UserId}", zone.Id, user.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Warehouse zone delete failed for warehouseZone {WarehouseZoneId}", warehouseZoneId);
-            throw;
-        }
-
-        return NoContent();
-    }
-
-    #endregion
-
-    #region Helper Methods
-
-    private bool WarehouseZoneExists(Guid warehouseZoneId)
-    {
-        return _unitOfWork.WarehouseZones.Any(z => z.Id == warehouseZoneId);
+        return deleted ? NoContent() : NotFound();
     }
 
     #endregion

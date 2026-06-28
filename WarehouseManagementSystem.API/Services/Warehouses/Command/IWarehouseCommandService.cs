@@ -18,13 +18,6 @@ public interface IWarehouseCommandService
     bool CodeExists(string code, Guid? excludeWarehouseId = null);
 
     /// <summary>
-    /// Checks whether a warehouse with the specified identifier exists.
-    /// </summary>
-    /// <param name="warehouseId">Warehouse identifier.</param>
-    /// <returns><c>true</c> if warehouse exists; otherwise <c>false</c>.</returns>
-    bool Exists(Guid warehouseId);
-
-    /// <summary>
     /// Creates a warehouse.
     /// </summary>
     /// <param name="dto">Warehouse creation data.</param>
