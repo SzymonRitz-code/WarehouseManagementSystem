@@ -279,6 +279,7 @@ app.UseHttpsRedirection();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.MapGet("/", () => Results.Redirect("/swagger"));
     app.UseSwagger();
     app.UseSwaggerUI();
 }
