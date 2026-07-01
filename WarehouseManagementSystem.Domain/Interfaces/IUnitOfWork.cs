@@ -18,4 +18,6 @@ public interface IUnitOfWork : IDisposable
     Task<IUnitOfWorkTransaction> BeginTransactionAsync(
         IsolationLevel isolationLevel = IsolationLevel.ReadCommitted,
         CancellationToken cancellationToken = default);
+
+    bool HasActiveTransaction { get; }
 }

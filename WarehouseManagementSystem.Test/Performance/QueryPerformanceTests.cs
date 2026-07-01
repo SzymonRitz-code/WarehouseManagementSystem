@@ -259,14 +259,13 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         WarehouseManagementSystemDbContext context,
         int rowCount)
     {
-        var user = CreateUser();
         var products = Enumerable.Range(0, rowCount)
             .Select(index => new Product(
                 $"PERF-SKU-{index:D6}",
                 $"Performance Product {index:D6}",
                 UnitOfMeasure.Piece,
                 requiresBatch: false,
-                user,
+                CreateUser(),
                 weight: index % 100,
                 volume: index % 50))
             .ToArray();
@@ -285,11 +284,10 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         WarehouseManagementSystemDbContext context,
         int rowCount)
     {
-        var user = CreateUser();
-        var warehouse = new Warehouse("WH-STOCK-PERF", "Stock Performance Warehouse", "Poland", "Warsaw", "Dock 1", user);
+        var warehouse = new Warehouse("WH-STOCK-PERF", "Stock Performance Warehouse", "Poland", "Warsaw", "Dock 1", CreateUser());
         var zone = warehouse.AddZone("PICK", "Picking", TemperatureType.Ambient, true);
         var products = Enumerable.Range(0, rowCount)
-            .Select(index => new Product($"SKU-{index:D6}", $"Stock Product {index:D6}", UnitOfMeasure.Piece, false, user))
+            .Select(index => new Product($"SKU-{index:D6}", $"Stock Product {index:D6}", UnitOfMeasure.Piece, false, CreateUser()))
             .ToArray();
         var stocks = products
             .Select((product, index) =>
@@ -323,17 +321,18 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         WarehouseManagementSystemDbContext context,
         int rowCount)
     {
-        var user = CreateUser();
-        var warehouse = new Warehouse("WH-DOC-PERF", "Document Performance Warehouse", "Poland", "Warsaw", "Dock 2", user);
+        var warehouse = new Warehouse("WH-DOC-PERF", "Document Performance Warehouse", "Poland", "Warsaw", "Dock 2", CreateUser());
         var zone = warehouse.AddZone("DOC", "Documents Zone", TemperatureType.Ambient, true);
-        var product = new Product("DOC-PERF", "Performance Document Product", UnitOfMeasure.Piece, false, user);
+        var product = new Product("DOC-PERF", "Performance Document Product", UnitOfMeasure.Piece, false, CreateUser());
         var documents = Enumerable.Range(0, rowCount)
             .Select(index =>
             {
-                var document = new Document(DateTime.UtcNow.AddMinutes(-index), DocumentType.PZ, user, warehouse.Id);
+                var createdBy = CreateUser();
+                var confirmedBy = CreateUser();
+                var document = new Document(DateTime.UtcNow.AddMinutes(-index), DocumentType.PZ, createdBy, warehouse.Id);
                 document.AddItem(new DocumentItem(product.Id, 1 + index % 25, null, null, zone.Id));
                 document.SetNumber($"PERF/PZ/{index:D6}");
-                document.Confirm(user);
+                document.Confirm(confirmedBy);
                 return document;
             })
             .ToArray();

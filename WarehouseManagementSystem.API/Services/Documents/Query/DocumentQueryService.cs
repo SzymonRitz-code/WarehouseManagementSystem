@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
@@ -11,11 +12,20 @@ public class DocumentQueryService : IDocumentQueryService
 {
     #region Fields and Constructor
 
-    private readonly WarehouseManagementSystemDbContext _context;
+    private const string ContractVersion = "v1";
 
-    public DocumentQueryService(WarehouseManagementSystemDbContext context)
+    private readonly WarehouseManagementSystemDbContext _context;
+    private readonly IQueryCacheService _queryCache;
+
+    public DocumentQueryService(WarehouseManagementSystemDbContext context, IQueryCacheService queryCache)
     {
         _context = context;
+        _queryCache = queryCache;
+    }
+
+    public DocumentQueryService(WarehouseManagementSystemDbContext context)
+        : this(context, new NoOpQueryCacheService())
+    {
     }
 
     #endregion
@@ -24,49 +34,79 @@ public class DocumentQueryService : IDocumentQueryService
 
     public async Task<PagedResult<DocumentListDto>> GetDocumentsPageAsync(DocumentListQuery query, CancellationToken ct = default)
     {
-        var documents = BuildDocumentListQuery();
-
-        documents = ApplyDocumentListSearch(documents, query);
-
-        var totalItems = await documents.CountAsync(ct);
-        var orderedDocuments = ApplyDocumentListSorting(documents, query.SortBy, query.SortDirection);
-
-        var pagedDocuments = orderedDocuments
-            .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize);
-
-        var items = await (
-            from document in pagedDocuments
-            join sourceWarehouse in _context.Warehouses.AsNoTracking()
-                on document.SourceWarehouseId equals sourceWarehouse.Id into sourceJoin
-            from sourceWarehouse in sourceJoin.DefaultIfEmpty()
-            join targetWarehouse in _context.Warehouses.AsNoTracking()
-                on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
-            from targetWarehouse in targetJoin.DefaultIfEmpty()
-            join item in _context.DocumentItems.AsNoTracking()
-                on document.Id equals item.DocumentId into itemJoin
-            select new DocumentListDto
-            {
-                Id = document.Id,
-                DocumentNumber = document.DocumentNumber,
-                Type = document.Type,
-                Status = document.Status,
-                SourceWarehouse = sourceWarehouse != null ? sourceWarehouse.Name : string.Empty,
-                DestinationWarehouse = targetWarehouse != null ? targetWarehouse.Name : null,
-                CreatedBy = document.CreatedBy,
-                ApprovedBy = document.ApprovedBy,
-                CreatedAt = document.CreatedAt,
-                ApprovedAt = document.ApprovedAt,
-                ItemCount = itemJoin.Count(),
-                TotalQuantity = itemJoin.Sum(item => (decimal?)item.Quantity) ?? 0
-            }).ToListAsync(ct);
-
-        return new PagedResult<DocumentListDto>
+        var parameters = new Dictionary<string, string>
         {
-            Items = items,
+            ["page"] = CacheKeyNormalizer.NormalizeInt(query.Page),
+            ["pageSize"] = CacheKeyNormalizer.NormalizeInt(query.PageSize),
+            ["search"] = CacheKeyNormalizer.NormalizeString(query.Search),
+            ["type"] = CacheKeyNormalizer.NormalizeEnum(query.Type),
+            ["status"] = CacheKeyNormalizer.NormalizeEnum(query.Status),
+            ["warehouseId"] = CacheKeyNormalizer.NormalizeGuid(query.WarehouseId),
+            ["createdFrom"] = CacheKeyNormalizer.NormalizeDate(query.CreatedFrom),
+            ["createdTo"] = CacheKeyNormalizer.NormalizeDate(query.CreatedTo),
+            ["sortBy"] = CacheKeyNormalizer.NormalizeSort(query.SortBy),
+            ["sortDirection"] = CacheKeyNormalizer.NormalizeSort(query.SortDirection)
+        };
+
+        var result = await _queryCache.GetOrCreateAsync(
+            CacheRegions.Documents,
+            ContractVersion,
+            parameters,
+            async token =>
+            {
+                var documents = BuildDocumentListQuery();
+
+                documents = ApplyDocumentListSearch(documents, query);
+
+                var totalItems = await documents.CountAsync(token);
+                var orderedDocuments = ApplyDocumentListSorting(documents, query.SortBy, query.SortDirection);
+
+                var pagedDocuments = orderedDocuments
+                    .Skip((query.Page - 1) * query.PageSize)
+                    .Take(query.PageSize);
+
+                var items = await (
+                    from document in pagedDocuments
+                    join sourceWarehouse in _context.Warehouses.AsNoTracking()
+                        on document.SourceWarehouseId equals sourceWarehouse.Id into sourceJoin
+                    from sourceWarehouse in sourceJoin.DefaultIfEmpty()
+                    join targetWarehouse in _context.Warehouses.AsNoTracking()
+                        on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
+                    from targetWarehouse in targetJoin.DefaultIfEmpty()
+                    join item in _context.DocumentItems.AsNoTracking()
+                        on document.Id equals item.DocumentId into itemJoin
+                    select new DocumentListDto
+                    {
+                        Id = document.Id,
+                        DocumentNumber = document.DocumentNumber,
+                        Type = document.Type,
+                        Status = document.Status,
+                        SourceWarehouse = sourceWarehouse != null ? sourceWarehouse.Name : string.Empty,
+                        DestinationWarehouse = targetWarehouse != null ? targetWarehouse.Name : null,
+                        CreatedBy = document.CreatedBy,
+                        ApprovedBy = document.ApprovedBy,
+                        CreatedAt = document.CreatedAt,
+                        ApprovedAt = document.ApprovedAt,
+                        ItemCount = itemJoin.Count(),
+                        TotalQuantity = itemJoin.Sum(item => (decimal?)item.Quantity) ?? 0
+                    }).ToListAsync(token);
+
+                return new PagedResult<DocumentListDto>
+                {
+                    Items = items,
+                    Page = query.Page,
+                    PageSize = query.PageSize,
+                    TotalItems = totalItems
+                };
+            },
+            ct);
+
+        return result ?? new PagedResult<DocumentListDto>
+        {
+            Items = Array.Empty<DocumentListDto>(),
             Page = query.Page,
             PageSize = query.PageSize,
-            TotalItems = totalItems
+            TotalItems = 0
         };
     }
 
@@ -202,45 +242,56 @@ public class DocumentQueryService : IDocumentQueryService
 
     public async Task<IReadOnlyList<DocumentListDto>> GetPendingDocumentsAsync(CancellationToken ct = default)
     {
-        return await (
-            from document in _context.Documents.AsNoTracking()
-            join item in _context.DocumentItems.AsNoTracking() on document.Id equals item.DocumentId into itemJoin
-            from item in itemJoin.DefaultIfEmpty()
-            join sourceWarehouse in _context.Warehouses.AsNoTracking() on document.SourceWarehouseId equals sourceWarehouse.Id
-            join targetWarehouse in _context.Warehouses.AsNoTracking() on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
-            from targetWarehouse in targetJoin.DefaultIfEmpty()
-            where document.Status == DocumentStatus.Draft
-            group new { document, item, sourceWarehouse, targetWarehouse }
-            by new
-            {
-                document.Id,
-                document.Number,
-                document.Type,
-                document.Status,
-                SourceWarehouseName = sourceWarehouse.Name,
-                TargetWarehouseName = targetWarehouse != null ? targetWarehouse.Name : null,
-                CreatedByName = document.CreatedByUser != null ? document.CreatedByUser.Name : null,
-                ConfirmedByName = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
-                document.CreatedAt,
-                document.ConfirmedAt
-            }
-            into g
-            select new DocumentListDto
-            {
-                Id = g.Key.Id,
-                DocumentNumber = g.Key.Number,
-                Type = g.Key.Type,
-                Status = g.Key.Status,
-                SourceWarehouse = g.Key.SourceWarehouseName,
-                DestinationWarehouse = g.Key.TargetWarehouseName,
-                CreatedBy = g.Key.CreatedByName,
-                ApprovedBy = g.Key.ConfirmedByName,
-                CreatedAt = g.Key.CreatedAt,
-                ApprovedAt = g.Key.ConfirmedAt,
-                ItemCount = g.Count(x => x.item != null),
-                TotalQuantity = g.Sum(x => (decimal?)x.item.Quantity) ?? 0
-            }
-            ).OrderBy(d => d.CreatedAt).AsNoTracking().ToListAsync(ct);
+        var parameters = new Dictionary<string, string>
+        {
+            ["scope"] = "pending"
+        };
+
+        return await _queryCache.GetOrCreateAsync(
+                   CacheRegions.Documents,
+                   ContractVersion,
+                   parameters,
+                   async token => await (
+                       from document in _context.Documents.AsNoTracking()
+                       join item in _context.DocumentItems.AsNoTracking() on document.Id equals item.DocumentId into itemJoin
+                       from item in itemJoin.DefaultIfEmpty()
+                       join sourceWarehouse in _context.Warehouses.AsNoTracking() on document.SourceWarehouseId equals sourceWarehouse.Id
+                       join targetWarehouse in _context.Warehouses.AsNoTracking() on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
+                       from targetWarehouse in targetJoin.DefaultIfEmpty()
+                       where document.Status == DocumentStatus.Draft
+                       group new { document, item, sourceWarehouse, targetWarehouse }
+                       by new
+                       {
+                           document.Id,
+                           document.Number,
+                           document.Type,
+                           document.Status,
+                           SourceWarehouseName = sourceWarehouse.Name,
+                           TargetWarehouseName = targetWarehouse != null ? targetWarehouse.Name : null,
+                           CreatedByName = document.CreatedByUser != null ? document.CreatedByUser.Name : null,
+                           ConfirmedByName = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
+                           document.CreatedAt,
+                           document.ConfirmedAt
+                       }
+                       into g
+                       select new DocumentListDto
+                       {
+                           Id = g.Key.Id,
+                           DocumentNumber = g.Key.Number,
+                           Type = g.Key.Type,
+                           Status = g.Key.Status,
+                           SourceWarehouse = g.Key.SourceWarehouseName,
+                           DestinationWarehouse = g.Key.TargetWarehouseName,
+                           CreatedBy = g.Key.CreatedByName,
+                           ApprovedBy = g.Key.ConfirmedByName,
+                           CreatedAt = g.Key.CreatedAt,
+                           ApprovedAt = g.Key.ConfirmedAt,
+                           ItemCount = g.Count(x => x.item != null),
+                           TotalQuantity = g.Sum(x => (decimal?)x.item.Quantity) ?? 0
+                       }
+                       ).OrderBy(d => d.CreatedAt).AsNoTracking().ToListAsync(token),
+                   ct)
+               ?? new List<DocumentListDto>();
     }
 
     public async Task<IReadOnlyList<StockReservation>> GetActiveReservationsAsync(
@@ -429,5 +480,18 @@ public class DocumentQueryService : IDocumentQueryService
     }
 
     #endregion
+
+    private sealed class NoOpQueryCacheService : IQueryCacheService
+    {
+        public Task<T?> GetOrCreateAsync<T>(
+            string region,
+            string contractVersion,
+            IReadOnlyDictionary<string, string> parameters,
+            Func<CancellationToken, Task<T?>> factory,
+            CancellationToken ct = default)
+        {
+            return factory(ct);
+        }
+    }
 
 }

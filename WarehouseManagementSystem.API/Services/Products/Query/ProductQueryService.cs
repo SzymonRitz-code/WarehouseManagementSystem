@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 using WarehouseManagementSystem.Infrastructure.Persistence;
@@ -9,11 +10,20 @@ public class ProductQueryService : IProductQueryService
 {
     #region Fields and Constructor
 
-    private readonly WarehouseManagementSystemDbContext _context;
+    private const string ContractVersion = "v1";
 
-    public ProductQueryService(WarehouseManagementSystemDbContext context)
+    private readonly WarehouseManagementSystemDbContext _context;
+    private readonly IQueryCacheService _queryCache;
+
+    public ProductQueryService(WarehouseManagementSystemDbContext context, IQueryCacheService queryCache)
     {
         _context = context;
+        _queryCache = queryCache;
+    }
+
+    public ProductQueryService(WarehouseManagementSystemDbContext context)
+        : this(context, new NoOpQueryCacheService())
+    {
     }
 
     #endregion
@@ -22,70 +32,123 @@ public class ProductQueryService : IProductQueryService
 
     public async Task<IReadOnlyList<ProductListDto>> GetProductsAsync(CancellationToken ct = default)
     {
-        return await _context.Products
-            .AsNoTracking()
-            .Select(p => new ProductListDto(
-                p.Id,
-                p.SKU,
-                p.Name,
-                p.Unit,
-                p.RequiresBatch,
-                p.Weight,
-                p.Volume,
-                p.IsActive))
-            .ToListAsync(ct);
+        var parameters = new Dictionary<string, string>
+        {
+            ["scope"] = "all"
+        };
+
+        return await _queryCache.GetOrCreateAsync(
+                   CacheRegions.Products,
+                   ContractVersion,
+                   parameters,
+                   async token => await _context.Products
+                       .AsNoTracking()
+                       .Select(p => new ProductListDto(
+                           p.Id,
+                           p.SKU,
+                           p.Name,
+                           p.Unit,
+                           p.RequiresBatch,
+                           p.Weight,
+                           p.Volume,
+                           p.IsActive))
+                       .ToListAsync(token),
+                   ct)
+               ?? new List<ProductListDto>();
     }
 
     public async Task<PagedResult<ProductListDto>> GetProductsPageAsync(ProductListQuery query, CancellationToken ct = default)
     {
-        var products = BuildProductListQuery();
+        var normalizedSearch = CacheKeyNormalizer.NormalizeString(query.Search);
+        var normalizedSortBy = CacheKeyNormalizer.NormalizeSort(query.SortBy);
+        var normalizedSortDirection = CacheKeyNormalizer.NormalizeSort(query.SortDirection);
 
-        products = ApplyProductListSearch(products, query);
-
-        var totalItems = await products.CountAsync(ct);
-        var orderedProducts = ApplyProductListSorting(products, query.SortBy, query.SortDirection);
-
-        var items = await orderedProducts
-            .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .Select(p => new ProductListDto(
-                p.Id,
-                p.SKU,
-                p.Name,
-                p.Unit,
-                p.RequiresBatch,
-                p.Weight,
-                p.Volume,
-                p.IsActive))
-            .ToListAsync(ct);
-
-        return new PagedResult<ProductListDto>
+        var parameters = new Dictionary<string, string>
         {
-            Items = items,
+            ["page"] = CacheKeyNormalizer.NormalizeInt(query.Page),
+            ["pageSize"] = CacheKeyNormalizer.NormalizeInt(query.PageSize),
+            ["search"] = normalizedSearch,
+            ["unit"] = CacheKeyNormalizer.NormalizeEnum(query.Unit),
+            ["requiresBatch"] = CacheKeyNormalizer.NormalizeBool(query.RequiresBatch),
+            ["isActive"] = CacheKeyNormalizer.NormalizeBool(query.IsActive),
+            ["sortBy"] = normalizedSortBy,
+            ["sortDirection"] = normalizedSortDirection
+        };
+
+        var result = await _queryCache.GetOrCreateAsync(
+            CacheRegions.Products,
+            ContractVersion,
+            parameters,
+            async token =>
+            {
+                var products = BuildProductListQuery();
+
+                products = ApplyProductListSearch(products, query);
+
+                var totalItems = await products.CountAsync(token);
+                var orderedProducts = ApplyProductListSorting(products, query.SortBy, query.SortDirection);
+
+                var items = await orderedProducts
+                    .Skip((query.Page - 1) * query.PageSize)
+                    .Take(query.PageSize)
+                    .Select(p => new ProductListDto(
+                        p.Id,
+                        p.SKU,
+                        p.Name,
+                        p.Unit,
+                        p.RequiresBatch,
+                        p.Weight,
+                        p.Volume,
+                        p.IsActive))
+                    .ToListAsync(token);
+
+                return new PagedResult<ProductListDto>
+                {
+                    Items = items,
+                    Page = query.Page,
+                    PageSize = query.PageSize,
+                    TotalItems = totalItems
+                };
+            },
+            ct);
+
+        return result ?? new PagedResult<ProductListDto>
+        {
+            Items = Array.Empty<ProductListDto>(),
             Page = query.Page,
             PageSize = query.PageSize,
-            TotalItems = totalItems
+            TotalItems = 0
         };
     }
 
     public async Task<ProductDetailsDto?> GetProductAsync(Guid productId, CancellationToken ct = default)
     {
-        return await _context.Products
-            .AsNoTracking()
-            .Where(p => p.Id == productId)
-            .Select(p => new ProductDetailsDto
-            {
-                Id = p.Id,
-                Sku = p.SKU,
-                Name = p.Name,
-                Description = p.Description,
-                Unit = p.Unit,
-                RequiresBatch = p.RequiresBatch,
-                IsActive = p.IsActive,
-                Weight = p.Weight,
-                Volume = p.Volume
-            })
-            .FirstOrDefaultAsync(ct);
+        var parameters = new Dictionary<string, string>
+        {
+            ["productId"] = productId.ToString("D")
+        };
+
+        return await _queryCache.GetOrCreateAsync(
+            CacheRegions.Products,
+            ContractVersion,
+            parameters,
+            async token => await _context.Products
+                .AsNoTracking()
+                .Where(p => p.Id == productId)
+                .Select(p => new ProductDetailsDto
+                {
+                    Id = p.Id,
+                    Sku = p.SKU,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Unit = p.Unit,
+                    RequiresBatch = p.RequiresBatch,
+                    IsActive = p.IsActive,
+                    Weight = p.Weight,
+                    Volume = p.Volume
+                })
+                .FirstOrDefaultAsync(token),
+            ct);
     }
 
     #endregion
@@ -164,4 +227,17 @@ public class ProductQueryService : IProductQueryService
     }
 
     #endregion
+
+    private sealed class NoOpQueryCacheService : IQueryCacheService
+    {
+        public Task<T?> GetOrCreateAsync<T>(
+            string region,
+            string contractVersion,
+            IReadOnlyDictionary<string, string> parameters,
+            Func<CancellationToken, Task<T?>> factory,
+            CancellationToken ct = default)
+        {
+            return factory(ct);
+        }
+    }
 }

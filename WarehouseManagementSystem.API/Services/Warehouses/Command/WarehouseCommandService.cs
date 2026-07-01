@@ -1,3 +1,4 @@
+using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
@@ -11,15 +12,18 @@ public class WarehouseCommandService : IWarehouseCommandService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogCommandService _auditLogService;
+    private readonly ICacheInvalidationService _cacheInvalidation;
     private readonly ILogger<WarehouseCommandService> _logger;
 
     public WarehouseCommandService(
         IUnitOfWork unitOfWork,
         IAuditLogCommandService auditLogService,
+        ICacheInvalidationService cacheInvalidation,
         ILogger<WarehouseCommandService> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _auditLogService = auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
+        _cacheInvalidation = cacheInvalidation ?? throw new ArgumentNullException(nameof(cacheInvalidation));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -58,6 +62,7 @@ public class WarehouseCommandService : IWarehouseCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.WarehouseMutation, ct);
 
         _logger.LogInformation("Warehouse {WarehouseId} created by {UserId}", warehouse.Id, createdBy.Id);
 
@@ -104,6 +109,7 @@ public class WarehouseCommandService : IWarehouseCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.WarehouseMutation, ct);
 
         _logger.LogInformation("Warehouse {WarehouseId} updated by {UserId}", warehouse.Id, updatedBy.Id);
 
@@ -138,9 +144,19 @@ public class WarehouseCommandService : IWarehouseCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.WarehouseMutation, ct);
 
         _logger.LogInformation("Warehouse {WarehouseId} deleted by {UserId}", warehouse.Id, deletedBy.Id);
 
         return true;
+    }
+    private async Task InvalidateAsync(IEnumerable<string> regions, CancellationToken ct)
+    {
+        if (_unitOfWork.HasActiveTransaction)
+        {
+            return;
+        }
+
+        await _cacheInvalidation.InvalidateRegionsAsync(regions, ct); // Invalidate cache regions after the transaction is committed
     }
 }

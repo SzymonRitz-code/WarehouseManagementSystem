@@ -1,4 +1,5 @@
-﻿using WarehouseManagementSystem.API.DTO;
+﻿using WarehouseManagementSystem.API.Caching;
+using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Interfaces;
@@ -13,15 +14,18 @@ public class ProductCommandService : IProductCommandService
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogCommandService _auditLogService;
+    private readonly ICacheInvalidationService _cacheInvalidation;
     private readonly ILogger<ProductCommandService> _logger;
 
     public ProductCommandService(
         IUnitOfWork unitOfWork,
         IAuditLogCommandService auditLogService,
+        ICacheInvalidationService cacheInvalidation,
         ILogger<ProductCommandService> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _auditLogService = auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
+        _cacheInvalidation = cacheInvalidation ?? throw new ArgumentNullException(nameof(cacheInvalidation));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -66,6 +70,7 @@ public class ProductCommandService : IProductCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.ProductMutation, ct);
 
         _logger.LogInformation("Product {ProductId} created by {UserId}", product.Id, createdBy.Id);
 
@@ -127,6 +132,7 @@ public class ProductCommandService : IProductCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.ProductMutation, ct);
 
         _logger.LogInformation("Product {ProductId} updated by {UserId}", product.Id, updatedBy.Id);
 
@@ -161,6 +167,7 @@ public class ProductCommandService : IProductCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.ProductMutation, ct);
 
         _logger.LogInformation("Product {ProductId} deleted by {UserId}", product.Id, deletedBy.Id);
 
@@ -168,4 +175,14 @@ public class ProductCommandService : IProductCommandService
     }
 
     #endregion
+
+    private async Task InvalidateAsync(IEnumerable<string> regions, CancellationToken ct)
+    {
+        if (_unitOfWork.HasActiveTransaction)
+        {
+            return;
+        }
+
+        await _cacheInvalidation.InvalidateRegionsAsync(regions, ct);
+    }
 }

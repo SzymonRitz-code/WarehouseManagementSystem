@@ -1,4 +1,5 @@
 using System.Data;
+using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;
@@ -23,6 +24,7 @@ public class DocumentCommandService : IDocumentCommandService
     private readonly ISystemClock _clock;
     private readonly ILogger<DocumentCommandService> _logger;
     private readonly IAuditLogCommandService _auditLogService;
+    private readonly ICacheInvalidationService _cacheInvalidation;
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
@@ -30,10 +32,12 @@ public class DocumentCommandService : IDocumentCommandService
         IDocumentNumberGenerator numberGenerator,
         ISystemClock systemClock,
         ILogger<DocumentCommandService> logger,
-        IAuditLogCommandService auditLogService)
+        IAuditLogCommandService auditLogService,
+        ICacheInvalidationService cacheInvalidation)
     {
         _logger = logger;
         _auditLogService = auditLogService;
+        _cacheInvalidation = cacheInvalidation;
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
@@ -94,6 +98,7 @@ public class DocumentCommandService : IDocumentCommandService
             newSnapshot: AuditSnapshots.Document(document),
             ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        await _cacheInvalidation.InvalidateRegionsAsync(CacheInvalidationMatrix.DocumentCreateOrUpdate, ct);
 
         _logger.LogInformation("Document {DocumentId} created by {UserId}", document.Id, createdBy.Id);
 
@@ -146,6 +151,7 @@ public class DocumentCommandService : IDocumentCommandService
             newSnapshot: AuditSnapshots.Document(document),
             ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
+        await _cacheInvalidation.InvalidateRegionsAsync(CacheInvalidationMatrix.DocumentCreateOrUpdate, ct);
 
         _logger.LogInformation("Document {DocumentId} updated by {UserId}", documentId, updatedBy.Id);
         return document;
@@ -241,6 +247,7 @@ public class DocumentCommandService : IDocumentCommandService
             ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
+        await _cacheInvalidation.InvalidateRegionsAsync(CacheInvalidationMatrix.DocumentConfirmOrCancel, ct);
         _logger.LogInformation("Document {DocumentId} confirmed by {UserId}", documentId, confirmedBy.Id);
     }
 
@@ -292,6 +299,7 @@ public class DocumentCommandService : IDocumentCommandService
             ct: ct);
         await _unitOfWork.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
+        await _cacheInvalidation.InvalidateRegionsAsync(CacheInvalidationMatrix.DocumentConfirmOrCancel, ct);
         _logger.LogInformation("Document {DocumentId} canceled by {UserId}", documentId, canceledBy.Id);
     }
 

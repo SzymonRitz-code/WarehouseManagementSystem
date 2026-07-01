@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using WarehouseManagementSystem.API;
+using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.Extensions;
 using WarehouseManagementSystem.API.Extensions.Middleware;
 using WarehouseManagementSystem.API.Services.Documents.Command;
@@ -37,6 +38,8 @@ var authenticationMetadataAddress = builder.Configuration["Authentication:Metada
 var authenticationAudience = builder.Configuration["Authentication:Audience"] ?? "wmsApi";
 var authenticationValidIssuer = builder.Configuration["Authentication:ValidIssuer"] ?? authenticationAuthority;
 var authenticationRequireHttpsMetadata = builder.Configuration.GetValue("Authentication:RequireHttpsMetadata", true);
+var redisOptions = builder.Configuration.GetSection(RedisCacheOptions.SectionName).Get<RedisCacheOptions>() ?? new RedisCacheOptions(); // Pobranie konfiguracji Redis z appsettings.json, jeśli nie ma to ustawienie domyślne, które wyłącza Redis.
+
 
 #region MVC and API Behavior
 
@@ -132,6 +135,33 @@ builder.Services.AddDbContext<WarehouseManagementSystemDbContext>(options =>
                .EnableDetailedErrors();
     }
 });
+// ------
+
+builder.Services.Configure<RedisCacheOptions>(builder.Configuration.GetSection(RedisCacheOptions.SectionName)); // Pobranie konfiguracji Redis z appsettings.json i zarejestrowanie jej w kontenerze DI, aby można było ją wstrzykiwać do serwisów, które potrzebują konfiguracji Redis.
+builder.Services.AddDistributedMemoryCache(); // Dodanie pamięci podręcznej w pamięci RAM jako domyślnej implementacji IDistributedCache, która będzie używana, jeśli Redis nie jest włączony. 
+
+if (redisOptions.Enabled)
+{
+    builder.Services.AddStackExchangeRedisCache(options => // Dodanie implementacji IDistributedCache, która korzysta z Redis jako pamięci podręcznej rozproszonej. Wstrzykiwana jest konfiguracja Redis z appsettings.json.
+    {
+        options.Configuration = redisOptions.ConnectionString;
+        options.InstanceName = redisOptions.InstancePrefix + ":";
+    });
+}
+
+builder.Services.AddSingleton<ICacheKeyBuilder, CacheKeyBuilder>();
+builder.Services.AddSingleton<ICacheRegionGenerationStore, DistributedCacheRegionGenerationStore>();
+builder.Services.AddScoped<IQueryCacheService, QueryCacheService>();
+builder.Services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
+
+var healthChecks = builder.Services.AddHealthChecks();
+
+if (redisOptions.Enabled)
+{
+    healthChecks.AddCheck<RedisHealthCheck>("redis");
+}
+// -------
+
 
 // Services
 builder.Services.AddScoped<IAuditLogCommandService, AuditLogCommandService>();
@@ -293,6 +323,7 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health"); // co to jest? Endpoint do sprawdzania stanu zdrowia aplikacji, np. czy baza danych jest dostępna, czy Redis działa itp. Może być używany przez load balancery lub monitoring.
 app.MapControllers();
 
 app.Run();

@@ -61,6 +61,8 @@ public class UnitOfWork : IUnitOfWork
         return new EfUnitOfWorkTransaction(transaction);
     }
 
+    public bool HasActiveTransaction => _context.Database.CurrentTransaction != null;
+
     private sealed class EfUnitOfWorkTransaction : IUnitOfWorkTransaction
     {
         private readonly IDbContextTransaction _transaction;

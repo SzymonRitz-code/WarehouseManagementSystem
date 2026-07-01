@@ -1,3 +1,4 @@
+using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
@@ -11,15 +12,18 @@ public class ProductBatchCommandService : IProductBatchCommandService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditLogCommandService _auditLogService;
+    private readonly ICacheInvalidationService _cacheInvalidation;
     private readonly ILogger<ProductBatchCommandService> _logger;
 
     public ProductBatchCommandService(
         IUnitOfWork unitOfWork,
         IAuditLogCommandService auditLogService,
+        ICacheInvalidationService cacheInvalidation,
         ILogger<ProductBatchCommandService> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _auditLogService = auditLogService ?? throw new ArgumentNullException(nameof(auditLogService));
+        _cacheInvalidation = cacheInvalidation ?? throw new ArgumentNullException(nameof(cacheInvalidation));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -60,6 +64,7 @@ public class ProductBatchCommandService : IProductBatchCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.ProductBatchMutation, ct);
 
         _logger.LogInformation("Product batch {BatchId} created by {UserId}", batch.Id, createdBy.Id);
 
@@ -103,6 +108,7 @@ public class ProductBatchCommandService : IProductBatchCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.ProductBatchMutation, ct);
 
         _logger.LogInformation("Product batch {BatchId} updated by {UserId}", batch.Id, updatedBy.Id);
 
@@ -136,9 +142,19 @@ public class ProductBatchCommandService : IProductBatchCommandService
             ct);
 
         await _unitOfWork.SaveChangesAsync(ct);
+        await InvalidateAsync(CacheInvalidationMatrix.ProductBatchMutation, ct);
 
         _logger.LogInformation("Product batch {BatchId} deleted by {UserId}", batch.Id, deletedBy.Id);
 
         return true;
+    }
+    private async Task InvalidateAsync(IEnumerable<string> regions, CancellationToken ct)
+    {
+        if (_unitOfWork.HasActiveTransaction)
+        {
+            return;
+        }
+
+        await _cacheInvalidation.InvalidateRegionsAsync(regions, ct);
     }
 }

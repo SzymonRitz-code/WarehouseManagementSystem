@@ -35,6 +35,15 @@ services:
       # Use the host-trusted localhost certificate instead of generating one per image.
       - ./.certs/localhost.pfx:/https/localhost.pfx:ro
 
+  redis:
+    image: redis:7-alpine
+    container_name: wms-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: .
@@ -45,6 +54,8 @@ services:
         condition: service_healthy
       idp:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       # Kestrel listens on both protocols so the published HTTP port can redirect to HTTPS.
       ASPNETCORE_ENVIRONMENT: "Development"
@@ -64,6 +75,14 @@ services:
       Database__MigrateOnStartup: "true"
       Seeding__Enabled: "true"
       Seeding__Profile: "Extreme"
+      RedisCache__Enabled: "true"
+      RedisCache__ConnectionString: "redis:6379"
+      RedisCache__InstancePrefix: "wms"
+      RedisCache__DefaultTtlMinutes: "15"
+      RedisCache__NegativeTtlSeconds: "30"
+      RedisCache__TtlJitterSeconds: "30"
+      RedisCache__ConnectTimeoutMs: "2000"
+      RedisCache__OperationTimeoutMs: "1500"
     ports:
       - "8080:8080"
       - "8081:8443"
