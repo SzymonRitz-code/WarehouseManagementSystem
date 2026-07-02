@@ -5,7 +5,8 @@ using System.Globalization;
 namespace WarehouseManagementSystem.API.Caching;
 
 /// <summary>
-/// Represents a store for managing cache region generations using a distributed cache.
+/// Stores per-region generation counters in the distributed cache.
+/// Incrementing a generation logically invalidates all cached entries built from older generations.
 /// </summary>
 public sealed class DistributedCacheRegionGenerationStore : ICacheRegionGenerationStore
 {
@@ -27,11 +28,11 @@ public sealed class DistributedCacheRegionGenerationStore : ICacheRegionGenerati
     }
 
     /// <summary>
-    /// Gets the current generation for the specified cache region.
+    /// Reads the current generation for a region and initializes it to zero when the counter is missing or invalid.
     /// </summary>
     /// <param name="region">The cache region.</param>
     /// <param name="ct">A cancellation token to cancel the operation.</param>
-    /// <returns>The current generation for the cache region.</returns>
+    /// <returns>The current region generation.</returns>
     public async Task<long> GetGenerationAsync(string region, CancellationToken ct = default)
     {
         if (!_options.Enabled)
@@ -65,11 +66,11 @@ public sealed class DistributedCacheRegionGenerationStore : ICacheRegionGenerati
     }
 
     /// <summary>
-    /// Increments the generation for the specified cache region.
+    /// Increments the region generation so subsequent reads build keys against a fresh logical version.
     /// </summary>
     /// <param name="region">The cache region.</param>
     /// <param name="ct">A cancellation token to cancel the operation.</param>
-    /// <returns>The new generation for the cache region.</returns>
+    /// <returns>The next region generation.</returns>
     public async Task<long> IncrementGenerationAsync(string region, CancellationToken ct = default)
     {
         if (!_options.Enabled)
@@ -99,9 +100,9 @@ public sealed class DistributedCacheRegionGenerationStore : ICacheRegionGenerati
     }
 
     /// <summary>
-    /// Builds the cache key for the generation of the specified region.
+    /// Builds the distributed-cache key used to persist the region generation counter.
     /// </summary>
     /// <param name="region">The cache region.</param>
-    /// <returns>The cache key for the region's generation.</returns>
+    /// <returns>The generation storage key.</returns>
     private string BuildRegionGenerationKey(string region) => $"{_options.InstancePrefix}:region:{region}:generation";
 }

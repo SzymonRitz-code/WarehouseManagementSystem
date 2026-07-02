@@ -7,8 +7,7 @@ using Microsoft.Extensions.Options;
 namespace WarehouseManagementSystem.API.Caching;
 
 /// <summary>
-/// Implements a caching service that retrieves or creates cached values for queries, 
-/// using a distributed cache (e.g., Redis) and a region-based generation store to manage cache invalidation.
+/// Implements read-through query caching with region generations, stampede protection and SQL fallback.
 /// </summary>
 public sealed class QueryCacheService : IQueryCacheService
 {
@@ -40,11 +39,21 @@ public sealed class QueryCacheService : IQueryCacheService
         _logger = logger;
     }
 
+    /// <summary>
+    /// Returns a cached value when present; otherwise resolves it through the factory, stores it and returns it.
+    /// </summary>
+    /// <typeparam name="T">Type of the cached value.</typeparam>
+    /// <param name="region">Logical cache region.</param>
+    /// <param name="contractVersion">Cached query contract version.</param>
+    /// <param name="parameters">Canonical parameters used to identify the query.</param>
+    /// <param name="factory">Fallback factory that loads the value from the underlying data source.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The cached or freshly loaded value.</returns>
     public async Task<T?> GetOrCreateAsync<T>(
         string region,
         string contractVersion,
         IReadOnlyDictionary<string, string> parameters,
-        Func<CancellationToken, Task<T?>> factory, //To jest funkcja, ktÃ³ra przyjmuje CancellationToken i zwraca Task<T?>. W kontekÅ›cie tego kodu, factory jest uÅ¼ywane do generowania wartoÅ›ci, jeÅ›li nie zostanie znaleziona w pamiÄ™ci podrÄ™cznej (cache). JeÅ›li wartoÅ›Ä‡ nie istnieje w cache, metoda GetOrCreateAsync wywoÅ‚uje factory, aby uzyskaÄ‡ wartoÅ›Ä‡ z innego ÅºrÃ³dÅ‚a (np. bazy danych) i nastÄ™pnie zapisuje jÄ… w cache.
+        Func<CancellationToken, Task<T?>> factory,
         CancellationToken ct = default)
     {
         if (!_options.Enabled)
@@ -56,7 +65,7 @@ public sealed class QueryCacheService : IQueryCacheService
         var key = _keyBuilder.Build(_options.InstancePrefix, region, contractVersion, generation, parameters);
 
         var redisReadWatch = Stopwatch.StartNew();
-        var cached = await TryReadAsync<T>(key, ct);
+        var cached = await TryReadAsync<T>(key, ct); 
         redisReadWatch.Stop();
 
         if (cached.Found)
@@ -114,14 +123,12 @@ public sealed class QueryCacheService : IQueryCacheService
     }
 
     /// <summary>
-    /// Tries to read a value from the cache for the given key. 
-    /// If the value is found, it returns a tuple indicating success and the deserialized value. 
-    /// If not found or an error occurs, it returns a tuple indicating failure and a default value.
+    /// Reads a cached JSON payload and deserializes it into the requested type.
     /// </summary>
-    /// <typeparam name="T">The type of the value to read from the cache.</typeparam>
-    /// <param name="key">The cache key.</param>
-    /// <param name="ct">A cancellation token to cancel the operation.</param>
-    /// <returns>A tuple indicating whether the value was found and the deserialized value.</returns>
+    /// <typeparam name="T">Type of the cached value.</typeparam>
+    /// <param name="key">Cache key.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A tuple indicating whether a cached value was found and its deserialized value.</returns>
     private async Task<(bool Found, T? Value)> TryReadAsync<T>(string key, CancellationToken ct)
     {
         try
@@ -143,13 +150,13 @@ public sealed class QueryCacheService : IQueryCacheService
     }
 
     /// <summary>
-    /// Tries to write a value to the cache for the given key with a specified time-to-live (TTL).
+    /// Serializes a value to JSON and stores it in the distributed cache with the provided TTL.
     /// </summary>
-    /// <typeparam name="T">The type of the value to write to the cache.</typeparam>
-    /// <param name="key">The cache key.</param>
-    /// <param name="value">The value to write to the cache.</param>
-    /// <param name="ttl">The time-to-live (TTL) for the cache entry.</param>
-    /// <param name="ct">A cancellation token to cancel the operation.</param>
+    /// <typeparam name="T">Type of the cached value.</typeparam>
+    /// <param name="key">Cache key.</param>
+    /// <param name="value">Value to store.</param>
+    /// <param name="ttl">Time to live for the entry.</param>
+    /// <param name="ct">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task TryWriteAsync<T>(string key, T? value, TimeSpan ttl, CancellationToken ct)
     {
@@ -169,7 +176,7 @@ public sealed class QueryCacheService : IQueryCacheService
     }
 
     /// <summary>
-    /// Builds a time-to-live (TTL) value for cache entries with optional jitter to prevent cache stampedes.
+    /// Builds a bounded TTL with jitter so many entries do not expire at the same moment.
     /// </summary>
     /// <returns>The calculated TTL value.</returns>
     private TimeSpan BuildJitteredTtl()

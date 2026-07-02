@@ -1,7 +1,7 @@
 namespace WarehouseManagementSystem.API.Caching;
 
 /// <summary>
-/// Represents the configuration options for Redis caching in the Warehouse Management System API.
+/// Binds Redis cache connectivity and TTL tuning options from configuration.
 /// </summary>
 public sealed class RedisCacheOptions
 {

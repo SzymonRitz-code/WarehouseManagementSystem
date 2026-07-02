@@ -6,14 +6,14 @@ namespace WarehouseManagementSystem.API.Caching;
 public interface ICacheKeyBuilder
 {
     /// <summary>
-    /// Builds a cache key based on the provided parameters.
+    /// Builds a deterministic cache key from the instance prefix, logical region, contract version, generation and parameters.
     /// </summary>
-    /// <param name="instancePrefix">The prefix for the cache key, typically identifying the application instance or environment.</param>
-    /// <param name="region">The cache region, often representing a geographical area or logical grouping of data.</param>
-    /// <param name="contractVersion">The version of the contract or API that defines the structure of the cached data.</param>
-    /// <param name="generation">The generation number of the cached data, used for invalidation purposes.</param>
-    /// <param name="parameters">Additional parameters that influence the cache key, typically key-value pairs.</param>
-    /// <returns>A string representing the constructed cache key.</returns>
+    /// <param name="instancePrefix">Cache namespace prefix used to isolate the application or environment.</param>
+    /// <param name="region">Logical cache region such as products, stocks or documents.</param>
+    /// <param name="contractVersion">Version of the cached query contract or payload shape.</param>
+    /// <param name="generation">Region generation used to invalidate stale entries without deleting them.</param>
+    /// <param name="parameters">Canonical key/value parameters that define the query identity.</param>
+    /// <returns>The constructed cache key.</returns>
     string Build(
         string instancePrefix,
         string region,
@@ -25,10 +25,10 @@ public interface ICacheKeyBuilder
 public sealed class CacheKeyBuilder : ICacheKeyBuilder
 {
     public string Build(
-        string instancePrefix, // Prefiks instancji, ktÃ³ry identyfikuje konkretnÄ… instancjÄ™ aplikacji lub Å›rodowisko.
-        string region, // czy region to jest region geograficzny? Tak, region odnosi siÄ™ do geograficznego obszaru, w ktÃ³rym dziaÅ‚a aplikacja lub przechowywane sÄ… dane. MoÅ¼e to byÄ‡ np. "us-east-1" dla regionu wschodniego USA.
-        string contractVersion, // czy contractVersion to jest wersja kontraktu API? Tak, contractVersion odnosi siÄ™ do wersji kontraktu API lub interfejsu, ktÃ³ry definiuje sposÃ³b komunikacji miÄ™dzy rÃ³Å¼nymi komponentami systemu. MoÅ¼e to byÄ‡ np. "v1", "v2" itp.
-        long generation, // czy generation to jest numer generacji danych? Tak, generation odnosi siÄ™ do numeru generacji danych lub wersji danych, ktÃ³re sÄ… przechowywane w pamiÄ™ci podrÄ™cznej. MoÅ¼e to byÄ‡ np. liczba caÅ‚kowita, ktÃ³ra zwiÄ™ksza siÄ™ przy kaÅ¼dej zmianie danych.
+        string instancePrefix,
+        string region,
+        string contractVersion,
+        long generation,
         IReadOnlyDictionary<string, string> parameters)
     {
         var canonical = BuildCanonicalParameters(parameters);
@@ -38,9 +38,9 @@ public sealed class CacheKeyBuilder : ICacheKeyBuilder
     }
 
     /// <summary>
-    /// Builds a canonical string representation of the provided parameters by ordering them and concatenating them in a specific format.
+    /// Produces a canonical parameter string by sorting keys and joining key/value pairs.
     /// </summary>
-    /// <param name="parameters">The parameters to be included in the canonical string.</param>
+    /// <param name="parameters">The parameters to include in the canonical representation.</param>
     /// <returns>A canonical string representation of the parameters.</returns>
     private static string BuildCanonicalParameters(IReadOnlyDictionary<string, string> parameters)
     {
@@ -52,10 +52,10 @@ public sealed class CacheKeyBuilder : ICacheKeyBuilder
     }
 
     /// <summary>
-    /// Computes a SHA256 hash of the provided string value and returns it as a lowercase hexadecimal string.
+    /// Computes a SHA-256 hash and returns it as lowercase hexadecimal text.
     /// </summary>
     /// <param name="value">The string value to hash.</param>
-    /// <returns>A lowercase hexadecimal string representation of the SHA256 hash.</returns>
+    /// <returns>A lowercase hexadecimal representation of the hash.</returns>
     private static string ComputeHash(string value)
     {
         var bytes = Encoding.UTF8.GetBytes(value);

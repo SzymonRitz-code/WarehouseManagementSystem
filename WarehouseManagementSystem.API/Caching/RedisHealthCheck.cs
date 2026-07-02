@@ -4,7 +4,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace WarehouseManagementSystem.API.Caching;
 
 /// <summary>
-/// Represents a health check for Redis cache connectivity and availability.
+/// Performs a round-trip probe against the distributed cache backend to validate Redis availability.
 /// </summary>
 public sealed class RedisHealthCheck : IHealthCheck
 {
@@ -16,7 +16,7 @@ public sealed class RedisHealthCheck : IHealthCheck
     }
 
     /// <summary>
-    /// Checks the health of the Redis cache by performing a simple set and get operation.
+    /// Writes a short-lived probe value and reads it back to confirm the backend responds correctly.
     /// </summary>
     /// <param name="context">The context in which the health check is being performed.</param>
     /// <param name="cancellationToken">A token to cancel the health check operation.</param>

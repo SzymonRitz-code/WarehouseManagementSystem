@@ -1,7 +1,8 @@
 namespace WarehouseManagementSystem.API.Caching;
 
 /// <summary>
-/// Service responsible for invalidating cache regions by incrementing their generation numbers in the underlying store.
+/// Invalidates cache regions by bumping their generation counters in the shared store.
+/// This avoids scanning or deleting individual keys in Redis.
 /// </summary>
 public sealed class CacheInvalidationService : ICacheInvalidationService
 {
@@ -17,7 +18,7 @@ public sealed class CacheInvalidationService : ICacheInvalidationService
     }
 
     /// <summary>
-    /// Invalidates the specified cache regions by incrementing their generation numbers in the underlying store.
+    /// Invalidates each distinct region once by incrementing its generation counter.
     /// </summary>
     /// <param name="regions">The cache regions to invalidate.</param>
     /// <param name="ct">A cancellation token.</param>

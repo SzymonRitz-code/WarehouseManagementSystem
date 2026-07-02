@@ -1,12 +1,12 @@
-namespace WarehouseManagementSystem.API.Caching;
+﻿namespace WarehouseManagementSystem.API.Caching;
 
 /// <summary>
-/// Defines the cache invalidation matrix for different entity mutations in the Warehouse Management System.
+/// Maps domain mutations to the read regions whose cached projections may become stale.
 /// </summary>
 public static class CacheInvalidationMatrix
 {
     /// <summary>
-    /// Defines the cache regions that should be invalidated when a product is mutated (created, updated, or deleted).
+    /// Regions affected by product mutations.
     /// </summary>
     public static readonly string[] ProductMutation =
     [
@@ -17,7 +17,7 @@ public static class CacheInvalidationMatrix
     ];
 
     /// <summary>
-    /// Defines the cache regions that should be invalidated when a product batch is mutated (created, updated, or deleted).
+    /// Regions affected by product batch mutations.
     /// </summary>
     public static readonly string[] ProductBatchMutation =
     [
@@ -27,7 +27,7 @@ public static class CacheInvalidationMatrix
     ];
 
     /// <summary>
-    /// Defines the cache regions that should be invalidated when a warehouse is mutated (created, updated, or deleted).
+    /// Regions affected by warehouse mutations.
     /// </summary>
     public static readonly string[] WarehouseMutation =
     [
@@ -37,8 +37,9 @@ public static class CacheInvalidationMatrix
         CacheRegions.Documents,
         CacheRegions.AuditLogs
     ];
+
     /// <summary>
-    /// Defines the cache regions that should be invalidated when a warehouse zone is mutated (created, updated, or deleted).
+    /// Regions affected by warehouse zone mutations.
     /// </summary>
     public static readonly string[] WarehouseZoneMutation =
     [
@@ -49,7 +50,7 @@ public static class CacheInvalidationMatrix
     ];
 
     /// <summary>
-    /// Defines the cache regions that should be invalidated when a document is created or updated.
+    /// Regions affected by document create and update operations.
     /// </summary>
     public static readonly string[] DocumentCreateOrUpdate =
     [
@@ -58,7 +59,7 @@ public static class CacheInvalidationMatrix
     ];
 
     /// <summary>
-    /// Defines the cache regions that should be invalidated when a document is confirmed or canceled.
+    /// Regions affected by document confirm and cancel operations.
     /// </summary>
     public static readonly string[] DocumentConfirmOrCancel =
     [

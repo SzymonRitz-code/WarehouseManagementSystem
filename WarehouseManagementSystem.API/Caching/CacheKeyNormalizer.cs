@@ -3,35 +3,35 @@ using System.Globalization;
 namespace WarehouseManagementSystem.API.Caching;
 
 /// <summary>
-/// Provides methods to normalize various types of values for use in cache keys, ensuring consistent formatting and handling of null values.
+/// Normalizes query values into stable cache key fragments so equivalent requests produce identical keys.
 /// </summary>
 public static class CacheKeyNormalizer
 {
     /// <summary>
-    /// Normalizes a string value by trimming whitespace and returning a placeholder for null values.
+    /// Trims a string value and maps null to a stable placeholder token.
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
+    /// <param name="value">The string value to normalize.</param>
+    /// <returns>A normalized string fragment.</returns>
     public static string NormalizeString(string? value)
     {
         return value?.Trim() ?? "<null>";
     }
 
     /// <summary>
-    /// Normalizes a string value for sorting purposes by trimming whitespace, converting to lowercase, and returning a placeholder for null values.
+    /// Normalizes sort-related values by trimming whitespace and lowercasing the text.
     /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
+    /// <param name="value">The sort value to normalize.</param>
+    /// <returns>A normalized sort fragment.</returns>
     public static string NormalizeSort(string? value)
     {
         return (value?.Trim().ToLowerInvariant()) ?? "<null>";
     }
 
     /// <summary>
-    /// Normalizes a DateTimeOffset value by converting it to UTC and formatting it in ISO 8601 format, returning a placeholder for null values.
+    /// Converts a DateTimeOffset to UTC and formats it in invariant ISO-8601 form.
     /// </summary>
     /// <param name="value">The DateTimeOffset value to normalize.</param>
-    /// <returns>A string representation of the normalized DateTimeOffset value.</returns>
+    /// <returns>A normalized date fragment.</returns>
     public static string NormalizeDate(DateTimeOffset? value)
     {
         return value.HasValue
@@ -40,20 +40,20 @@ public static class CacheKeyNormalizer
     }
 
     /// <summary>
-    /// Normalizes a Guid value by formatting it in the standard "D" format, returning a placeholder for null values.
+    /// Formats a GUID using the canonical D representation.
     /// </summary>
     /// <param name="value">The Guid value to normalize.</param>
-    /// <returns>A string representation of the normalized Guid value.</returns>
+    /// <returns>A normalized GUID fragment.</returns>
     public static string NormalizeGuid(Guid? value)
     {
         return value?.ToString("D") ?? "<null>";
     }
 
     /// <summary>
-    /// Normalizes a boolean value by converting it to a lowercase string, returning a placeholder for null values.
+    /// Formats a nullable boolean as lowercase text and preserves null via a stable placeholder.
     /// </summary>
     /// <param name="value">The boolean value to normalize.</param>
-    /// <returns>A string representation of the normalized boolean value.</returns>
+    /// <returns>A normalized boolean fragment.</returns>
     public static string NormalizeBool(bool? value)
     {
         return value.HasValue
@@ -62,11 +62,11 @@ public static class CacheKeyNormalizer
     }
     
     /// <summary>
-    /// Normalizes an enum value by converting it to its integer representation, returning a placeholder for null values.
+    /// Converts an enum to its invariant integer representation.
     /// </summary>
     /// <typeparam name="TEnum">The type of the enum.</typeparam>
     /// <param name="value">The enum value to normalize.</param>
-    /// <returns>A string representation of the normalized enum value.</returns>
+    /// <returns>A normalized enum fragment.</returns>
     public static string NormalizeEnum<TEnum>(TEnum? value) where TEnum : struct, Enum
     {
         return value.HasValue
@@ -75,20 +75,20 @@ public static class CacheKeyNormalizer
     }
     
     /// <summary>
-    /// Normalizes an integer value by converting it to a string using invariant culture.
+    /// Formats an integer using invariant culture.
     /// </summary>
     /// <param name="value">The integer value to normalize.</param>
-    /// <returns>A string representation of the normalized integer value.</returns>
+    /// <returns>A normalized integer fragment.</returns>
     public static string NormalizeInt(int value)
     {
         return value.ToString(CultureInfo.InvariantCulture);
     }
     
     /// <summary>
-    /// Normalizes a decimal value by converting it to a string using invariant culture.
+    /// Formats a decimal using invariant culture so key generation is locale independent.
     /// </summary>
     /// <param name="value">The decimal value to normalize.</param>
-    /// <returns>A string representation of the normalized decimal value.</returns>
+    /// <returns>A normalized decimal fragment.</returns>
     public static string NormalizeDecimal(decimal value)
     {
         return value.ToString(CultureInfo.InvariantCulture);
