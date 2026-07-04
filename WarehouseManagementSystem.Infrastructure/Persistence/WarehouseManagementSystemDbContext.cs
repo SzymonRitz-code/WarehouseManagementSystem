@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using WarehouseManagementSystem.Domain.Model.AuditDomain;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
@@ -6,6 +6,7 @@ using WarehouseManagementSystem.Domain.Model.Documents;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
+using WarehouseManagementSystem.Infrastructure.Integration;
 
 namespace WarehouseManagementSystem.Infrastructure.Persistence;
 
@@ -24,6 +25,9 @@ public class WarehouseManagementSystemDbContext : DbContext
     public DbSet<StockReservation> StockReservations { get; set; }
     public DbSet<Warehouse> Warehouses { get; set; }
     public DbSet<WarehouseZone> WarehouseZones { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
+    public DbSet<ProcessedMessage> ProcessedMessages { get; set; }
+    public DbSet<ShippingShipment> ShippingShipments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -46,6 +50,9 @@ public class WarehouseManagementSystemDbContext : DbContext
         ConfigureDocumentSequence(modelBuilder);
 
         ConfigureAuditLog(modelBuilder);
+        ConfigureOutboxMessage(modelBuilder);
+        ConfigureProcessedMessage(modelBuilder);
+        ConfigureShippingShipment(modelBuilder);
 
         base.OnModelCreating(modelBuilder);
     }
@@ -504,6 +511,95 @@ public class WarehouseManagementSystemDbContext : DbContext
         });
 
         builder.HasIndex(x => new { x.EntityName, x.EntityId });
+    }
+
+    private void ConfigureOutboxMessage(ModelBuilder modelBuilder)
+    {
+        var builder = modelBuilder.Entity<OutboxMessage>();
+        builder.ToTable("OutboxMessages");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Type)
+               .IsRequired()
+               .HasMaxLength(200);
+
+        builder.Property(x => x.RoutingKey)
+               .IsRequired()
+               .HasMaxLength(200);
+
+        builder.Property(x => x.Payload)
+               .IsRequired();
+
+        builder.Property(x => x.Status)
+               .IsRequired()
+               .HasMaxLength(20);
+
+        builder.Property(x => x.OccurredAt)
+               .IsRequired()
+               .HasColumnType("datetimeoffset");
+
+        builder.Property(x => x.PublishedAt)
+               .HasColumnType("datetimeoffset");
+
+        builder.Property(x => x.LastError)
+               .HasMaxLength(2000);
+
+        builder.HasIndex(x => new { x.Status, x.OccurredAt });
+        builder.HasIndex(x => x.MessageId).IsUnique();
+    }
+
+    private void ConfigureProcessedMessage(ModelBuilder modelBuilder)
+    {
+        var builder = modelBuilder.Entity<ProcessedMessage>();
+        builder.ToTable("ProcessedMessages");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Consumer)
+               .IsRequired()
+               .HasMaxLength(200);
+
+        builder.Property(x => x.MessageType)
+               .IsRequired()
+               .HasMaxLength(200);
+
+        builder.Property(x => x.ProcessedAt)
+               .IsRequired()
+               .HasColumnType("datetimeoffset");
+
+        builder.HasIndex(x => new { x.Consumer, x.MessageId }).IsUnique();
+    }
+
+    private void ConfigureShippingShipment(ModelBuilder modelBuilder)
+    {
+        var builder = modelBuilder.Entity<ShippingShipment>();
+        builder.ToTable("ShippingShipments");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.DocumentNumber)
+               .IsRequired()
+               .HasMaxLength(50);
+
+        builder.Property(x => x.DocumentType)
+               .IsRequired()
+               .HasMaxLength(20);
+
+        builder.Property(x => x.Status)
+               .IsRequired()
+               .HasMaxLength(30);
+
+        builder.Property(x => x.RequestedAt)
+               .IsRequired()
+               .HasColumnType("datetimeoffset");
+
+        builder.Property(x => x.CreatedAt)
+               .IsRequired()
+               .HasColumnType("datetimeoffset");
+
+        builder.HasIndex(x => x.DocumentId).IsUnique();
+        builder.HasIndex(x => x.MessageId).IsUnique();
     }
 
     #endregion

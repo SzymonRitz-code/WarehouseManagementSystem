@@ -29,6 +29,8 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 using WarehouseManagementSystem.Infrastructure.Services;
 using WarehouseManagementSystem.API.Services.AuditLogs.Query;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
+using WarehouseManagementSystem.API.Integration;
+using WarehouseManagementSystem.API.Integration.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 // Docker supplies internal authority/metadata addresses and the browser-visible issuer separately.
@@ -39,6 +41,7 @@ var authenticationAudience = builder.Configuration["Authentication:Audience"] ??
 var authenticationValidIssuer = builder.Configuration["Authentication:ValidIssuer"] ?? authenticationAuthority;
 var authenticationRequireHttpsMetadata = builder.Configuration.GetValue("Authentication:RequireHttpsMetadata", true);
 var redisOptions = builder.Configuration.GetSection(RedisCacheOptions.SectionName).Get<RedisCacheOptions>() ?? new RedisCacheOptions(); // Pobranie konfiguracji Redis z appsettings.json, jeśli nie ma to ustawienie domyślne, które wyłącza Redis.
+builder.Services.Configure<MessagingOptions>(builder.Configuration.GetSection(MessagingOptions.SectionName));
 
 
 #region MVC and API Behavior
@@ -179,12 +182,17 @@ builder.Services.AddScoped<IStockReservationService, StockReservationService>();
 builder.Services.AddScoped<IProductBatchQueryService, ProductBatchQueryService>();
 builder.Services.AddScoped<IProductBatchCommandService, ProductBatchCommandService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IIntegrationOutbox, IntegrationOutbox>();
 
+builder.Services.AddSingleton<IRabbitMqConnectionFactory, RabbitMqConnectionFactory>();
+builder.Services.AddSingleton<IRabbitMqTopologyConfigurator, RabbitMqTopologyConfigurator>();
 
 
 builder.Services.AddTransient<IDocumentNumberGenerator, DocumentNumberGenerator>();
 builder.Services.AddHostedService<DatabaseSeedingHostedService>();
 builder.Services.AddHostedService<ReservationExpirationJob>();
+builder.Services.AddHostedService<OutboxPublisherWorker>();
+builder.Services.AddHostedService<ShippingDocumentConfirmedConsumer>();
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
 builder.Services.AddSingleton<IUserService, UserService>();
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseManagementSystem.API.Caching;
+using WarehouseManagementSystem.API.Integration;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.Documents.Command;
 using WarehouseManagementSystem.API.Services.User;
@@ -32,6 +33,7 @@ public class DocumentCommandServiceOrchestrationTests
     private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
     private readonly Mock<IAuditLogCommandService> _auditLogService = new();
     private readonly Mock<ICacheInvalidationService> _cacheInvalidation = new();
+    private readonly Mock<IIntegrationOutbox> _integrationOutbox = new();
     private readonly Mock<IUserService> _userServiceMock = new();
     private readonly Mock<IDocumentNumberGenerator> _numberGeneratorMock = new();
     private readonly Mock<IUnitOfWorkTransaction> _transactionMock = new();
@@ -47,7 +49,8 @@ public class DocumentCommandServiceOrchestrationTests
             _clockMock.Object,
             _logger.Object,
             _auditLogService.Object,
-            _cacheInvalidation.Object);
+            _cacheInvalidation.Object,
+            _integrationOutbox.Object);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
         _unitOfWorkMock.Setup(u => u.Documents).Returns(_documentRepoMock.Object);
         _transactionMock

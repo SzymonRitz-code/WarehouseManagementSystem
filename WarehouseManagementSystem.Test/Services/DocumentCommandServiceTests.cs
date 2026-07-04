@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseManagementSystem.API.Caching;
+using WarehouseManagementSystem.API.Integration;
+using WarehouseManagementSystem.API.Integration.Contracts;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.Documents.Command;
 using WarehouseManagementSystem.API.Services.User;
@@ -28,6 +30,7 @@ public class DocumentCommandServiceTests
     private readonly Mock<ILogger<DocumentCommandService>> _logger = new();
     private readonly Mock<IAuditLogCommandService> _auditLogService = new();
     private readonly Mock<ICacheInvalidationService> _cacheInvalidation = new();
+    private readonly Mock<IIntegrationOutbox> _integrationOutbox = new();
     private readonly Mock<IUserService> _userServiceMock = new();
     private readonly Mock<IUnitOfWorkTransaction> _transactionMock = new();
 
@@ -42,7 +45,8 @@ public class DocumentCommandServiceTests
             _clockMock.Object,
             _logger.Object,
             _auditLogService.Object,
-            _cacheInvalidation.Object);
+            _cacheInvalidation.Object,
+            _integrationOutbox.Object);
         _transactionMock
             .Setup(x => x.CommitAsync(It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -150,6 +154,14 @@ public class DocumentCommandServiceTests
             x => x.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, It.IsAny<CancellationToken>()),
             Times.Once);
         _transactionMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _integrationOutbox.Verify(
+            x => x.Add(
+                It.IsAny<Guid>(),
+                doc.Id,
+                "document.confirmed",
+                It.IsAny<DocumentConfirmedIntegrationEvent>(),
+                It.IsAny<DateTimeOffset>()),
+            Times.Once);
     }
 
     /// <summary>

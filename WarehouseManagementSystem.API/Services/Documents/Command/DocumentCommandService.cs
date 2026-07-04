@@ -1,5 +1,7 @@
 using System.Data;
 using WarehouseManagementSystem.API.Caching;
+ using WarehouseManagementSystem.API.Integration;
+using WarehouseManagementSystem.API.Integration.Contracts;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;
@@ -25,6 +27,7 @@ public class DocumentCommandService : IDocumentCommandService
     private readonly ILogger<DocumentCommandService> _logger;
     private readonly IAuditLogCommandService _auditLogService;
     private readonly ICacheInvalidationService _cacheInvalidation;
+    private readonly IIntegrationOutbox _integrationOutbox;
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
@@ -33,11 +36,13 @@ public class DocumentCommandService : IDocumentCommandService
         ISystemClock systemClock,
         ILogger<DocumentCommandService> logger,
         IAuditLogCommandService auditLogService,
-        ICacheInvalidationService cacheInvalidation)
+        ICacheInvalidationService cacheInvalidation,
+        IIntegrationOutbox integrationOutbox)
     {
         _logger = logger;
         _auditLogService = auditLogService;
         _cacheInvalidation = cacheInvalidation;
+        _integrationOutbox = integrationOutbox;
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
@@ -235,8 +240,43 @@ public class DocumentCommandService : IDocumentCommandService
 
         document.SetNumber(documentNumber);
         document.Confirm(confirmedBy);
+        var confirmedAt = document.ConfirmedAt ?? _clock.UtcNow;
+        var integrationEvent = new DocumentConfirmedIntegrationEvent
+        {
+            MessageId = Guid.NewGuid(),
+            CorrelationId = document.Id,
+            OccurredAt = confirmedAt,
+            DocumentId = document.Id,
+            DocumentNumber = document.Number ?? throw new InvalidOperationException("Confirmed document must have a number."),
+            DocumentType = document.Type.ToString(),
+            SourceWarehouseId = document.SourceWarehouseId ?? throw new MissingSourceWarehouseForDocumentException(document.Id),
+            TargetWarehouseId = document.TargetWarehouseId,
+            ConfirmedAt = confirmedAt,
+            ConfirmedBy = new ConfirmedByPayload
+            {
+                Id = confirmedBy.Id,
+                Name = confirmedBy.Name,
+                Email = confirmedBy.Email
+            },
+            Items = document.Items
+                .Select(item => new DocumentConfirmedItemPayload
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    ProductBatchId = item.ProductBatchId,
+                    SourceZoneId = item.SourceZoneId,
+                    TargetZoneId = item.TargetZoneId
+                })
+                .ToList()
+        };
 
         _unitOfWork.Documents.Update(document);
+        _integrationOutbox.Add(
+            integrationEvent.MessageId,
+            integrationEvent.CorrelationId,
+            routingKey: "document.confirmed",
+            integrationEvent,
+            integrationEvent.OccurredAt);
         await _auditLogService.LogChangesAsync(
             entityName: nameof(Document),
             entityId: documentId,
