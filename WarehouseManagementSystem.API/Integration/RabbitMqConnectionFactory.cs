@@ -26,6 +26,7 @@ public class RabbitMqConnectionFactory : IRabbitMqConnectionFactory
 
     public IConnection CreateConnection()
     {
+        // BROKER: RabbitMQ jest tutaj konkretnym brokerem, czyli infrastrukturą transportową.
         var factory = new ConnectionFactory
         {
             HostName = _options.RabbitMq.HostName,
@@ -35,6 +36,10 @@ public class RabbitMqConnectionFactory : IRabbitMqConnectionFactory
             VirtualHost = _options.RabbitMq.VirtualHost,
             DispatchConsumersAsync = false
         };
+
+        // TODO(RECRUITMENT): Po przejsciu na async consumer ustaw DispatchConsumersAsync=true i skonfiguruj
+        // automatic recovery, heartbeat oraz client-provided connection name. Zerwane polaczenie powinno
+        // byc wykrywalne, odnawialne i latwe do znalezienia w panelu RabbitMQ.
 
         return factory.CreateConnection();
     }

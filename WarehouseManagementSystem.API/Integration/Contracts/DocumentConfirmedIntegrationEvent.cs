@@ -5,6 +5,8 @@ namespace WarehouseManagementSystem.API.Integration.Contracts;
 /// </summary>
 public class DocumentConfirmedIntegrationEvent
 {
+    // TODO(RECRUITMENT): Dodaj jawne SchemaVersion/EventVersion. Publisher i consumer moga byc wdrazane
+    // niezaleznie i przez pewien czas obslugiwac rozne wersje kontraktu.
     public Guid MessageId { get; init; }
     public Guid CorrelationId { get; init; }
     public DateTimeOffset OccurredAt { get; init; }
@@ -15,6 +17,8 @@ public class DocumentConfirmedIntegrationEvent
     public Guid? TargetWarehouseId { get; init; }
     public DateTimeOffset ConfirmedAt { get; init; }
     public ConfirmedByPayload ConfirmedBy { get; init; } = null!;
+    // TODO(RECRUITMENT): Zweryfikuj minimalizacje danych i RODO. Email trafia do brokera, DLQ i backupow;
+    // usun go z eventu, jezeli downstream nie potrzebuje tej danej.
     public IReadOnlyList<DocumentConfirmedItemPayload> Items { get; init; } = [];
 }
 

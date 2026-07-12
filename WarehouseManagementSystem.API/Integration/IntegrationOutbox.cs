@@ -16,6 +16,10 @@ public class IntegrationOutbox : IIntegrationOutbox
 
     public void Add<TMessage>(Guid messageId, Guid? correlationId, string routingKey, TMessage message, DateTimeOffset occurredAt)
     {
+        // PUBLISHER INTENT: to jeszcze nie jest publish do brokera, tylko zapis intencji publikacji do Outbox.
+        // Wpis do Outboxa jest zapisywany przez ten sam DbContext co zmiana domenowa.
+        // To jest sedno transactional boundary: stan biznesowy i "intencja publikacji"
+        // lądują w jednej transakcji SQL, a sam publish dzieje się dopiero asynchronicznie.
         var outboxMessage = new OutboxMessage
         {
             Id = Guid.NewGuid(),

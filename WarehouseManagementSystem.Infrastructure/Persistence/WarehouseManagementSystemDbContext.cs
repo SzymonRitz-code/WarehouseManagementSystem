@@ -546,6 +546,9 @@ public class WarehouseManagementSystemDbContext : DbContext
                .HasMaxLength(2000);
 
         builder.HasIndex(x => new { x.Status, x.OccurredAt });
+        // Unikalny MessageId pozwala wykryć przypadkowe zdublowanie wpisu po stronie publishera.
+        // To nie rozwiązuje jeszcze wszystkiego w stylu "message lost between systems", ale daje
+        // twardy identyfikator do monitoringu, retry i reconciliation.
         builder.HasIndex(x => x.MessageId).IsUnique();
     }
 
@@ -568,6 +571,8 @@ public class WarehouseManagementSystemDbContext : DbContext
                .IsRequired()
                .HasColumnType("datetimeoffset");
 
+        // Jeden consumer może rozliczyć dane MessageId tylko raz. Dzięki temu biznesowa idempotencja
+        // nie opiera się wyłącznie na pamięci procesu albo na zachowaniu brokera.
         builder.HasIndex(x => new { x.Consumer, x.MessageId }).IsUnique();
     }
 
@@ -598,6 +603,9 @@ public class WarehouseManagementSystemDbContext : DbContext
                .IsRequired()
                .HasColumnType("datetimeoffset");
 
+        // Jeden shipment na dokument pokazuje ownership procesu po stronie Shipping.
+        // Gdy w przyszłości pojawi się więcej eventów lifecycle, tu właśnie może pojawić się problem
+        // replay/out-of-order, jeśli eventy będą próbowały modyfikować ten sam rekord w złej kolejności.
         builder.HasIndex(x => x.DocumentId).IsUnique();
         builder.HasIndex(x => x.MessageId).IsUnique();
     }

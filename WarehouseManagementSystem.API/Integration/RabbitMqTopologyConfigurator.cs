@@ -26,9 +26,13 @@ public class RabbitMqTopologyConfigurator : IRabbitMqTopologyConfigurator
 
     public void EnsureTopology(IModel channel)
     {
+        // EXCHANGE: exchange przyjmuje publish od publishera i kieruje wiadomości do queue.
         channel.ExchangeDeclare(_options.Exchanges.WmsEvents, ExchangeType.Direct, durable: true);
         channel.ExchangeDeclare(_options.Exchanges.DeadLetter, ExchangeType.Direct, durable: true);
+        // Osobny DLX/DLQ daje miejsce na poison messages i analizę operacyjną zamiast cichego gubienia
+        // błędnych wiadomości. To jest ważny element odpowiedzi na pytania o niezawodność integracji.
 
+        // QUEUE: DLQ to konkretna kolejka wewnątrz brokera dla odrzuconych wiadomości.
         channel.QueueDeclare(
             queue: _options.Shipping.DocumentConfirmedDeadLetterQueue,
             durable: true,
@@ -36,11 +40,13 @@ public class RabbitMqTopologyConfigurator : IRabbitMqTopologyConfigurator
             autoDelete: false,
             arguments: null);
 
+        // ROUTING KEY: exchange używa tego klucza, aby skierować wiadomość do właściwej queue.
         channel.QueueBind(
             queue: _options.Shipping.DocumentConfirmedDeadLetterQueue,
             exchange: _options.Exchanges.DeadLetter,
             routingKey: _options.Shipping.DocumentConfirmedRoutingKey);
 
+        // QUEUE: to główna kolejka, z której consumer będzie odbierał wiadomości.
         channel.QueueDeclare(
             queue: _options.Shipping.DocumentConfirmedQueue,
             durable: true,
@@ -51,10 +57,19 @@ public class RabbitMqTopologyConfigurator : IRabbitMqTopologyConfigurator
                 ["x-dead-letter-exchange"] = _options.Exchanges.DeadLetter,
                 ["x-dead-letter-routing-key"] = _options.Shipping.DocumentConfirmedRoutingKey
             });
+        // Na tym etapie DLQ już jest, ale repo nie ma jeszcze osobnego procesu do replay/manual repair.
+        // Jeśli na rozmowie padnie pytanie "jak odbudujesz stan po błędzie?", to właśnie tu naturalnie
+        // dochodzi kolejny krok: narzędzie do ponownego puszczania wiadomości z DLQ.
 
+        // EXCHANGE VS QUEUE: exchange kieruje wiadomość, a queue przechowuje ją do odbioru.
         channel.QueueBind(
             queue: _options.Shipping.DocumentConfirmedQueue,
             exchange: _options.Exchanges.WmsEvents,
             routingKey: _options.Shipping.DocumentConfirmedRoutingKey);
+
+        // TODO(RECRUITMENT): Dodaj kontrolowany replay DLQ z audytem i limitem prob. Nie przepinaj calej
+        // kolejki bez kontroli, bo poison message moze utworzyc petle awarii.
+        // TODO(RECRUITMENT): Dla bledow transient dodaj retry queues z TTL i dead-letteringiem z powrotem
+        // do kolejki glownej (np. 10 s, 1 min, 10 min). DLQ powinna byc koncem retry.
     }
 }

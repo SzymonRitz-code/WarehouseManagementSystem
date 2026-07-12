@@ -18,6 +18,7 @@ namespace WarehouseManagementSystem.API.Services.Documents.Command;
 
 public class DocumentCommandService : IDocumentCommandService
 {
+    // BUSINESS PUBLISHER: ten serwis tworzy event biznesowy, który później trafi do brokera.
     #region Fields and Constructor
 
     private readonly IUnitOfWork _unitOfWork;
@@ -241,9 +242,18 @@ public class DocumentCommandService : IDocumentCommandService
         document.SetNumber(documentNumber);
         document.Confirm(confirmedBy);
         var confirmedAt = document.ConfirmedAt ?? _clock.UtcNow;
+        // To jest biznesowy owner procesu "DocumentConfirmed" po stronie WMS:
+        // tutaj kończy się lokalna transakcja domenowa, a dalej zaczyna się integracja z downstreamami
+        // typu Shipping/Billing. Dzięki temu na rozmowie można jasno powiedzieć, kto publikuje event
+        // i kto odpowiada za prawdę o stanie dokumentu.
+        // PUBLISHER ENTRY POINT: tutaj powstaje event gotowy do wysłania poza WMS.
+        // ROUTING KEY: "document.confirmed"
+        // MESSAGE BUS: architektonicznie to fragment komunikacji event-driven; sam broker pojawi się w workerze.
         var integrationEvent = new DocumentConfirmedIntegrationEvent
         {
             MessageId = Guid.NewGuid(),
+            // CorrelationId spina cały flow między systemami. Tu używa się DocumentId, żeby później dało się
+            // po logach, outboxie i tabelach downstreamów prześledzić jedną biznesową operację end-to-end.
             CorrelationId = document.Id,
             OccurredAt = confirmedAt,
             DocumentId = document.Id,
@@ -271,6 +281,9 @@ public class DocumentCommandService : IDocumentCommandService
         };
 
         _unitOfWork.Documents.Update(document);
+        // To jest odpowiedź na pytanie "co jeśli baza się zapisała, ale publish do brokera nie wyszedł?".
+        // Nie publikujemy do RabbitMQ bezpośrednio po SaveChanges. Zapisujemy wpis do Outboxa w tej samej
+        // transakcji co zmianę biznesową, więc unikamy problemu dual-write.
         _integrationOutbox.Add(
             integrationEvent.MessageId,
             integrationEvent.CorrelationId,

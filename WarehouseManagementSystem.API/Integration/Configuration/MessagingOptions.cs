@@ -43,6 +43,7 @@ public class MessagingOptions
 
 public class RabbitMqOptions
 {
+    // BROKER CONFIGURATION: te pola konfigurują konkretny broker RabbitMQ.
     /// <summary>
     /// Gets or sets the hostname of the RabbitMQ server.
     /// </summary>
@@ -65,6 +66,7 @@ public class RabbitMqOptions
 
 public class ExchangeOptions
 {
+    // EXCHANGE CONFIGURATION: exchange to punkt wejścia dla publish, nie miejsce przechowywania wiadomości.
     /// <summary>
     /// Gets or sets the name of the exchange for WMS events.
     /// </summary>
@@ -78,6 +80,9 @@ public class ExchangeOptions
 
 public class ShippingConsumerOptions
 {
+    // QUEUE / ROUTING KEY CONFIGURATION:
+    // queue przechowuje wiadomości do odbioru,
+    // routing key pomaga exchange skierować wiadomość do właściwej queue.
     /// <summary>
     /// Gets or sets the name of the queue for confirmed shipping documents.
     /// </summary>
