@@ -192,7 +192,6 @@ builder.Services.AddTransient<IDocumentNumberGenerator, DocumentNumberGenerator>
 builder.Services.AddHostedService<DatabaseSeedingHostedService>();
 builder.Services.AddHostedService<ReservationExpirationJob>();
 builder.Services.AddHostedService<OutboxPublisherWorker>();
-builder.Services.AddHostedService<ShippingDocumentConfirmedConsumer>();
 builder.Services.AddSingleton<ISystemClock, SystemClock>();
 builder.Services.AddSingleton<IUserService, UserService>();
 

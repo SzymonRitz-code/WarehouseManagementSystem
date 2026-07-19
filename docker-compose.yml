@@ -102,6 +102,7 @@ services:
       Messaging__Enabled: "true"
       Messaging__PublishBatchSize: "20"
       Messaging__PublishPollIntervalSeconds: "5"
+      Messaging__PublishConfirmTimeoutSeconds: "10"
       Messaging__RabbitMq__HostName: "rabbitmq"
       Messaging__RabbitMq__Port: "5672"
       Messaging__RabbitMq__UserName: "guest"
@@ -112,6 +113,23 @@ services:
       - "8081:8443"
     volumes:
       - ./.certs/localhost.pfx:/https/localhost.pfx:ro
+
+  fake-shipping:
+    build:
+      context: .
+      dockerfile: WarehouseManagementSystem.FakeShipping/Dockerfile
+    container_name: wms-fake-shipping
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Shipping: "Data Source=/app/data/fake-shipping.db"
+      ShippingMessaging__HostName: "rabbitmq"
+      ShippingMessaging__Port: "5672"
+      ShippingMessaging__UserName: "guest"
+      ShippingMessaging__Password: "guest"
+    volumes:
+      - shipping-data:/app/data
 
   client:
     build:
@@ -133,3 +151,4 @@ services:
 
 volumes:
   sqlserver-data:
+  shipping-data:

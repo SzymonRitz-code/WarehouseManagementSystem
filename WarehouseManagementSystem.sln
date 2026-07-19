@@ -19,6 +19,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.Infrastructure", "WarehouseManagementSystem.Infrastructure\WarehouseManagementSystem.Infrastructure.csproj", "{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.FakeShipping", "WarehouseManagementSystem.FakeShipping\WarehouseManagementSystem.FakeShipping.csproj", "{E3B908A4-5A70-4E8B-BB63-689A868E1C2E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11CA0FA5-CD75-43D2-AE63-DBEEA7752684}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3B908A4-5A70-4E8B-BB63-689A868E1C2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3B908A4-5A70-4E8B-BB63-689A868E1C2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3B908A4-5A70-4E8B-BB63-689A868E1C2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3B908A4-5A70-4E8B-BB63-689A868E1C2E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

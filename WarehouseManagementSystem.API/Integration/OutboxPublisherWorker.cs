@@ -73,6 +73,7 @@ public class OutboxPublisherWorker : BackgroundService
         using var connection = _connectionFactory.CreateConnection();
         using var channel = connection.CreateModel();
         _topologyConfigurator.EnsureTopology(channel);
+        channel.ConfirmSelect();
 
         // TODO(RECRUITMENT): Wlacz publisher confirms i oznaczaj rekord jako Published dopiero po ACK brokera.
         // BasicPublish moze zakonczyc sie bez wyjatku, mimo ze broker nie utrwalil wiadomosci. Dodaj tez
@@ -120,6 +121,10 @@ public class OutboxPublisherWorker : BackgroundService
                     basicProperties: properties,
                     body: body);
 
+                // BasicPublish only writes to the client channel. A publisher confirm is the
+                // broker acknowledgement that lets us safely move the outbox row forward.
+                channel.WaitForConfirmsOrDie(TimeSpan.FromSeconds(_options.PublishConfirmTimeoutSeconds));
+
                 message.Status = OutboxMessageStatus.Published;
                 message.PublishedAt = DateTimeOffset.UtcNow;
                 message.LastError = null;
@@ -128,9 +133,7 @@ public class OutboxPublisherWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                message.Status = OutboxMessageStatus.Failed;
-                message.RetryCount++;
-                message.LastError = ex.Message;
+                OutboxMessageRetry.MarkFailed(message, ex);
                 // TODO(RECRUITMENT): Dodaj exponential backoff z jitterem, NextAttemptAt, MaxRetryCount
                 // oraz stan Dead/Abandoned. Po przekroczeniu progu wyslij alert zamiast retry bez konca.
                 // Prosty retry policy na poziomie outboxa: wiadomość zostaje w bazie jako Failed

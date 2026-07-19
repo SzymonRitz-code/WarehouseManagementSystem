@@ -25,6 +25,8 @@ public class MessagingOptions
     /// </summary>
     public int PublishPollIntervalSeconds { get; set; } = 5;
 
+    public int PublishConfirmTimeoutSeconds { get; set; } = 10;
+
     /// <summary>
     /// Gets or sets the RabbitMQ configuration options.
     /// </summary>

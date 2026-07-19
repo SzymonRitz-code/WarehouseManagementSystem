@@ -134,3 +134,16 @@ Known technical debt:
 - auth diagnostics still use console output.
 
 Before production hardening, move auth values to configuration, remove the certificate bypass, replace console diagnostics with structured logging and prefer the standard JWT bearer metadata/JWKS flow where possible.
+
+## Event-driven learning slice: WMS to FakeShipping
+
+`docker compose up -d --build` now starts SQL Server, RabbitMQ (management UI: http://localhost:15672, `guest` / `guest`), the WMS API and `fake-shipping`. FakeShipping stores its local state in the Docker volume `shipping-data`; it does not use the WMS database.
+
+Flow: confirm a document in WMS -> one SQL transaction saves the document and `OutboxMessages` -> WMS publisher sends a durable `document.confirmed` message to `wms.events` -> RabbitMQ delivers it to the durable `shipping.document-confirmed` queue -> FakeShipping atomically writes `FakeShipments` and `ProcessedMessages` to SQLite -> ACK.
+
+- Inspect the WMS outbox with authenticated `GET /api/integration/outbox` (latest 100 messages, including status, retry count and error).
+- Inspect RabbitMQ queues and the DLQ in the management UI.
+- For a local, non-Docker run start RabbitMQ/SQL with Compose, then run `dotnet run --project WarehouseManagementSystem.FakeShipping` and the API. The worker configuration is in each project's `appsettings.json`.
+- To demonstrate duplicate delivery, republish the same JSON payload in RabbitMQ with the original `MessageId`; FakeShipping logs a duplicate and leaves exactly one `FakeShipments` row.
+
+The delivery guarantee is at-least-once, not exactly-once: a crash after a broker confirm but before WMS records `Published` can produce a duplicate. The unique processed-message record makes that duplicate harmless for this consumer.
