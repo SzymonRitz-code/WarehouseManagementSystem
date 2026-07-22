@@ -83,7 +83,8 @@ public class OutboxPublisherWorker : BackgroundService
         var dbContext = scope.ServiceProvider.GetRequiredService<WarehouseManagementSystemDbContext>();
 
         var messages = await dbContext.OutboxMessages
-            .Where(x => x.Status == OutboxMessageStatus.Pending || x.Status == OutboxMessageStatus.Failed)
+            .Where(x => (x.Status == OutboxMessageStatus.Pending || x.Status == OutboxMessageStatus.Failed) &&
+                        (x.NextAttemptAt == null || x.NextAttemptAt <= DateTimeOffset.UtcNow))
             // TODO(RECRUITMENT): Przy wielu instancjach atomowo claimuj rekordy (np. Processing + lease,
             // SELECT ... FOR UPDATE SKIP LOCKED albo optimistic concurrency). Sam SELECT pozwala dwom
             // publisherom pobrac i opublikowac ten sam batch.
@@ -128,12 +129,13 @@ public class OutboxPublisherWorker : BackgroundService
                 message.Status = OutboxMessageStatus.Published;
                 message.PublishedAt = DateTimeOffset.UtcNow;
                 message.LastError = null;
+                message.NextAttemptAt = null;
 
                 _logger.LogInformation("Published outbox message {MessageId} ({Type}).", message.MessageId, message.Type);
             }
             catch (Exception ex)
             {
-                OutboxMessageRetry.MarkFailed(message, ex);
+                OutboxMessageRetry.MarkFailed(message, ex, _options.MaxPublishAttempts, _options.PublishRetryDelaySeconds);
                 // TODO(RECRUITMENT): Dodaj exponential backoff z jitterem, NextAttemptAt, MaxRetryCount
                 // oraz stan Dead/Abandoned. Po przekroczeniu progu wyslij alert zamiast retry bez konca.
                 // Prosty retry policy na poziomie outboxa: wiadomość zostaje w bazie jako Failed
@@ -141,7 +143,7 @@ public class OutboxPublisherWorker : BackgroundService
                 // limitu prób ani eskalacji do alertu - to jest miejsce, gdzie naturalnie dochodzi się do
                 // pytań o stuck messages i operacyjne monitorowanie.
 
-                _logger.LogWarning(ex, "Failed to publish outbox message {MessageId}.", message.MessageId);
+                _logger.LogWarning(ex, "Failed to publish outbox message {MessageId}; attempt {RetryCount}, status {Status}.", message.MessageId, message.RetryCount, message.Status);
             }
         }
 

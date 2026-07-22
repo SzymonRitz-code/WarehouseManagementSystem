@@ -493,6 +493,9 @@ namespace WarehouseManagementSystem.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("PublishedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset?>("NextAttemptAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<int>("RetryCount")
                         .HasColumnType("int");
 

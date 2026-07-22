@@ -91,6 +91,20 @@ public class ShippingDocumentConfirmedConsumer : BackgroundService
             // To odpowiada na pytanie "co robisz z wiadomością, której nie da się poprawnie przetworzyć?".
             // TODO(RECRUITMENT): Rozroznij bledy transient (timeout bazy/sieci -> retry z opoznieniem)
             // od permanentnych (zly JSON/kontrakt -> DLQ). Teraz kazdy wyjatek od razu trafia do DLQ.
+            var retries = ConsumerRetryPolicy.GetRetryCount(args.BasicProperties.Headers);
+            var retryPolicy = new ConsumerRetryPolicy(_options.Shipping.MaxRetryAttempts);
+            if (retryPolicy.ShouldRetry(retries))
+            {
+                var properties = CopyProperties(channel, args.BasicProperties);
+                properties.Headers[ConsumerRetryPolicy.RetryCountHeader] = retryPolicy.NextRetryCount(retries);
+                properties.Headers[ConsumerRetryPolicy.LastAttemptAtHeader] = DateTimeOffset.UtcNow.ToString("O");
+                channel.BasicPublish(_options.Shipping.DocumentConfirmedRetryExchange, _options.Shipping.DocumentConfirmedRoutingKey, properties, args.Body);
+                channel.BasicAck(args.DeliveryTag, multiple: false);
+                _logger.LogWarning("Shipping consumer scheduled retry {RetryCount} for MessageId {MessageId}.", retryPolicy.NextRetryCount(retries), args.BasicProperties.MessageId);
+                return;
+            }
+
+            _logger.LogError("Shipping consumer sent MessageId {MessageId} to DLQ after {RetryCount} retries.", args.BasicProperties.MessageId, retries);
             channel.BasicNack(args.DeliveryTag, multiple: false, requeue: false);
         };
 
@@ -172,7 +186,15 @@ public class ShippingDocumentConfirmedConsumer : BackgroundService
                 ProcessedAt = DateTimeOffset.UtcNow
             });
 
-            await dbContext.SaveChangesAsync(ct);
+            try
+            {
+                await dbContext.SaveChangesAsync(ct);
+            }
+            catch (DbUpdateException ex) when (IsProcessedMessageDuplicate(ex))
+            {
+                _logger.LogInformation("Shipping consumer skipped concurrently processed duplicate message {MessageId}.", message.MessageId);
+                return true;
+            }
             // TODO(RECRUITMENT): Dodaj AggregateVersion/Sequence do eventu i zapamietuj ostatnia wersje
             // per DocumentId. Zdefiniuj polityke dla luk: buforowanie, retry albo reconciliation.
             // TODO(RECRUITMENT): Dodaj okresowy reconciliation job porownujacy potwierdzone dokumenty WMS
@@ -196,5 +218,21 @@ public class ShippingDocumentConfirmedConsumer : BackgroundService
             _logger.LogError(ex, "Shipping consumer failed to handle a DocumentConfirmed message.");
             return false;
         }
+    }
+
+    private static bool IsProcessedMessageDuplicate(DbUpdateException exception) =>
+        exception.InnerException?.Message.Contains("IX_ProcessedMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
+        exception.InnerException?.Message.Contains("ProcessedMessages.Consumer, ProcessedMessages.MessageId", StringComparison.OrdinalIgnoreCase) == true;
+
+    private static IBasicProperties CopyProperties(IModel channel, IBasicProperties source)
+    {
+        var properties = channel.CreateBasicProperties();
+        properties.Persistent = true;
+        properties.MessageId = source.MessageId;
+        properties.Type = source.Type;
+        properties.CorrelationId = source.CorrelationId;
+        properties.Timestamp = source.Timestamp;
+        properties.Headers = source.Headers is null ? new Dictionary<string, object>() : new Dictionary<string, object>(source.Headers);
+        return properties;
     }
 }

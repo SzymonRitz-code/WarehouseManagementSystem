@@ -27,6 +27,10 @@ public class MessagingOptions
 
     public int PublishConfirmTimeoutSeconds { get; set; } = 10;
 
+    public int MaxPublishAttempts { get; set; } = 3;
+
+    public int PublishRetryDelaySeconds { get; set; } = 30;
+
     /// <summary>
     /// Gets or sets the RabbitMQ configuration options.
     /// </summary>
@@ -95,6 +99,10 @@ public class ShippingConsumerOptions
     /// </summary>
     public string DocumentConfirmedDeadLetterQueue { get; set; } = "shipping.document-confirmed.dlq";
 
+    public string DocumentConfirmedRetryQueue { get; set; } = "shipping.document-confirmed.retry";
+
+    public string DocumentConfirmedRetryExchange { get; set; } = "wms.events.retry";
+
     /// <summary>
     /// Gets or sets the routing key for confirmed shipping documents.
     /// </summary>
@@ -104,4 +112,8 @@ public class ShippingConsumerOptions
     /// Gets or sets the prefetch count for the shipping consumer, which determines how many messages can be fetched from the queue before acknowledging them.
     /// </summary>
     public ushort PrefetchCount { get; set; } = 10;
+
+    public int MaxRetryAttempts { get; set; } = 3;
+
+    public int RetryDelaySeconds { get; set; } = 10;
 }

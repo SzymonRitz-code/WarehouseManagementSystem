@@ -29,6 +29,7 @@ public class RabbitMqTopologyConfigurator : IRabbitMqTopologyConfigurator
         // EXCHANGE: exchange przyjmuje publish od publishera i kieruje wiadomości do queue.
         channel.ExchangeDeclare(_options.Exchanges.WmsEvents, ExchangeType.Direct, durable: true);
         channel.ExchangeDeclare(_options.Exchanges.DeadLetter, ExchangeType.Direct, durable: true);
+        channel.ExchangeDeclare(_options.Shipping.DocumentConfirmedRetryExchange, ExchangeType.Direct, durable: true);
         // Osobny DLX/DLQ daje miejsce na poison messages i analizę operacyjną zamiast cichego gubienia
         // błędnych wiadomości. To jest ważny element odpowiedzi na pytania o niezawodność integracji.
 
@@ -44,6 +45,22 @@ public class RabbitMqTopologyConfigurator : IRabbitMqTopologyConfigurator
         channel.QueueBind(
             queue: _options.Shipping.DocumentConfirmedDeadLetterQueue,
             exchange: _options.Exchanges.DeadLetter,
+            routingKey: _options.Shipping.DocumentConfirmedRoutingKey);
+
+        channel.QueueDeclare(
+            queue: _options.Shipping.DocumentConfirmedRetryQueue,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: new Dictionary<string, object>
+            {
+                ["x-message-ttl"] = _options.Shipping.RetryDelaySeconds * 1000,
+                ["x-dead-letter-exchange"] = _options.Exchanges.WmsEvents,
+                ["x-dead-letter-routing-key"] = _options.Shipping.DocumentConfirmedRoutingKey
+            });
+        channel.QueueBind(
+            queue: _options.Shipping.DocumentConfirmedRetryQueue,
+            exchange: _options.Shipping.DocumentConfirmedRetryExchange,
             routingKey: _options.Shipping.DocumentConfirmedRoutingKey);
 
         // QUEUE: to główna kolejka, z której consumer będzie odbierał wiadomości.
@@ -67,9 +84,5 @@ public class RabbitMqTopologyConfigurator : IRabbitMqTopologyConfigurator
             exchange: _options.Exchanges.WmsEvents,
             routingKey: _options.Shipping.DocumentConfirmedRoutingKey);
 
-        // TODO(RECRUITMENT): Dodaj kontrolowany replay DLQ z audytem i limitem prob. Nie przepinaj calej
-        // kolejki bez kontroli, bo poison message moze utworzyc petle awarii.
-        // TODO(RECRUITMENT): Dla bledow transient dodaj retry queues z TTL i dead-letteringiem z powrotem
-        // do kolejki glownej (np. 10 s, 1 min, 10 min). DLQ powinna byc koncem retry.
     }
 }

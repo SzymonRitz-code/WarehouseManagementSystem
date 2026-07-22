@@ -1,5 +1,9 @@
 # WarehouseManagementSystem
 
+[![CI](https://github.com/SzymonRitz-code/WarehouseManagementSystem/actions/workflows/ci.yml/badge.svg)](https://github.com/SzymonRitz-code/WarehouseManagementSystem/actions/workflows/ci.yml)
+
+Architecture decisions are recorded in [docs/adr](docs/adr/README.md). Messaging operations are described in [docs/messaging-operations.md](docs/messaging-operations.md).
+
 ## Backend stabilization
 
 Current stabilization scope:

@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+      - run: dotnet restore WarehouseManagementSystem.sln
+      - run: dotnet build WarehouseManagementSystem.sln --configuration Release --no-restore
+      - run: dotnet test WarehouseManagementSystem.sln --configuration Release --no-build --collect:"XPlat Code Coverage"

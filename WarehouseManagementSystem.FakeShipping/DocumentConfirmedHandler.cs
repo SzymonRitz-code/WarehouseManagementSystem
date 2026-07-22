@@ -28,7 +28,23 @@ public sealed class DocumentConfirmedHandler(ShippingDbContext db, ILogger<Docum
             ProcessedAt = DateTimeOffset.UtcNow
         });
 
-        await db.SaveChangesAsync(ct);
-        logger.LogInformation("FakeShipping created shipment for MessageId {MessageId}, CorrelationId {CorrelationId}", message.MessageId, message.CorrelationId);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            logger.LogInformation("FakeShipping created shipment for MessageId {MessageId}, CorrelationId {CorrelationId}", message.MessageId, message.CorrelationId);
+        }
+        catch (DbUpdateException ex) when (ProcessedMessageConflict.IsDuplicate(ex))
+        {
+            // Another consumer instance committed the same MessageId after our initial read.
+            // The database constraint is the final idempotency guard; treating this as handled is safe.
+            logger.LogInformation("FakeShipping skipped concurrently processed duplicate MessageId {MessageId}", message.MessageId);
+        }
     }
+}
+
+public static class ProcessedMessageConflict
+{
+    public static bool IsDuplicate(DbUpdateException exception) =>
+        exception.InnerException?.Message.Contains("IX_ProcessedMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
+        exception.InnerException?.Message.Contains("ProcessedMessages.Consumer, ProcessedMessages.MessageId", StringComparison.OrdinalIgnoreCase) == true;
 }

@@ -545,6 +545,9 @@ public class WarehouseManagementSystemDbContext : DbContext
         builder.Property(x => x.LastError)
                .HasMaxLength(2000);
 
+        builder.Property(x => x.NextAttemptAt)
+               .HasColumnType("datetimeoffset");
+
         builder.HasIndex(x => new { x.Status, x.OccurredAt });
         // Unikalny MessageId pozwala wykryć przypadkowe zdublowanie wpisu po stronie publishera.
         // To nie rozwiązuje jeszcze wszystkiego w stylu "message lost between systems", ale daje

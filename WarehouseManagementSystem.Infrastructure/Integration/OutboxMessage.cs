@@ -15,6 +15,7 @@ public class OutboxMessage
     public DateTimeOffset? PublishedAt { get; set; }
     public string Status { get; set; } = OutboxMessageStatus.Pending;
     public int RetryCount { get; set; }
+    public DateTimeOffset? NextAttemptAt { get; set; }
     public string? LastError { get; set; }
 }
 
@@ -26,4 +27,5 @@ public static class OutboxMessageStatus
     public const string Pending = "Pending";
     public const string Published = "Published";
     public const string Failed = "Failed";
+    public const string Abandoned = "Abandoned";
 }
