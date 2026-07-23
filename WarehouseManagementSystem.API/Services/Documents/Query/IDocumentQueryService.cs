@@ -26,9 +26,9 @@ public interface IDocumentQueryService
     /// </summary>
     /// <param name="documentId">Document identifier.</param>
     /// <param name="ct">Operation cancellation token.</param>
-    /// <returns>Document, or <c>null</c> if it does not exist.</returns>
+    /// <returns>Document DTO, or <c>null</c> if it does not exist.</returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
-    Task<Document?> GetByIdAsync(Guid documentId, CancellationToken ct = default);
+    Task<DocumentDto?> GetByIdAsync(Guid documentId, CancellationToken ct = default);
 
     /// <summary>
     /// Gets a document by number.
@@ -51,7 +51,7 @@ public interface IDocumentQueryService
     /// <param name="ct">Operation cancellation token.</param>
     /// <returns>List of documents with the specified type and status.</returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
-    Task<IReadOnlyList<Document>> GetByTypeAndStatusAsync(
+    Task<IReadOnlyList<DocumentListDto>> GetByTypeAndStatusAsync(
         DocumentType type,
         DocumentStatus status,
         CancellationToken ct = default);
@@ -62,7 +62,7 @@ public interface IDocumentQueryService
     /// <param name="ct">Operation cancellation token.</param>
     /// <returns>List of documents in Draft status.</returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
-    Task<IReadOnlyList<Document>> GetDraftsAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<DocumentListDto>> GetDraftsAsync(CancellationToken ct = default);
 
     /// <summary>
     /// Gets documents pending confirmation.
@@ -129,7 +129,7 @@ public interface IDocumentQueryService
     /// <param name="ct">Operation cancellation token.</param>
     /// <returns>List of recent documents limited by the <paramref name="take"/> parameter.</returns>
     /// <exception cref="OperationCanceledException">Thrown when the operation is canceled through <paramref name="ct"/>.</exception>
-    Task<IReadOnlyList<Document>> GetRecentAsync(
+    Task<IReadOnlyList<DocumentListDto>> GetRecentAsync(
         int take,
         CancellationToken ct = default);
 

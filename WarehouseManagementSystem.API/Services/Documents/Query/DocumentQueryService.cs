@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.Domain.Enums;
@@ -114,21 +114,48 @@ public class DocumentQueryService : IDocumentQueryService
 
     #region Document Lookup Operations
 
-    public async Task<Document?> GetByIdAsync(Guid documentId, CancellationToken ct = default)
+    public async Task<DocumentDto?> GetByIdAsync(Guid documentId, CancellationToken ct = default)
     {
         return await _context.Documents
-            .Include(d => d.SourceWarehouse)
-            .Include(d => d.TargetWarehouse)
-            .Include(d => d.Items)
-                .ThenInclude(i => i.Product)
-            .Include(d => d.Items)
-                .ThenInclude(i => i.ProductBatch)
-            .Include(d => d.Items)
-                .ThenInclude(i => i.SourceZone)
-            .Include(d => d.Items)
-                .ThenInclude(i => i.TargetZone)
+            .Where(d => d.Id == documentId)
+            .Select(d => new DocumentDto
+            {
+                Id = d.Id,
+                Number = d.Number,
+                Type = d.Type,
+                Status = d.Status,
+                DocumentDate = d.DocumentDate,
+                Notes = d.Notes,
+                CreatedAt = d.CreatedAt,
+                ConfirmedAt = d.ConfirmedAt,
+                TransferStartedAt = d.TransferStartedAt,
+                SourceWarehouseId = d.SourceWarehouseId ?? Guid.Empty,
+                SourceWarehouseName = d.SourceWarehouse != null ? d.SourceWarehouse.Name : null,
+                TargetWarehouseId = d.TargetWarehouseId,
+                TargetWarehouseName = d.TargetWarehouse != null ? d.TargetWarehouse.Name : null,
+                CreatedById = d.CreatedByUser != null ? d.CreatedByUser.Id : Guid.Empty,
+                CreatedByName = d.CreatedByUser != null ? d.CreatedByUser.Name : null,
+                CreatedByEmail = d.CreatedByUser != null ? d.CreatedByUser.Email : null,
+                ConfirmedById = d.ConfirmedByUser != null ? d.ConfirmedByUser.Id : (Guid?)null,
+                ConfirmedByName = d.ConfirmedByUser != null ? d.ConfirmedByUser.Name : null,
+                ConfirmedByEmail = d.ConfirmedByUser != null ? d.ConfirmedByUser.Email : null,
+                Items = d.Items.Select(i => new DocumentItemDto
+                {
+                    Id = i.Id,
+                    DocumentId = i.DocumentId,
+                    ProductId = i.ProductId,
+                    Quantity = i.Quantity,
+                    ProductBatchId = i.ProductBatchId,
+                    SourceZoneId = i.SourceZoneId,
+                    TargetZoneId = i.TargetZoneId,
+                    ProductName = i.Product != null ? i.Product.Name : string.Empty,
+                    ProductBatchNumber = i.ProductBatch != null ? i.ProductBatch.BatchNumber : null,
+                    SourceZoneName = i.SourceZone != null ? i.SourceZone.Name : null,
+                    TargetZoneName = i.TargetZone != null ? i.TargetZone.Name : null,
+                }).ToList()
+            })
             .AsNoTracking()
-            .FirstOrDefaultAsync(d => d.Id == documentId, ct);
+            .FirstOrDefaultAsync(ct);
     }
 
     public async Task<Document?> GetByNumberAsync(string number, CancellationToken ct = default)
@@ -209,24 +236,22 @@ public class DocumentQueryService : IDocumentQueryService
 
     #region Status and Workflow Query Operations
 
-    public async Task<IReadOnlyList<Document>> GetByTypeAndStatusAsync(
+    public async Task<IReadOnlyList<DocumentListDto>> GetByTypeAndStatusAsync(
         DocumentType type,
         DocumentStatus status,
         CancellationToken ct = default)
     {
-        return await _context.Documents
+        return await BuildDocumentListDtoQuery()
             .Where(d => d.Type == type && d.Status == status)
             .OrderByDescending(d => d.CreatedAt)
-            .AsNoTracking()
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Document>> GetDraftsAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<DocumentListDto>> GetDraftsAsync(CancellationToken ct = default)
     {
-        return await _context.Documents
+        return await BuildDocumentListDtoQuery()
             .Where(d => d.Status == DocumentStatus.Draft)
             .OrderByDescending(d => d.CreatedAt)
-            .AsNoTracking()
             .ToListAsync(ct);
     }
     [Obsolete]
@@ -354,14 +379,13 @@ public class DocumentQueryService : IDocumentQueryService
 
     #region Recent Query Operations
 
-    public async Task<IReadOnlyList<Document>> GetRecentAsync(
+    public async Task<IReadOnlyList<DocumentListDto>> GetRecentAsync(
         int take,
         CancellationToken ct = default)
     {
-        return await _context.Documents
+        return await BuildDocumentListDtoQuery()
             .OrderByDescending(d => d.CreatedAt)
             .Take(take)
-            .AsNoTracking()
             .ToListAsync(ct);
     }
 
@@ -477,6 +501,53 @@ public class DocumentQueryService : IDocumentQueryService
         public string? ApprovedBy { get; init; }
         public DateTimeOffset CreatedAt { get; init; }
         public DateTimeOffset? ApprovedAt { get; init; }
+    }
+
+    /// <summary>
+    /// Reusable EF projection to DocumentListDto. Used by GetByTypeAndStatus, GetDrafts, GetRecent.
+    /// Keeps controller free of AutoMapper and keeps all projection logic in one place.
+    /// </summary>
+    private IQueryable<DocumentListDto> BuildDocumentListDtoQuery()
+    {
+        return (from document in _context.Documents.AsNoTracking()
+                join sourceWarehouse in _context.Warehouses.AsNoTracking()
+                    on document.SourceWarehouseId equals sourceWarehouse.Id into sourceJoin
+                from sourceWarehouse in sourceJoin.DefaultIfEmpty()
+                join targetWarehouse in _context.Warehouses.AsNoTracking()
+                    on document.TargetWarehouseId equals targetWarehouse.Id into targetJoin
+                from targetWarehouse in targetJoin.DefaultIfEmpty()
+                join item in _context.DocumentItems.AsNoTracking()
+                    on document.Id equals item.DocumentId into itemJoin
+                group new { document, sourceWarehouse, targetWarehouse, itemJoin }
+                by new
+                {
+                    document.Id,
+                    Number = document.Number,
+                    document.Type,
+                    document.Status,
+                    SourceWarehouse = sourceWarehouse != null ? sourceWarehouse.Name : string.Empty,
+                    DestinationWarehouse = targetWarehouse != null ? targetWarehouse.Name : null,
+                    CreatedBy = document.CreatedByUser != null ? document.CreatedByUser.Name : null,
+                    ApprovedBy = document.ConfirmedByUser != null ? document.ConfirmedByUser.Name : null,
+                    document.CreatedAt,
+                    ApprovedAt = document.ConfirmedAt
+                }
+                into g
+                select new DocumentListDto
+                {
+                    Id = g.Key.Id,
+                    DocumentNumber = g.Key.Number,
+                    Type = g.Key.Type,
+                    Status = g.Key.Status,
+                    SourceWarehouse = g.Key.SourceWarehouse,
+                    DestinationWarehouse = g.Key.DestinationWarehouse,
+                    CreatedBy = g.Key.CreatedBy,
+                    ApprovedBy = g.Key.ApprovedBy,
+                    CreatedAt = g.Key.CreatedAt,
+                    ApprovedAt = g.Key.ApprovedAt,
+                    ItemCount = g.SelectMany(x => x.itemJoin).Count(),
+                    TotalQuantity = g.SelectMany(x => x.itemJoin).Sum(i => (decimal?)i.Quantity) ?? 0
+                });
     }
 
     #endregion

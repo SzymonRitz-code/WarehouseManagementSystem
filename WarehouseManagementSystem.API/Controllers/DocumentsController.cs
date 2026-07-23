@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using WarehouseManagementSystem.API.DTO;
 using WarehouseManagementSystem.API.Services.Documents.Command;
 using WarehouseManagementSystem.API.Services.Documents.Query;
@@ -17,7 +18,8 @@ namespace WarehouseManagementSystem.API.Controllers;
 // które mają być dostępne bez uwierzytelnienia.
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class DocumentsController : ControllerBase
 {
     #region Fields and Constructor
@@ -87,7 +89,7 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<DocumentDto>> GetDocumentById(Guid documentId, CancellationToken ct = default)
     {
         var document = await _queryService.GetByIdAsync(documentId, ct);
-        return document == null ? (ActionResult<DocumentDto>)NotFound() : (ActionResult<DocumentDto>)Ok(_mapper.Map<DocumentDto>(document));
+        return document == null ? NotFound() : Ok(document);
     }
 
     #endregion
@@ -106,16 +108,6 @@ public class DocumentsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<DocumentDto>> CreateDocument([FromBody] CreateDocumentDto documentDto, CancellationToken ct = default)
     {
-        if (documentDto.Items == null || !documentDto.Items.Any())
-        {
-            ModelState.AddModelError(nameof(documentDto.Items), "Document must have at least one item.");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
-
         // Mapujemy DTO → ValueObject (DocumentItemDraft)
         var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(
             productId: i.ProductId,
@@ -169,16 +161,6 @@ public class DocumentsController : ControllerBase
             return BadRequest("Route ID and body ID mismatch.");
         }
 
-        if (documentDto.Items == null || !documentDto.Items.Any())
-        {
-            ModelState.AddModelError(nameof(documentDto.Items), "Document must have at least one item.");
-        }
-
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
-
         // Mapujemy DTO → ValueObject (DocumentItemDraft)
         var itemDrafts = documentDto.Items.Select(i => new DocumentItemDraft(
             productId: i.ProductId,
@@ -223,10 +205,6 @@ public class DocumentsController : ControllerBase
     [HttpPut("{documentId}/confirm")]
     public async Task<IActionResult> ConfirmDocument(Guid documentId, CancellationToken ct = default)
     {
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
         // Coś w stylu User.Identity.Name
         try
         {
@@ -248,11 +226,6 @@ public class DocumentsController : ControllerBase
     [HttpPut("{documentId}/cancel")]
     public async Task<IActionResult> CancelDocument(Guid documentId, CancellationToken ct = default)
     {
-        if (!ModelState.IsValid)
-        {
-            return ValidationProblem(ModelState);
-        }
-
         try
         {
             await _commandService.CancelDocumentAsync(documentId, _userService.GetUser(HttpContext), ct);
@@ -290,7 +263,7 @@ public class DocumentsController : ControllerBase
         }
 
         var documents = await _queryService.GetByTypeAndStatusAsync(docType, docStatus, ct);
-        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(documents));
+        return Ok(documents);
     }
 
     /// <summary>
@@ -303,7 +276,7 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetDrafts(CancellationToken ct = default)
     {
         var drafts = await _queryService.GetDraftsAsync(ct);
-        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(drafts));
+        return Ok(drafts);
     }
 
 
@@ -318,7 +291,7 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<IEnumerable<DocumentDto>>> GetRecent([FromQuery] int take = 10, CancellationToken ct = default)
     {
         var recent = await _queryService.GetRecentAsync(take, ct);
-        return Ok(_mapper.Map<IEnumerable<DocumentDto>>(recent));
+        return Ok(recent);
     }
 
     #endregion
