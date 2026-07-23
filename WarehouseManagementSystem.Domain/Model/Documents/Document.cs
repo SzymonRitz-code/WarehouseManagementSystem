@@ -1,4 +1,5 @@
 using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Events;
 using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
@@ -72,12 +73,14 @@ namespace WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 /// - Repository: Talk to aggregates through repository, never directly (hidden behind IDocumentRepository)
 /// - Event: Immutable record of something that happened (DocumentConfirmedEvent)
 /// </summary>
-public class Document
+public class Document : IHasDomainEvents
 {
     #region Fields and Constructors
 
     private const int MaxNumberLength = 50;
     private const int MaxNotesLength = 1000;
+
+    private readonly List<IDomainEvent> _domainEvents = new();
 
     /// <summary>
     /// PRIVATE collection ensures external code CANNOT directly add/remove items.
@@ -208,6 +211,18 @@ public class Document
     /// This ensures business rules (e.g., non-empty check in Confirm) are always enforced.
     /// </summary>
     public IReadOnlyCollection<DocumentItem> Items => _items.AsReadOnly();
+
+    /// <inheritdoc />
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+    #endregion
+
+    #region Domain Event Helpers
+
+    private void AddDomainEvent(IDomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+
+    /// <inheritdoc />
+    public void ClearDomainEvents() => _domainEvents.Clear();
 
     #endregion
 
@@ -409,16 +424,14 @@ public class Document
         ConfirmedByUser = confirmedByUser;
         ConfirmedAt = DateTimeOffset.UtcNow;
 
-        // NOTE: In WMS architecture, domain events are added manually here:
-        // AddDomainEvent(new DocumentConfirmedEvent(this));
-        // 
-        // Then in CommandService:
-        // await _eventPublisher.PublishAsync(new DocumentConfirmedEvent(document));
-        //
-        // COMPARISON with DDD-Fundamentals:
-        // In DDD-Fundamentals, event would be auto-tracked in SaveChangesAsync():
-        // Events.Add(new DocumentConfirmedEvent(this));
-        // // DbContext.SaveChangesAsync() auto-publishes via MediatR
+        AddDomainEvent(new DocumentConfirmedDomainEvent(
+            documentId: Id,
+            documentNumber: Number ?? string.Empty,
+            documentType: Type.ToString(),
+            sourceWarehouseId: SourceWarehouseId ?? Guid.Empty,
+            targetWarehouseId: TargetWarehouseId,
+            confirmedBy: confirmedByUser,
+            occurredAt: ConfirmedAt.Value));
     }
 
     /// <summary>
@@ -462,6 +475,11 @@ public class Document
         Status = DocumentStatus.Cancelled;
         CancelledAt = DateTimeOffset.UtcNow;
         CancelledByUser = cancelledByUser;
+
+        AddDomainEvent(new DocumentCancelledDomainEvent(
+            documentId: Id,
+            cancelledBy: cancelledByUser,
+            occurredAt: CancelledAt.Value));
     }
 
     #endregion

@@ -1,6 +1,8 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
+using WarehouseManagementSystem.Domain.Events;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
 using WarehouseManagementSystem.Infrastructure.Persistence.Repositories;
@@ -158,6 +160,7 @@ public class UnitOfWork : IUnitOfWork
     /// All repositories share this context to ensure transactional consistency.
     /// </summary>
     private readonly WarehouseManagementSystemDbContext _context;
+    private readonly ILogger<UnitOfWork> _logger;
 
     /// <summary>
     /// REPOSITORY INSTANCES - One per aggregate root.
@@ -186,9 +189,10 @@ public class UnitOfWork : IUnitOfWork
     /// doc.Confirm(user);
     /// await uow.SaveChangesAsync(); // All changes atomic
     /// </summary>
-    public UnitOfWork(WarehouseManagementSystemDbContext context)
+    public UnitOfWork(WarehouseManagementSystemDbContext context, ILogger<UnitOfWork> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _auditLogRepository = new AuditLogRepository(_context);
         _productRepository = new ProductRepository(_context);
         _productBatchRepository = new ProductBatchRepository(_context);
@@ -296,9 +300,37 @@ public class UnitOfWork : IUnitOfWork
     /// - DDD: SaveChangesAsync() auto-publishes events (MediatR integration)
     /// - WMS: SaveChangesAsync() just persists, event publishing is separate
     /// </summary>
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return _context.SaveChangesAsync(cancellationToken);
+        DispatchDomainEvents();
+        return await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Collects domain events from all tracked aggregates, logs them, and clears the event queues.
+    /// Called before every SaveChangesAsync to ensure events are visible in logs/tracing.
+    /// </summary>
+    private void DispatchDomainEvents()
+    {
+        var aggregatesWithEvents = _context.ChangeTracker
+            .Entries<IHasDomainEvents>()
+            .Where(e => e.Entity.DomainEvents.Count > 0)
+            .Select(e => e.Entity)
+            .ToList();
+
+        foreach (var aggregate in aggregatesWithEvents)
+        {
+            foreach (var domainEvent in aggregate.DomainEvents)
+            {
+                _logger.LogInformation(
+                    "Domain event raised: {EventType} | EventId={EventId} | OccurredAt={OccurredAt}",
+                    domainEvent.GetType().Name,
+                    domainEvent.EventId,
+                    domainEvent.OccurredAt);
+            }
+
+            aggregate.ClearDomainEvents();
+        }
     }
 
     /// <summary>
