@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
@@ -134,7 +134,7 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
     {
         // Arrange
         var warehouse = CreateWarehouse();
-        warehouse.Stocks = [CreateStock(warehouse.Id, Guid.NewGuid())];
+        AddStockToWarehouse(warehouse, CreateStock(warehouse.Id, Guid.NewGuid()));
 
         // Act
         Action act = () => warehouse.Deactivate();
@@ -220,4 +220,11 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
     /// <returns>A new instance of the <see cref="Stock"/> class.</returns>
     private Stock CreateStock(Guid warehouseId, Guid zoneId)
         => new(_productId, warehouseId, zoneId, null, 10);
+
+    private static void AddStockToWarehouse(Warehouse warehouse, Stock stock)
+    {
+        var field = typeof(Warehouse).GetField("_stocks",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        ((List<Stock>)field.GetValue(warehouse)!).Add(stock);
+    }
 }

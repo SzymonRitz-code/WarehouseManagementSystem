@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
@@ -102,14 +102,11 @@ public class WarehouseTests(DomainTestFixture fixture) : IClassFixture<DomainTes
         act.Should().Throw<InvalidOperationException>().WithMessage("*active zones*");
     }
 
-    /// <summary>
-    /// Tests that the Deactivate method throws an InvalidOperationException when there are stocks in the warehouse.
-    /// </summary>
     [Fact]
     public void Deactivate_ShouldThrow_WhenStocksExist()
     {
         var warehouse = CreateWarehouse();
-        warehouse.Stocks = [CreateStock(warehouse.Id, Guid.NewGuid())];
+        AddStockToWarehouse(warehouse, CreateStock(warehouse.Id, Guid.NewGuid()));
 
         Action act = () => warehouse.Deactivate();
         act.Should().Throw<InvalidOperationException>().WithMessage("*containing stock*");
@@ -234,5 +231,16 @@ public class WarehouseTests(DomainTestFixture fixture) : IClassFixture<DomainTes
     private static Stock CreateStock(Guid warehouseId, Guid zoneId)
     {
         return new(Guid.NewGuid(), warehouseId, zoneId, null, 10);
+    }
+
+    /// <summary>
+    /// Uses reflection to insert a stock entry into the warehouse's private backing list,
+    /// simulating the state that EF Core would produce after loading from the database.
+    /// </summary>
+    private static void AddStockToWarehouse(Warehouse warehouse, Stock stock)
+    {
+        var field = typeof(Warehouse).GetField("_stocks",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        ((List<Stock>)field.GetValue(warehouse)!).Add(stock);
     }
 }

@@ -1,4 +1,4 @@
-﻿using WarehouseManagementSystem.Domain.Enums;
+using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;
@@ -47,9 +47,13 @@ public class Warehouse
 
     public IReadOnlyCollection<WarehouseZone> Zones => _zones.AsReadOnly();
 
-    public ICollection<Document> SourceDocuments { get; set; }
-    public ICollection<Document> TargetDocuments { get; set; }
-    public ICollection<Stock> Stocks { get; set; }
+    private readonly List<Document> _sourceDocuments = new();
+    private readonly List<Document> _targetDocuments = new();
+    private readonly List<Stock> _stocks = new();
+
+    public IReadOnlyCollection<Document> SourceDocuments => _sourceDocuments.AsReadOnly();
+    public IReadOnlyCollection<Document> TargetDocuments => _targetDocuments.AsReadOnly();
+    public IReadOnlyCollection<Stock> Stocks => _stocks.AsReadOnly();
 
     #endregion
 
@@ -114,20 +118,14 @@ public class Warehouse
             return;
         }
 
-        if (_zones != null)
+        if (_zones.Any())
         {
-            if (_zones.Any())
-            {
-                throw new InvalidOperationException("Cannot deactivate warehouse with active zones.");
-            }
+            throw new InvalidOperationException("Cannot deactivate warehouse with active zones.");
         }
 
-        if (Stocks != null)
+        if (_stocks.Any())
         {
-            if (Stocks.Any())
-            {
-                throw new InvalidOperationException("Cannot deactivate warehouse containing stock.");
-            }
+            throw new InvalidOperationException("Cannot deactivate warehouse containing stock.");
         }
 
         IsActive = false;
