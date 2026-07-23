@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+using AutoMapper;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
@@ -11,7 +12,8 @@ namespace WarehouseManagementSystem.API.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class ProductsController : ControllerBase
 {
     #region Fields and Constructor
@@ -102,10 +104,6 @@ public class ProductsController : ControllerBase
         if (_productCommandService.SkuExists(productDto.Sku!, ct: ct))
         {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
-        }
-
-        if (!ModelState.IsValid)
-        {
             return ValidationProblem(ModelState);
         }
 
@@ -141,10 +139,6 @@ public class ProductsController : ControllerBase
         if (_productCommandService.SkuExists(productDto.Sku!, productId, ct))
         {
             ModelState.AddModelError(nameof(productDto.Sku), "Sku already exists");
-        }
-
-        if (!ModelState.IsValid)
-        {
             return ValidationProblem(ModelState);
         }
 
