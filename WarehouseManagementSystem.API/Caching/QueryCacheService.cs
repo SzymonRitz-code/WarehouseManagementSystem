@@ -17,7 +17,7 @@ public sealed class QueryCacheService : IQueryCacheService
         WriteIndented = false
     };
 
-    private static readonly ConcurrentDictionary<string, SemaphoreSlim> KeyLocks = new();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _keyLocks = new();
 
     private readonly IDistributedCache _cache;
     private readonly ICacheRegionGenerationStore _generationStore;
@@ -76,7 +76,7 @@ public sealed class QueryCacheService : IQueryCacheService
 
         _logger.LogDebug("Cache miss for region {Region}", region);
 
-        var gate = KeyLocks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        var gate = _keyLocks.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
         var lockTimeout = TimeSpan.FromMilliseconds(Math.Max(500, _options.OperationTimeoutMs));
         var lockAcquired = await gate.WaitAsync(lockTimeout, ct);
 

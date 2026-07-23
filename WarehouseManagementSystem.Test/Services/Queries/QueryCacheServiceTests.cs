@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 using WarehouseManagementSystem.API.Caching;
 
 namespace WarehouseManagementSystem.Tests.Services.Queries;
@@ -130,9 +131,14 @@ public class QueryCacheServiceTests
 
     private sealed record PagedResultLike(int Count);
 
+    /// <summary>
+    /// Thread-safe in-memory IDistributedCache backed by a ConcurrentDictionary.
+    /// Needed so stampede-protection tests observe correct read-after-write behaviour
+    /// when multiple tasks race concurrently.
+    /// </summary>
     private sealed class TestDistributedCache : IDistributedCache
     {
-        private readonly Dictionary<string, byte[]> _store = new(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, byte[]> _store = new(StringComparer.Ordinal);
 
         public byte[]? Get(string key)
         {
@@ -141,23 +147,14 @@ public class QueryCacheServiceTests
         }
 
         public Task<byte[]?> GetAsync(string key, CancellationToken token = default)
-        {
-            return Task.FromResult(Get(key));
-        }
+            => Task.FromResult(Get(key));
 
-        public void Refresh(string key)
-        {
-        }
+        public void Refresh(string key) { }
 
         public Task RefreshAsync(string key, CancellationToken token = default)
-        {
-            return Task.CompletedTask;
-        }
+            => Task.CompletedTask;
 
-        public void Remove(string key)
-        {
-            _store.Remove(key);
-        }
+        public void Remove(string key) => _store.TryRemove(key, out _);
 
         public Task RemoveAsync(string key, CancellationToken token = default)
         {
@@ -166,9 +163,7 @@ public class QueryCacheServiceTests
         }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
-        {
-            _store[key] = value;
-        }
+            => _store[key] = value;
 
         public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
         {
