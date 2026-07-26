@@ -3,8 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using WarehouseManagementSystem.API.Integration;
-using WarehouseManagementSystem.API.Integration.Contracts;
+using WarehouseManagementSystem.Contracts;
 
 namespace WarehouseManagementSystem.FakeShipping;
 
@@ -39,14 +38,14 @@ public sealed class ShippingConsumerWorker(
             }
             catch (Exception ex)
             {
-                var retries = ConsumerRetryPolicy.GetRetryCount(delivery.BasicProperties.Headers);
-                var policy = new ConsumerRetryPolicy(_options.MaxRetryAttempts);
+                var retries = ShippingConsumerRetryPolicy.GetRetryCount(delivery.BasicProperties.Headers);
+                var policy = new ShippingConsumerRetryPolicy(_options.MaxRetryAttempts);
                 if (policy.ShouldRetry(retries))
                 {
                     var properties = CopyProperties(channel, delivery.BasicProperties);
-                    properties.Headers[ConsumerRetryPolicy.RetryCountHeader] = policy.NextRetryCount(retries);
-                    properties.Headers[ConsumerRetryPolicy.LastErrorHeader] = ex.Message;
-                    properties.Headers[ConsumerRetryPolicy.LastAttemptAtHeader] = DateTimeOffset.UtcNow.ToString("O");
+                    properties.Headers[ShippingConsumerRetryPolicy.RetryCountHeader] = policy.NextRetryCount(retries);
+                    properties.Headers[ShippingConsumerRetryPolicy.LastErrorHeader] = ex.Message;
+                    properties.Headers[ShippingConsumerRetryPolicy.LastAttemptAtHeader] = DateTimeOffset.UtcNow.ToString("O");
                     channel.BasicPublish(_options.RetryExchange, _options.RoutingKey, properties, delivery.Body);
                     channel.BasicAck(delivery.DeliveryTag, false);
                     logger.LogWarning(ex, "FakeShipping scheduled retry {RetryCount} for MessageId {MessageId}", policy.NextRetryCount(retries), delivery.BasicProperties.MessageId);
