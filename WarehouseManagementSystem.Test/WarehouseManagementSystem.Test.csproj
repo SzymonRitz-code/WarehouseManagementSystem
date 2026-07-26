@@ -29,10 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WarehouseManagementSystem.Contracts\WarehouseManagementSystem.Contracts.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.API\WarehouseManagementSystem.API.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.Domain\WarehouseManagementSystem.Domain.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.Infrastructure\WarehouseManagementSystem.Infrastructure.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.FakeShipping\WarehouseManagementSystem.FakeShipping.csproj" />
+    <ProjectReference Include="..\WarehouseManagementSystem.FakeBilling\WarehouseManagementSystem.FakeBilling.csproj" />
   </ItemGroup>
 
   <ItemGroup>

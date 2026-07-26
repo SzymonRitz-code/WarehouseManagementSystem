@@ -9,3 +9,9 @@ On a consumer error, the delivery is copied to `wms.events.retry` with `x-wms-re
 Use the RabbitMQ management UI to inspect the DLQ. Its message properties and headers identify the original message, retry count and final error. To replay manually, republish the original payload and properties to `wms.events` with routing key `document.confirmed`. Preserve the original `MessageId`: changing it would bypass idempotency and can repeat the business effect. No automatic DLQ replay is provided.
 
 This design does not provide exactly-once delivery. A crash after a durable database commit but before ACK can redeliver a message; the idempotent consumer makes that safe. A crash after RabbitMQ confirms publishing but before the outbox status update can also republish an event.
+
+## Billing demonstration
+
+Shipping owns `shipping.document-confirmed`, `.retry` and `.dlq`. Billing independently owns `billing.document-confirmed`, `.retry` and `.dlq`; after three retries, a Billing delivery is routed to `billing.document-confirmed.dlq`. WMS only declares `wms.events` and the shared dead-letter exchange. Each consumer declares its own queues.
+
+`FakeBilling` consumes `document.confirmed` into its own SQLite database. Only a `WZ` is eligible: another document type is marked in `ProcessedMessages`, logged as `ignored`, and ACKed without an invoice. The invoice and processed-message marker are committed in one local transaction. `(Consumer, MessageId)` gives technical idempotency. The unique `FakeInvoices.SourceDocumentId` is the business guard: a second, different event for the same WMS document logs `duplicate` and cannot create another invoice.

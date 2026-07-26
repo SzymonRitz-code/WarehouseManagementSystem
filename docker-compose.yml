@@ -131,6 +131,23 @@ services:
     volumes:
       - shipping-data:/app/data
 
+  fake-billing:
+    build:
+      context: .
+      dockerfile: WarehouseManagementSystem.FakeBilling/Dockerfile
+    container_name: wms-fake-billing
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Billing: "Data Source=/app/data/fake-billing.db"
+      BillingMessaging__HostName: "rabbitmq"
+      BillingMessaging__Port: "5672"
+      BillingMessaging__UserName: "guest"
+      BillingMessaging__Password: "guest"
+    volumes:
+      - billing-data:/app/data
+
   client:
     build:
       context: WarehouseManagementSystemClient
@@ -152,3 +169,4 @@ services:
 volumes:
   sqlserver-data:
   shipping-data:
+  billing-data:
