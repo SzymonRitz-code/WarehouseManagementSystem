@@ -1,7 +1,7 @@
 using System.Data;
 using WarehouseManagementSystem.API.Caching;
  using WarehouseManagementSystem.API.Integration;
-using WarehouseManagementSystem.API.Integration.Contracts;
+using WarehouseManagementSystem.Contracts;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
 using WarehouseManagementSystem.Domain.Enums;

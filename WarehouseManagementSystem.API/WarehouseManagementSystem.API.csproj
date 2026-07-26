@@ -41,6 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WarehouseManagementSystem.Contracts\WarehouseManagementSystem.Contracts.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.Domain\WarehouseManagementSystem.Domain.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.Infrastructure\WarehouseManagementSystem.Infrastructure.csproj" />
   </ItemGroup>

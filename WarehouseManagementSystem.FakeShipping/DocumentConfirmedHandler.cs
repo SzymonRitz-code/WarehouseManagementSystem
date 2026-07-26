@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using WarehouseManagementSystem.API.Integration.Contracts;
+using WarehouseManagementSystem.Contracts;
 
 namespace WarehouseManagementSystem.FakeShipping;
 

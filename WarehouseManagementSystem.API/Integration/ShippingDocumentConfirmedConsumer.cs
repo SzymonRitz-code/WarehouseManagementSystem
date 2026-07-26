@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using WarehouseManagementSystem.API.Integration.Configuration;
-using WarehouseManagementSystem.API.Integration.Contracts;
+using WarehouseManagementSystem.Contracts;
 using WarehouseManagementSystem.Infrastructure.Integration;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 

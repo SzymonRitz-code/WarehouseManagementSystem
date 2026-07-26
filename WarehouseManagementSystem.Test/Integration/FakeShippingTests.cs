@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using WarehouseManagementSystem.API.Integration.Contracts;
+using WarehouseManagementSystem.Contracts;
 using WarehouseManagementSystem.FakeShipping;
 
 namespace WarehouseManagementSystem.Test.Integration;
