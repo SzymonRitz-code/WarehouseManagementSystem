@@ -12,5 +12,8 @@ builder.Services.AddHostedService<BillingConsumerWorker>();
 
 var host = builder.Build();
 using (var scope = host.Services.CreateScope())
+{
     await scope.ServiceProvider.GetRequiredService<BillingDbContext>().Database.EnsureCreatedAsync();
+}
+
 await host.RunAsync();

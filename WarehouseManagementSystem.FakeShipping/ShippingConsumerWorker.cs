@@ -40,19 +40,28 @@ public sealed class ShippingConsumerWorker(
             {
                 var retries = ShippingConsumerRetryPolicy.GetRetryCount(delivery.BasicProperties.Headers);
                 var policy = new ShippingConsumerRetryPolicy(_options.MaxRetryAttempts);
+
                 if (policy.ShouldRetry(retries))
                 {
                     var properties = CopyProperties(channel, delivery.BasicProperties);
                     properties.Headers[ShippingConsumerRetryPolicy.RetryCountHeader] = policy.NextRetryCount(retries);
                     properties.Headers[ShippingConsumerRetryPolicy.LastErrorHeader] = ex.Message;
                     properties.Headers[ShippingConsumerRetryPolicy.LastAttemptAtHeader] = DateTimeOffset.UtcNow.ToString("O");
+
                     channel.BasicPublish(_options.RetryExchange, _options.RoutingKey, properties, delivery.Body);
                     channel.BasicAck(delivery.DeliveryTag, false);
-                    logger.LogWarning(ex, "FakeShipping scheduled retry {RetryCount} for MessageId {MessageId}", policy.NextRetryCount(retries), delivery.BasicProperties.MessageId);
+
+                    logger.LogWarning(ex,
+                        "FakeShipping scheduled retry {RetryCount} for MessageId {MessageId}",
+                        policy.NextRetryCount(retries), delivery.BasicProperties.MessageId);
+
                     return;
                 }
 
-                logger.LogError(ex, "FakeShipping sent MessageId {MessageId} to DLQ after {RetryCount} retries", delivery.BasicProperties.MessageId, retries);
+                logger.LogError(ex, 
+                    "FakeShipping sent MessageId {MessageId} to DLQ after {RetryCount} retries",
+                    delivery.BasicProperties.MessageId, retries);
+
                 channel.BasicNack(delivery.DeliveryTag, false, requeue: false);
             }
         };

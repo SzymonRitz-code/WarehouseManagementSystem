@@ -11,7 +11,9 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
     {
         if (await db.ProcessedMessages.AnyAsync(x => x.Consumer == ConsumerName && x.MessageId == message.MessageId, ct))
         {
-            logger.LogInformation("FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}", message.MessageId, message.CorrelationId, message.DocumentId);
+            logger.LogInformation(
+                "FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
+                message.MessageId, message.CorrelationId, message.DocumentId);
             return BillingDecision.Duplicate;
         }
 
@@ -21,7 +23,9 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
             db.ProcessedMessages.Add(Processed(message));
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
-            logger.LogInformation("FakeBilling decision ignored. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}", message.MessageId, message.CorrelationId, message.DocumentId);
+            logger.LogInformation(
+                "FakeBilling decision ignored. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
+                message.MessageId, message.CorrelationId, message.DocumentId);
             return BillingDecision.Ignored;
         }
 
@@ -30,7 +34,9 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
             db.ProcessedMessages.Add(Processed(message));
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
-            logger.LogInformation("FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}", message.MessageId, message.CorrelationId, message.DocumentId);
+            logger.LogInformation(
+                "FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
+                message.MessageId, message.CorrelationId, message.DocumentId);
             return BillingDecision.Duplicate;
         }
 
@@ -49,34 +55,43 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
         {
             await db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
-            logger.LogInformation("FakeBilling decision created. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}", message.MessageId, message.CorrelationId, message.DocumentId);
+            logger.LogInformation(
+                "FakeBilling decision created. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
+                message.MessageId, message.CorrelationId, message.DocumentId);
             return BillingDecision.Created;
         }
         catch (DbUpdateException ex) when (BillingConflict.IsDuplicate(ex))
         {
             await transaction.RollbackAsync(ct);
             db.ChangeTracker.Clear();
-            logger.LogInformation("FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}", message.MessageId, message.CorrelationId, message.DocumentId);
+            logger.LogInformation(
+                "FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
+                message.MessageId, message.CorrelationId, message.DocumentId);
             return BillingDecision.Duplicate;
         }
     }
 
-    private static ProcessedMessage Processed(DocumentConfirmedIntegrationEvent message) => new()
+    private static ProcessedMessage Processed(DocumentConfirmedIntegrationEvent message)
     {
-        Id = Guid.NewGuid(),
-        Consumer = ConsumerName,
-        MessageId = message.MessageId,
-        MessageType = nameof(DocumentConfirmedIntegrationEvent),
-        CorrelationId = message.CorrelationId,
-        ProcessedAt = DateTimeOffset.UtcNow
-    };
+        return new()
+        {
+            Id = Guid.NewGuid(),
+            Consumer = ConsumerName,
+            MessageId = message.MessageId,
+            MessageType = nameof(DocumentConfirmedIntegrationEvent),
+            CorrelationId = message.CorrelationId,
+            ProcessedAt = DateTimeOffset.UtcNow
+        };
+    }
 }
 
 public enum BillingDecision { Created, Duplicate, Ignored }
 
 public static class BillingConflict
 {
-    public static bool IsDuplicate(DbUpdateException exception) =>
-        exception.InnerException?.Message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase) == true ||
+    public static bool IsDuplicate(DbUpdateException exception)
+    {
+        return exception.InnerException?.Message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase) == true ||
         exception.InnerException?.Message.Contains("IX_", StringComparison.OrdinalIgnoreCase) == true;
+    }
 }
