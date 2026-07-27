@@ -1,17 +1,19 @@
 using System.Data;
+using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.API.Caching;
- using WarehouseManagementSystem.API.Integration;
-using WarehouseManagementSystem.Contracts;
-using WarehouseManagementSystem.API.Services.AuditLogs.Command;
+using WarehouseManagementSystem.API.Integration;
 using WarehouseManagementSystem.API.Services.AuditLogs;
+using WarehouseManagementSystem.API.Services.AuditLogs.Command;
+using WarehouseManagementSystem.API.Services.Stocks.Command;
+using WarehouseManagementSystem.Contracts;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.DocumentsDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
+using WarehouseManagementSystem.Infrastructure.Persistence;
 using WarehouseManagementSystem.Infrastructure.Services;
-using WarehouseManagementSystem.API.Services.Stocks.Command;
 using Document = WarehouseManagementSystem.Domain.Model.DocumentsDomain.Document;
 
 namespace WarehouseManagementSystem.API.Services.Documents.Command;
@@ -29,6 +31,7 @@ public class DocumentCommandService : IDocumentCommandService
     private readonly IAuditLogCommandService _auditLogService;
     private readonly ICacheInvalidationService _cacheInvalidation;
     private readonly IIntegrationOutbox _integrationOutbox;
+    private readonly WarehouseManagementSystemDbContext? _dbContext;
 
     public DocumentCommandService(
         IUnitOfWork unitOfWork,
@@ -38,12 +41,14 @@ public class DocumentCommandService : IDocumentCommandService
         ILogger<DocumentCommandService> logger,
         IAuditLogCommandService auditLogService,
         ICacheInvalidationService cacheInvalidation,
-        IIntegrationOutbox integrationOutbox)
+        IIntegrationOutbox integrationOutbox,
+        WarehouseManagementSystemDbContext? dbContext = null)
     {
         _logger = logger;
         _auditLogService = auditLogService;
         _cacheInvalidation = cacheInvalidation;
         _integrationOutbox = integrationOutbox;
+        _dbContext = dbContext;
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _stockService = stockService ?? throw new ArgumentNullException(nameof(stockService));
         _numberGenerator = numberGenerator ?? throw new ArgumentNullException(nameof(numberGenerator));
@@ -254,7 +259,10 @@ public class DocumentCommandService : IDocumentCommandService
             MessageId = Guid.NewGuid(),
             // CorrelationId spina cały flow między systemami. Tu używa się DocumentId, żeby później dało się
             // po logach, outboxie i tabelach downstreamów prześledzić jedną biznesową operację end-to-end.
-            CorrelationId = document.Id,
+            // Imported ERP documents retain the initiating correlation without putting ERP data on the domain aggregate.
+            CorrelationId = _dbContext is null ? document.Id :
+                await _dbContext.ErpOrderImports.Where(x => x.WmsDocumentId == document.Id)
+                    .Select(x => (Guid?)x.CorrelationId).SingleOrDefaultAsync(ct) ?? document.Id,
             OccurredAt = confirmedAt,
             DocumentId = document.Id,
             DocumentNumber = document.Number ?? throw new InvalidOperationException("Confirmed document must have a number."),

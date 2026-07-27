@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.FakeBilling", "WarehouseManagementSystem.FakeBilling\WarehouseManagementSystem.FakeBilling.csproj", "{849BEA92-BCB7-4C39-92AC-D314DCA3C6EF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarehouseManagementSystem.FakeERP", "WarehouseManagementSystem.FakeERP\WarehouseManagementSystem.FakeERP.csproj", "{4E40E182-1305-4B2A-9500-81D29DB67ADE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{849BEA92-BCB7-4C39-92AC-D314DCA3C6EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{849BEA92-BCB7-4C39-92AC-D314DCA3C6EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{849BEA92-BCB7-4C39-92AC-D314DCA3C6EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E40E182-1305-4B2A-9500-81D29DB67ADE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E40E182-1305-4B2A-9500-81D29DB67ADE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E40E182-1305-4B2A-9500-81D29DB67ADE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E40E182-1305-4B2A-9500-81D29DB67ADE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

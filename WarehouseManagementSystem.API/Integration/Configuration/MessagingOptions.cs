@@ -45,6 +45,7 @@ public class MessagingOptions
     /// Gets or sets the shipping consumer configuration options.
     /// </summary>
     public ShippingConsumerOptions Shipping { get; set; } = new();
+    public ErpDocumentCreateConsumerOptions Erp { get; set; } = new();
 }
 
 public class RabbitMqOptions
@@ -115,5 +116,19 @@ public class ShippingConsumerOptions
 
     public int MaxRetryAttempts { get; set; } = 3;
 
+    public int RetryDelaySeconds { get; set; } = 10;
+}
+
+public class ErpDocumentCreateConsumerOptions
+{
+    public string CommandsExchange { get; set; } = "erp.commands";
+    public string Queue { get; set; } = "wms.erp-document-create";
+    public string RetryExchange { get; set; } = "wms.erp-document-create.retry.exchange";
+    public string RetryQueue { get; set; } = "wms.erp-document-create.retry";
+    public string DeadLetterExchange { get; set; } = "wms.erp-document-create.dlx";
+    public string DeadLetterQueue { get; set; } = "wms.erp-document-create.dlq";
+    public string RoutingKey { get; set; } = "erp.document.create";
+    public ushort PrefetchCount { get; set; } = 10;
+    public int MaxRetryAttempts { get; set; } = 3;
     public int RetryDelaySeconds { get; set; } = 10;
 }

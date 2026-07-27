@@ -28,6 +28,8 @@ public class WarehouseManagementSystemDbContext : DbContext
     public DbSet<OutboxMessage> OutboxMessages { get; set; }
     public DbSet<ProcessedMessage> ProcessedMessages { get; set; }
     public DbSet<ShippingShipment> ShippingShipments { get; set; }
+    public DbSet<InboxMessage> InboxMessages { get; set; }
+    public DbSet<ErpOrderImport> ErpOrderImports { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -53,6 +55,7 @@ public class WarehouseManagementSystemDbContext : DbContext
         ConfigureOutboxMessage(modelBuilder);
         ConfigureProcessedMessage(modelBuilder);
         ConfigureShippingShipment(modelBuilder);
+        ConfigureErpInbox(modelBuilder);
 
         base.OnModelCreating(modelBuilder);
     }
@@ -553,6 +556,26 @@ public class WarehouseManagementSystemDbContext : DbContext
         // To nie rozwiązuje jeszcze wszystkiego w stylu "message lost between systems", ale daje
         // twardy identyfikator do monitoringu, retry i reconciliation.
         builder.HasIndex(x => x.MessageId).IsUnique();
+    }
+
+    private static void ConfigureErpInbox(ModelBuilder modelBuilder)
+    {
+        var inbox = modelBuilder.Entity<InboxMessage>();
+        inbox.ToTable("InboxMessages");
+        inbox.HasKey(x => x.Id);
+        inbox.Property(x => x.Consumer).HasMaxLength(150).IsRequired();
+        inbox.Property(x => x.MessageType).HasMaxLength(250).IsRequired();
+        inbox.Property(x => x.Status).HasMaxLength(30).IsRequired();
+        inbox.Property(x => x.LastError).HasMaxLength(2000);
+        inbox.HasIndex(x => new { x.Consumer, x.MessageId }).IsUnique();
+
+        var imports = modelBuilder.Entity<ErpOrderImport>();
+        imports.ToTable("ErpOrderImports");
+        imports.HasKey(x => x.Id);
+        imports.Property(x => x.ExternalOrderId).HasMaxLength(100).IsRequired();
+        imports.Property(x => x.PayloadFingerprint).HasMaxLength(128).IsRequired();
+        imports.HasIndex(x => x.ExternalOrderId).IsUnique();
+        imports.HasIndex(x => x.WmsDocumentId).IsUnique();
     }
 
     private void ConfigureProcessedMessage(ModelBuilder modelBuilder)

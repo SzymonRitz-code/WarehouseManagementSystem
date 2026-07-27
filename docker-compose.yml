@@ -148,6 +148,23 @@ services:
     volumes:
       - billing-data:/app/data
 
+  fake-erp:
+    build:
+      context: .
+      dockerfile: WarehouseManagementSystem.FakeERP/Dockerfile
+    container_name: wms-fake-erp
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__Erp: "Data Source=/app/data/fake-erp.db"
+      ErpMessaging__HostName: "rabbitmq"
+      ErpMessaging__Port: "5672"
+      ErpMessaging__UserName: "guest"
+      ErpMessaging__Password: "guest"
+    volumes:
+      - erp-data:/app/data
+
   client:
     build:
       context: WarehouseManagementSystemClient
@@ -170,3 +187,4 @@ volumes:
   sqlserver-data:
   shipping-data:
   billing-data:
+  erp-data:

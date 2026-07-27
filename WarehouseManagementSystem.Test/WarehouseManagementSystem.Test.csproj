@@ -35,6 +35,7 @@
     <ProjectReference Include="..\WarehouseManagementSystem.Infrastructure\WarehouseManagementSystem.Infrastructure.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.FakeShipping\WarehouseManagementSystem.FakeShipping.csproj" />
     <ProjectReference Include="..\WarehouseManagementSystem.FakeBilling\WarehouseManagementSystem.FakeBilling.csproj" />
+    <ProjectReference Include="..\WarehouseManagementSystem.FakeERP\WarehouseManagementSystem.FakeERP.csproj" />
   </ItemGroup>
 
   <ItemGroup>

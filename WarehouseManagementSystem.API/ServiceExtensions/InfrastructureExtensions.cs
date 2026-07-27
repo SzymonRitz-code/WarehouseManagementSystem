@@ -88,6 +88,8 @@ public static class InfrastructureExtensions
         services.AddHostedService<DatabaseSeedingHostedService>();
         services.AddHostedService<ReservationExpirationJob>();
         services.AddHostedService<OutboxPublisherWorker>();
+        services.AddHostedService<ErpDocumentCreateConsumer>();
+        services.AddScoped<ErpDocumentCreateHandler>();
 
         services.AddSingleton<ISystemClock, SystemClock>();
         services.AddSingleton<IUserService, UserService>();

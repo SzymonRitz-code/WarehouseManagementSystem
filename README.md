@@ -151,3 +151,6 @@ Flow: confirm a document in WMS -> one SQL transaction saves the document and `O
 - To demonstrate duplicate delivery, republish the same JSON payload in RabbitMQ with the original `MessageId`; FakeShipping logs a duplicate and leaves exactly one `FakeShipments` row.
 
 The delivery guarantee is at-least-once, not exactly-once: a crash after a broker confirm but before WMS records `Published` can produce a duplicate. Billing additionally has a unique `SourceDocumentId`, so even a new event ID cannot bill the same WMS document twice.
+# ERP Inbox demonstration
+
+Run `fake-erp` with `--demo-order` to create the deterministic `ERP-DEMO-001` only when it does not already exist. It writes the ERP order and a command outbox row atomically, then publishes `erp.document.create`. The command requires real seeded WMS warehouse/product/zone identifiers; the demonstration payload deliberately uses placeholders so it is safe to inspect and amend before sending in a real environment.

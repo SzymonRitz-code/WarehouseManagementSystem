@@ -10,6 +10,12 @@ Use the RabbitMQ management UI to inspect the DLQ. Its message properties and he
 
 This design does not provide exactly-once delivery. A crash after a durable database commit but before ACK can redeliver a message; the idempotent consumer makes that safe. A crash after RabbitMQ confirms publishing but before the outbox status update can also republish an event.
 
+## ERP -> WMS Inbox
+
+WMS owns `wms.erp-document-create`, `.retry` and `.dlq`; FakeERP owns `erp.document-confirmed`, `.retry` and `.dlq`. Each consumer uses durable queues, manual ACK, TTL retry and a bounded retry count. A permanent command validation/conflict failure is rejected directly to the WMS DLQ.
+
+`InboxMessages(Consumer, MessageId)` is WMS's technical receive marker. `ErpOrderImports.ExternalOrderId` is the separate business idempotency guard: a different message ID for an already imported equivalent order ACKs without another document; differing payload data is a permanent conflict. The Inbox row, import map and document are committed in one SQL transaction. The original ERP correlation ID is stored on the import map and copied to `DocumentConfirmedIntegrationEvent` on confirmation.
+
 ## Billing demonstration
 
 Shipping owns `shipping.document-confirmed`, `.retry` and `.dlq`. Billing independently owns `billing.document-confirmed`, `.retry` and `.dlq`; after three retries, a Billing delivery is routed to `billing.document-confirmed.dlq`. WMS only declares `wms.events` and the shared dead-letter exchange. Each consumer declares its own queues.
