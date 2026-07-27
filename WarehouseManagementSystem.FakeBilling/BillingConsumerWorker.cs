@@ -31,8 +31,12 @@ public sealed class BillingConsumerWorker(
         {
             try
             {
-                var documentConfirmedEvent = JsonSerializer.Deserialize<DocumentConfirmedIntegrationEvent>(Encoding.UTF8.GetString(delivery.Body.ToArray()), JsonOptions)
-                    ?? throw new InvalidOperationException("DocumentConfirmed message is empty.");
+                var documentConfirmedEvent = JsonSerializer.Deserialize<DocumentConfirmedIntegrationEvent>
+                (
+                    Encoding.UTF8.GetString(delivery.Body.ToArray()),
+                    JsonOptions)
+                ?? throw new InvalidOperationException("DocumentConfirmed message is empty.");
+
                 using var consumerScope = scopeFactory.CreateScope();
                 consumerScope.ServiceProvider.GetRequiredService<DocumentConfirmedBillingHandler>().HandleAsync(documentConfirmedEvent, ct).GetAwaiter().GetResult();
                 rabbitChannel.BasicAck(delivery.DeliveryTag, false);
@@ -47,8 +51,12 @@ public sealed class BillingConsumerWorker(
                     retryMessageProperties.Headers[BillingConsumerRetryPolicy.RetryCountHeader] = retryPolicy.NextRetryCount(completedRetries);
                     retryMessageProperties.Headers[BillingConsumerRetryPolicy.LastErrorHeader] = ex.Message;
                     retryMessageProperties.Headers[BillingConsumerRetryPolicy.LastAttemptAtHeader] = DateTimeOffset.UtcNow.ToString("O");
-                    rabbitChannel.BasicPublish(_messagingOptions.RetryExchange, _messagingOptions.RoutingKey, retryMessageProperties, delivery.Body);
-                    rabbitChannel.BasicAck(delivery.DeliveryTag, false);
+                    rabbitChannel.BasicPublish(
+                        exchange: _messagingOptions.RetryExchange,
+                        routingKey: _messagingOptions.RoutingKey,
+                        basicProperties: retryMessageProperties,
+                        body: delivery.Body);
+                    rabbitChannel.BasicAck(delivery.DeliveryTag, multiple: false);
                     logger.LogWarning(ex,
                         "FakeBilling decision retry {RetryCount}. MessageId {MessageId}, CorrelationId {CorrelationId}",
                         retryPolicy.NextRetryCount(completedRetries), delivery.BasicProperties.MessageId, delivery.BasicProperties.CorrelationId);
@@ -58,7 +66,7 @@ public sealed class BillingConsumerWorker(
                 logger.LogError(ex,
                     "FakeBilling decision dead-letter after {RetryCount} retries. MessageId {MessageId}, CorrelationId {CorrelationId}",
                     completedRetries, delivery.BasicProperties.MessageId, delivery.BasicProperties.CorrelationId);
-                rabbitChannel.BasicNack(delivery.DeliveryTag, false, requeue: false);
+                rabbitChannel.BasicNack(delivery.DeliveryTag, multiple: false, requeue: false);
             }
         };
         rabbitChannel.BasicConsume(_messagingOptions.Queue, autoAck: false, billingConsumer);
@@ -68,9 +76,14 @@ public sealed class BillingConsumerWorker(
     private static IBasicProperties CopyProperties(IModel channel, IBasicProperties source)
     {
         var properties = channel.CreateBasicProperties();
-        properties.Persistent = true; properties.MessageId = source.MessageId; properties.Type = source.Type;
-        properties.CorrelationId = source.CorrelationId; properties.Timestamp = source.Timestamp;
-        properties.Headers = source.Headers is null ? new Dictionary<string, object>() : new Dictionary<string, object>(source.Headers);
+        properties.Persistent = true;
+        properties.MessageId = source.MessageId;
+        properties.Type = source.Type;
+        properties.CorrelationId = source.CorrelationId;
+        properties.Timestamp = source.Timestamp;
+        properties.Headers = source.Headers is null
+            ? new Dictionary<string, object>()
+            : new Dictionary<string, object>(source.Headers);
         return properties;
     }
 }
@@ -114,24 +127,66 @@ public sealed class BillingRabbitMqTopology(IOptions<BillingMessagingOptions> op
     public void EnsureTopology(IModel channel)
     {
         var messagingOptions = options.Value;
-        channel.ExchangeDeclare(messagingOptions.Exchange, ExchangeType.Direct, durable: true);
-        channel.ExchangeDeclare(messagingOptions.RetryExchange, ExchangeType.Direct, durable: true);
-        channel.ExchangeDeclare(messagingOptions.DeadLetterExchange, ExchangeType.Direct, durable: true);
-        channel.QueueDeclare(messagingOptions.DeadLetterQueue, true, false, false);
-        channel.QueueBind(messagingOptions.DeadLetterQueue, messagingOptions.DeadLetterExchange, messagingOptions.RoutingKey);
-        channel.QueueDeclare(messagingOptions.RetryQueue, true, false, false, new Dictionary<string, object>
-        {
-            ["x-message-ttl"] = messagingOptions.RetryDelaySeconds * 1000,
-            ["x-dead-letter-exchange"] = messagingOptions.Exchange,
-            ["x-dead-letter-routing-key"] = messagingOptions.RoutingKey
-        });
-        channel.QueueBind(messagingOptions.RetryQueue, messagingOptions.RetryExchange, messagingOptions.RoutingKey);
-        channel.QueueDeclare(messagingOptions.Queue, true, false, false, new Dictionary<string, object>
-        {
-            ["x-dead-letter-exchange"] = messagingOptions.DeadLetterExchange,
-            ["x-dead-letter-routing-key"] = messagingOptions.RoutingKey
-        });
-        channel.QueueBind(messagingOptions.Queue, messagingOptions.Exchange, messagingOptions.RoutingKey);
+
+        channel.ExchangeDeclare(
+            exchange: messagingOptions.Exchange,
+            type: ExchangeType.Direct,
+            durable: true);
+
+        channel.ExchangeDeclare(
+            exchange: messagingOptions.RetryExchange,
+            ExchangeType.Direct,
+            durable: true);
+
+        channel.ExchangeDeclare(
+            exchange: messagingOptions.DeadLetterExchange,
+            type: ExchangeType.Direct,
+            durable: true);
+
+        channel.QueueDeclare(
+            queue: messagingOptions.DeadLetterQueue,
+            durable: true,
+            exclusive: false, 
+            autoDelete: false);
+
+        channel.QueueBind(
+            queue: messagingOptions.DeadLetterQueue, 
+            exchange: messagingOptions.DeadLetterExchange, 
+            routingKey: messagingOptions.RoutingKey);
+
+        channel.QueueDeclare(
+            queue: messagingOptions.RetryQueue, 
+            durable: true, 
+            exclusive: false, 
+            autoDelete: false, 
+            arguments: new Dictionary<string, object>
+                {
+                    ["x-message-ttl"] = messagingOptions.RetryDelaySeconds * 1000,
+                    ["x-dead-letter-exchange"] = messagingOptions.Exchange,
+                    ["x-dead-letter-routing-key"] = messagingOptions.RoutingKey
+                }
+            );
+
+        channel.QueueBind(
+            queue: messagingOptions.RetryQueue, 
+            exchange: messagingOptions.RetryExchange, 
+            routingKey: messagingOptions.RoutingKey);
+
+        channel.QueueDeclare(
+            queue: messagingOptions.Queue, 
+            durable: true, 
+            exclusive: false, 
+            autoDelete: false, 
+            arguments: new Dictionary<string, object>
+            {
+                ["x-dead-letter-exchange"] = messagingOptions.DeadLetterExchange,
+                ["x-dead-letter-routing-key"] = messagingOptions.RoutingKey
+            });
+
+        channel.QueueBind(
+            queue: messagingOptions.Queue, 
+            exchange: messagingOptions.Exchange, 
+            routingKey: messagingOptions.RoutingKey);
     }
 }
 
