@@ -12,6 +12,7 @@ public sealed class BillingConsumerWorker(
     IOptions<BillingMessagingOptions> options, ILogger<BillingConsumerWorker> logger) : BackgroundService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly BillingMessagingOptions _options = options.Value;
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)

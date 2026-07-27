@@ -1,49 +1,49 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
 
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="8.0.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="FluentAssertions" Version="8.8.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.24" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-    <PackageReference Include="Moq" Version="4.20.72" />
-    <PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
-    <PackageReference Include="xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="coverlet.collector" Version="8.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="FluentAssertions" Version="8.8.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.24" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+		<PackageReference Include="Moq" Version="4.20.72" />
+		<PackageReference Include="Testcontainers.MsSql" Version="3.10.0" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\WarehouseManagementSystem.Contracts\WarehouseManagementSystem.Contracts.csproj" />
-    <ProjectReference Include="..\WarehouseManagementSystem.API\WarehouseManagementSystem.API.csproj" />
-    <ProjectReference Include="..\WarehouseManagementSystem.Domain\WarehouseManagementSystem.Domain.csproj" />
-    <ProjectReference Include="..\WarehouseManagementSystem.Infrastructure\WarehouseManagementSystem.Infrastructure.csproj" />
-    <ProjectReference Include="..\WarehouseManagementSystem.FakeShipping\WarehouseManagementSystem.FakeShipping.csproj" />
-    <ProjectReference Include="..\WarehouseManagementSystem.FakeBilling\WarehouseManagementSystem.FakeBilling.csproj" />
-    <ProjectReference Include="..\WarehouseManagementSystem.FakeERP\WarehouseManagementSystem.FakeERP.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\WarehouseManagementSystem.Contracts\WarehouseManagementSystem.Contracts.csproj" />
+		<ProjectReference Include="..\WarehouseManagementSystem.API\WarehouseManagementSystem.API.csproj" />
+		<ProjectReference Include="..\WarehouseManagementSystem.Domain\WarehouseManagementSystem.Domain.csproj" />
+		<ProjectReference Include="..\WarehouseManagementSystem.Infrastructure\WarehouseManagementSystem.Infrastructure.csproj" />
+		<ProjectReference Include="..\WarehouseManagementSystem.FakeShipping\WarehouseManagementSystem.FakeShipping.csproj" />
+		<ProjectReference Include="..\WarehouseManagementSystem.FakeBilling\WarehouseManagementSystem.FakeBilling.csproj" />
+		<ProjectReference Include="..\WarehouseManagementSystem.FakeERP\WarehouseManagementSystem.FakeERP.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
+	<ItemGroup>
+		<Using Include="Xunit" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Helpers\" />
+	</ItemGroup>
 
 </Project>

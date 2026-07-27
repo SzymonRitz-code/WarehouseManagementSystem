@@ -159,6 +159,7 @@ public sealed class ErpConfirmedConsumer(
                 ch.BasicNack(d.DeliveryTag, false, false);
             }
         };
-        ch.BasicConsume(o.Queue, false, consumer); ct.WaitHandle.WaitOne();
+        ch.BasicConsume(o.Queue, false, consumer); 
+        ct.WaitHandle.WaitOne();
     }
 }
