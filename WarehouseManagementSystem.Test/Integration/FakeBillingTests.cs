@@ -65,9 +65,14 @@ public sealed class FakeBillingTests
     private static DocumentConfirmedBillingHandler Handler(BillingDbContext db) => new(db, NullLogger<DocumentConfirmedBillingHandler>.Instance);
     private static DocumentConfirmedIntegrationEvent Message(Guid? documentId = null, string documentType = "WZ") => new()
     {
-        MessageId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), OccurredAt = DateTimeOffset.UtcNow,
-        DocumentId = documentId ?? Guid.NewGuid(), DocumentNumber = "WZ/1", DocumentType = documentType,
-        SourceWarehouseId = Guid.NewGuid(), ConfirmedAt = DateTimeOffset.UtcNow,
+        MessageId = Guid.NewGuid(),
+        CorrelationId = Guid.NewGuid(),
+        OccurredAt = DateTimeOffset.UtcNow,
+        DocumentId = documentId ?? Guid.NewGuid(),
+        DocumentNumber = "WZ/1",
+        DocumentType = documentType,
+        SourceWarehouseId = Guid.NewGuid(),
+        ConfirmedAt = DateTimeOffset.UtcNow,
         ConfirmedBy = new ConfirmedByPayload { Id = Guid.NewGuid(), Name = "Test", Email = "test@example.com" }
     };
 }

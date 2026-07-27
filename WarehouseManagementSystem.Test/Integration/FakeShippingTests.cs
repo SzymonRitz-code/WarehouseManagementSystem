@@ -17,9 +17,15 @@ public sealed class FakeShippingTests
         var handler = new DocumentConfirmedHandler(db, NullLogger<DocumentConfirmedHandler>.Instance);
         var message = new DocumentConfirmedIntegrationEvent
         {
-            MessageId = Guid.NewGuid(), CorrelationId = Guid.NewGuid(), OccurredAt = DateTimeOffset.UtcNow,
-            DocumentId = Guid.NewGuid(), DocumentNumber = "WZ/1", DocumentType = "WZ", SourceWarehouseId = Guid.NewGuid(),
-            ConfirmedAt = DateTimeOffset.UtcNow, ConfirmedBy = new ConfirmedByPayload { Id = Guid.NewGuid(), Name = "Test", Email = "test@example.com" }
+            MessageId = Guid.NewGuid(),
+            CorrelationId = Guid.NewGuid(),
+            OccurredAt = DateTimeOffset.UtcNow,
+            DocumentId = Guid.NewGuid(),
+            DocumentNumber = "WZ/1",
+            DocumentType = "WZ",
+            SourceWarehouseId = Guid.NewGuid(),
+            ConfirmedAt = DateTimeOffset.UtcNow,
+            ConfirmedBy = new ConfirmedByPayload { Id = Guid.NewGuid(), Name = "Test", Email = "test@example.com" }
         };
 
         await handler.HandleAsync(message, CancellationToken.None);
