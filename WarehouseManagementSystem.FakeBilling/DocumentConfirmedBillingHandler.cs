@@ -91,7 +91,11 @@ public static class BillingConflict
 {
     public static bool IsDuplicate(DbUpdateException exception)
     {
-        return exception.InnerException?.Message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase) == true ||
-        exception.InnerException?.Message.Contains("IX_", StringComparison.OrdinalIgnoreCase) == true;
+        return
+            exception.InnerException?
+                .Message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase) == true
+        ||
+            exception.InnerException?
+                .Message.Contains("IX_", StringComparison.OrdinalIgnoreCase) == true;
     }
 }

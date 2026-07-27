@@ -147,7 +147,10 @@ public class StockQueryServiceTests
     /// </summary>
     /// <param name="context">The in-memory database context to be used by the service.</param>
     /// <returns>A new instance of StockQueryService.</returns>
-    private static StockQueryService CreateService(WarehouseManagementSystemDbContext context) => new(context);
+    private static StockQueryService CreateService(WarehouseManagementSystemDbContext context)
+    {
+        return new(context);
+    }
 
     /// <summary>
     /// Creates a new Stock entity with the specified product, warehouse, zone, batch, quantity, and reserved quantity. This helper method is used to seed test data for stock-related tests.

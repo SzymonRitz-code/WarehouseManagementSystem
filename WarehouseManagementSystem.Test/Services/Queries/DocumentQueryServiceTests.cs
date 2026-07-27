@@ -131,7 +131,10 @@ public class DocumentQueryServiceTests
     /// </summary>
     /// <param name="context">The DbContext to be used by the service.</param>
     /// <returns>A new instance of <see cref="DocumentQueryService"/>.</returns>
-    private static DocumentQueryService CreateService(WarehouseManagementSystemDbContext context) => new(context);
+    private static DocumentQueryService CreateService(WarehouseManagementSystemDbContext context)
+    {
+        return new(context);
+    }
 
     /// <summary>
     /// Adds the specified documents to the provided DbContext and saves the changes asynchronously.

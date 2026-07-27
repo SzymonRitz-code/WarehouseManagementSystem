@@ -243,7 +243,10 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
     /// </summary>
     /// <param name="rowCount">The number of rows to consider for determining the guardrail.</param>
     /// <returns>A <see cref="TimeSpan"/> representing the 95th percentile guardrail time.</returns>
-    private static TimeSpan P95Guardrail(int rowCount) => MedianGuardrail(rowCount) * 2;
+    private static TimeSpan P95Guardrail(int rowCount)
+    {
+        return MedianGuardrail(rowCount) * 2;
+    }
 
     #endregion
 
@@ -345,10 +348,13 @@ public sealed class QueryPerformanceTests(QueryPerformanceDatabaseFixture databa
         return warehouse;
     }
 
-    private static UserSnapshot CreateUser() => new(
+    private static UserSnapshot CreateUser()
+    {
+        return new(
         Guid.Parse("33333333-3333-3333-3333-333333333333"),
         "performance.test@example.com",
         "Performance Tester");
+    }
 
     #endregion
 }

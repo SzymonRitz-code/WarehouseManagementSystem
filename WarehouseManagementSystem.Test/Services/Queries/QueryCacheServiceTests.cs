@@ -147,14 +147,21 @@ public class QueryCacheServiceTests
         }
 
         public Task<byte[]?> GetAsync(string key, CancellationToken token = default)
-            => Task.FromResult(Get(key));
+        {
+            return Task.FromResult(Get(key));
+        }
 
         public void Refresh(string key) { }
 
         public Task RefreshAsync(string key, CancellationToken token = default)
-            => Task.CompletedTask;
+        {
+            return Task.CompletedTask;
+        }
 
-        public void Remove(string key) => _store.TryRemove(key, out _);
+        public void Remove(string key)
+        {
+            _store.TryRemove(key, out _);
+        }
 
         public Task RemoveAsync(string key, CancellationToken token = default)
         {
@@ -163,7 +170,9 @@ public class QueryCacheServiceTests
         }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
-            => _store[key] = value;
+        {
+            _store[key] = value;
+        }
 
         public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
         {

@@ -104,5 +104,8 @@ public sealed class DistributedCacheRegionGenerationStore : ICacheRegionGenerati
     /// </summary>
     /// <param name="region">The cache region.</param>
     /// <returns>The generation storage key.</returns>
-    private string BuildRegionGenerationKey(string region) => $"{_options.InstancePrefix}:region:{region}:generation";
+    private string BuildRegionGenerationKey(string region)
+    {
+        return $"{_options.InstancePrefix}:region:{region}:generation";
+    }
 }

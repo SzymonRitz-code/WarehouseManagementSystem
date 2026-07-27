@@ -32,7 +32,9 @@ public sealed class ErpDocumentCreateHandler(
         if (existingImport is not null)
         {
             if (!string.Equals(existingImport.PayloadFingerprint, fingerprint, StringComparison.Ordinal))
+            {
                 throw new PermanentIntegrationException($"ERP order '{command.ExternalOrderId}' conflicts with the already imported payload.");
+            }
 
             db.InboxMessages.Add(ProcessedInbox(command));
             await db.SaveChangesAsync(ct);
@@ -41,9 +43,14 @@ public sealed class ErpDocumentCreateHandler(
         }
 
         if (!Enum.TryParse<DocumentType>(command.DocumentType, ignoreCase: true, out var documentType))
+        {
             throw new PermanentIntegrationException($"Unsupported WMS document type '{command.DocumentType}'.");
+        }
+
         if (string.IsNullOrWhiteSpace(command.ExternalOrderId) || command.Items.Count == 0)
+        {
             throw new PermanentIntegrationException("ExternalOrderId and at least one item are required.");
+        }
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         try
@@ -80,24 +87,40 @@ public sealed class ErpDocumentCreateHandler(
         }
     }
 
-    private static InboxMessage ProcessedInbox(CreateWarehouseDocumentCommand command) => new()
+    private static InboxMessage ProcessedInbox(CreateWarehouseDocumentCommand command)
     {
-        Id = Guid.NewGuid(),
-        MessageId = command.MessageId,
-        Consumer = ConsumerName,
-        MessageType = nameof(CreateWarehouseDocumentCommand),
-        CorrelationId = command.CorrelationId,
-        ReceivedAt = DateTimeOffset.UtcNow,
-        ProcessedAt = DateTimeOffset.UtcNow,
-        Status = "Processed"
-    };
+        return new()
+        {
+            Id = Guid.NewGuid(),
+            MessageId = command.MessageId,
+            Consumer = ConsumerName,
+            MessageType = nameof(CreateWarehouseDocumentCommand),
+            CorrelationId = command.CorrelationId,
+            ReceivedAt = DateTimeOffset.UtcNow,
+            ProcessedAt = DateTimeOffset.UtcNow,
+            Status = "Processed"
+        };
+    }
 
-    private static string Fingerprint(CreateWarehouseDocumentCommand command) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
-        { command.ExternalOrderId, command.DocumentType, command.SourceWarehouseId, command.TargetWarehouseId, command.DocumentDate, command.Notes, command.Items }))));
+    private static string Fingerprint(CreateWarehouseDocumentCommand command)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+        {
+            command.ExternalOrderId,
+            command.DocumentType,
+            command.SourceWarehouseId,
+            command.TargetWarehouseId,
+            command.DocumentDate,
+            command.Notes,
+            command.Items
+        }))));
+    }
 
-    private static bool IsDuplicate(DbUpdateException exception) => exception.InnerException?.Message.Contains("IX_InboxMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
+    private static bool IsDuplicate(DbUpdateException exception)
+    {
+        return exception.InnerException?.Message.Contains("IX_InboxMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
         exception.InnerException?.Message.Contains("ExternalOrderId", StringComparison.OrdinalIgnoreCase) == true;
+    }
 }
 
 public sealed class PermanentIntegrationException(string message) : Exception(message);

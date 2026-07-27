@@ -50,7 +50,9 @@ public sealed class DocumentConfirmedHandler(ShippingDbContext db, ILogger<Docum
 
 public static class ProcessedMessageConflict
 {
-    public static bool IsDuplicate(DbUpdateException exception) =>
-        exception.InnerException?.Message.Contains("IX_ProcessedMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
+    public static bool IsDuplicate(DbUpdateException exception)
+    {
+        return exception.InnerException?.Message.Contains("IX_ProcessedMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
         exception.InnerException?.Message.Contains("ProcessedMessages.Consumer, ProcessedMessages.MessageId", StringComparison.OrdinalIgnoreCase) == true;
+    }
 }

@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Tests.Support;
 
@@ -242,7 +242,8 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
         /// <param name="initialQuantity">The initial quantity of the stock.</param>
         /// <returns>A new instance of the <see cref="Stock"/> class.</returns>
         private Stock CreateStock(decimal initialQuantity = 100m)
-            => new(_productId, _warehouseId, _zoneId, null, initialQuantity);
-
+        {
+            return new(_productId, _warehouseId, _zoneId, null, initialQuantity);
+        }
     }
 }

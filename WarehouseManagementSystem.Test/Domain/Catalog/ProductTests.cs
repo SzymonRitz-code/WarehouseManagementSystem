@@ -189,5 +189,7 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         decimal weight = 1.5m,
         decimal volume = 0.75m,
         string? description = "Description")
-        => new(sku, name, unit, requiresBatch, fixture.User, weight, volume, description);
+    {
+        return new(sku, name, unit, requiresBatch, fixture.User, weight, volume, description);
+    }
 }

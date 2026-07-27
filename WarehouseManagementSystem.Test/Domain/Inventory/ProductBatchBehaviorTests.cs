@@ -203,11 +203,13 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
             string batchNumber = "BATCH01",
             DateOnly? manufacturedDate = null,
             DateOnly? expirationDate = null)
-            => new(
-                        _productId,
-                        batchNumber,
-                        fixture.User,
-                        manufacturedDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
-                        expirationDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)));
+        {
+            return new(
+                                _productId,
+                                batchNumber,
+                                fixture.User,
+                                manufacturedDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+                                expirationDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)));
+        }
     }
 }

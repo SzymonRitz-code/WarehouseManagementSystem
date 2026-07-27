@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Tests.Support;
 
@@ -166,5 +166,7 @@ public class ProductBatchTests(DomainTestFixture fixture) : IClassFixture<Domain
         string batchNumber = "BATCH",
         DateOnly? manufacturedDate = null,
         DateOnly? expirationDate = null)
-        => new(productId ?? Guid.NewGuid(), batchNumber, fixture.User, manufacturedDate, expirationDate);
+    {
+        return new(productId ?? Guid.NewGuid(), batchNumber, fixture.User, manufacturedDate, expirationDate);
+    }
 }

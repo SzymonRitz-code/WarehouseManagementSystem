@@ -65,13 +65,13 @@ public sealed class QueryCacheService : IQueryCacheService
         var key = _keyBuilder.Build(_options.InstancePrefix, region, contractVersion, generation, parameters);
 
         var redisReadWatch = Stopwatch.StartNew();
-        var cached = await TryReadAsync<T>(key, ct);
+        var (Found, Value) = await TryReadAsync<T>(key, ct);
         redisReadWatch.Stop();
 
-        if (cached.Found)
+        if (Found)
         {
             _logger.LogDebug("Cache hit for region {Region} in {ElapsedMs}ms", region, redisReadWatch.ElapsedMilliseconds);
-            return cached.Value;
+            return Value;
         }
 
         _logger.LogDebug("Cache miss for region {Region}", region);

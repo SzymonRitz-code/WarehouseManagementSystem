@@ -204,13 +204,15 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
     /// </summary>
     /// <returns>A new instance of the <see cref="Warehouse"/> class.</returns>
     private Warehouse CreateWarehouse()
-        => new(
-                "WH01",
-                "Main Warehouse",
-                "Poland",
-                "Warsaw",
-                "ul. Example 1",
-                fixture.User);
+    {
+        return new(
+                    "WH01",
+                    "Main Warehouse",
+                    "Poland",
+                    "Warsaw",
+                    "ul. Example 1",
+                    fixture.User);
+    }
 
     /// <summary>
     /// Creates a new instance of the <see cref="Stock"/> class with predefined properties for testing purposes.
@@ -219,7 +221,9 @@ public class WarehouseAggregateFlowTests(DomainTestFixture fixture) : IClassFixt
     /// <param name="zoneId">The ID of the zone to which the stock belongs.</param>
     /// <returns>A new instance of the <see cref="Stock"/> class.</returns>
     private Stock CreateStock(Guid warehouseId, Guid zoneId)
-        => new(_productId, warehouseId, zoneId, null, 10);
+    {
+        return new(_productId, warehouseId, zoneId, null, 10);
+    }
 
     private static void AddStockToWarehouse(Warehouse warehouse, Stock stock)
     {

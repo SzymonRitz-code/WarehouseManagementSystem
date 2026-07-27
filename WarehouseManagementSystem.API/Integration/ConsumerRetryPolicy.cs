@@ -14,15 +14,20 @@ public sealed class ConsumerRetryPolicy
         _maxRetryAttempts = maxRetryAttempts >= 0 ? maxRetryAttempts : 0;
     }
 
-    public bool ShouldRetry(int completedRetries) => completedRetries < _maxRetryAttempts;
+    public bool ShouldRetry(int completedRetries)
+    {
+        return completedRetries < _maxRetryAttempts;
+    }
 
-    public int NextRetryCount(int completedRetries) => completedRetries + 1;
+    public int NextRetryCount(int completedRetries)
+    {
+        return completedRetries + 1;
+    }
 
     public static int GetRetryCount(IDictionary<string, object>? headers)
     {
-        if (headers is null || !headers.TryGetValue(RetryCountHeader, out var value) || value is null)
-            return 0;
-
-        return Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture);
+        return headers is null || !headers.TryGetValue(RetryCountHeader, out var value) || value is null
+            ? 0
+            : Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture);
     }
 }

@@ -131,7 +131,10 @@ public class FakeUserService : IFakeUserService
             ? string.IsNullOrWhiteSpace(user.Password) && string.IsNullOrWhiteSpace(password) ? true : Equals(user.Password, password)
             : false;
     }
-    public TestUser? FindByUsername(string username) => Users.FirstOrDefault(x => x.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+    public TestUser? FindByUsername(string username)
+    {
+        return Users.FirstOrDefault(x => x.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+    }
 
     private static FakeUserSummary MapToSummary(TestUser user)
     {

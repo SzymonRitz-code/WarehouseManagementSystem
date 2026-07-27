@@ -110,18 +110,24 @@ public class StocksControllerTests
     /// <param name="page">The page number.</param>
     /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A paged result of StockDto.</returns>
-    private static PagedResult<StockDto> CreatePagedStocksResult(int page, int pageSize) => new()
+    private static PagedResult<StockDto> CreatePagedStocksResult(int page, int pageSize)
     {
-        Items = [],
-        Page = page,
-        PageSize = pageSize,
-        TotalItems = 0
-    };
+        return new()
+        {
+            Items = [],
+            Page = page,
+            PageSize = pageSize,
+            TotalItems = 0
+        };
+    }
+
     /// <summary>
     /// Creates a sample StockDto object for testing purposes.
     /// </summary>
     /// <returns>A sample StockDto object.</returns>
-    private static StockDto CreateStockDto() => new(
+    private static StockDto CreateStockDto()
+    {
+        return new(
         Guid.NewGuid(),
         null,
         10,
@@ -136,4 +142,5 @@ public class StocksControllerTests
         Guid.NewGuid(),
         "Picking",
         "Piece");
+    }
 }

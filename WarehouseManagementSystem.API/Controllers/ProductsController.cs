@@ -150,12 +150,7 @@ public class ProductsController : ControllerBase
             HttpContext.Connection.RemoteIpAddress?.ToString(),
             ct);
 
-        if (updated == null)
-        {
-            return NotFound();
-        }
-
-        return NoContent();
+        return updated == null ? NotFound() : NoContent();
     }
 
     #endregion

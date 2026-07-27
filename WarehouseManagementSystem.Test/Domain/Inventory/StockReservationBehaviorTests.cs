@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Tests.Support;
 
@@ -203,5 +203,7 @@ public class StockReservationBehaviorTests(DomainTestFixture fixture) : IClassFi
     /// <param name="initialQuantity">The initial quantity to set for the stock instance.</param>
     /// <returns>A new stock instance with the specified initial quantity.</returns>
     private Stock CreateStock(decimal initialQuantity = 100m)
-        => new(_productId, _warehouseId, _zoneId, null, initialQuantity);
+    {
+        return new(_productId, _warehouseId, _zoneId, null, initialQuantity);
+    }
 }

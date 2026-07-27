@@ -55,24 +55,37 @@ public sealed class FakeBillingTests
     [InlineData(0, true)]
     [InlineData(2, true)]
     [InlineData(3, false)]
-    public void Retry_policy_stops_after_maximum_attempts(int completedRetries, bool expected) =>
+    public void Retry_policy_stops_after_maximum_attempts(int completedRetries, bool expected)
+    {
         new BillingConsumerRetryPolicy(3).ShouldRetry(completedRetries).Should().Be(expected);
+    }
 
-    private static BillingDbContext CreateDb() => new(new DbContextOptionsBuilder<BillingDbContext>()
+    private static BillingDbContext CreateDb()
+    {
+        return new(new DbContextOptionsBuilder<BillingDbContext>()
         .UseInMemoryDatabase(Guid.NewGuid().ToString())
         .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
         .Options);
-    private static DocumentConfirmedBillingHandler Handler(BillingDbContext db) => new(db, NullLogger<DocumentConfirmedBillingHandler>.Instance);
-    private static DocumentConfirmedIntegrationEvent Message(Guid? documentId = null, string documentType = "WZ") => new()
+    }
+
+    private static DocumentConfirmedBillingHandler Handler(BillingDbContext db)
     {
-        MessageId = Guid.NewGuid(),
-        CorrelationId = Guid.NewGuid(),
-        OccurredAt = DateTimeOffset.UtcNow,
-        DocumentId = documentId ?? Guid.NewGuid(),
-        DocumentNumber = "WZ/1",
-        DocumentType = documentType,
-        SourceWarehouseId = Guid.NewGuid(),
-        ConfirmedAt = DateTimeOffset.UtcNow,
-        ConfirmedBy = new ConfirmedByPayload { Id = Guid.NewGuid(), Name = "Test", Email = "test@example.com" }
-    };
+        return new(db, NullLogger<DocumentConfirmedBillingHandler>.Instance);
+    }
+
+    private static DocumentConfirmedIntegrationEvent Message(Guid? documentId = null, string documentType = "WZ")
+    {
+        return new()
+        {
+            MessageId = Guid.NewGuid(),
+            CorrelationId = Guid.NewGuid(),
+            OccurredAt = DateTimeOffset.UtcNow,
+            DocumentId = documentId ?? Guid.NewGuid(),
+            DocumentNumber = "WZ/1",
+            DocumentType = documentType,
+            SourceWarehouseId = Guid.NewGuid(),
+            ConfirmedAt = DateTimeOffset.UtcNow,
+            ConfirmedBy = new ConfirmedByPayload { Id = Guid.NewGuid(), Name = "Test", Email = "test@example.com" }
+        };
+    }
 }

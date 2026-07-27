@@ -17,7 +17,10 @@ public sealed class ShippingConsumerWorker(
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly ShippingMessagingOptions _options = options.Value;
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.Run(() => Consume(stoppingToken), stoppingToken);
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        return Task.Run(() => Consume(stoppingToken), stoppingToken);
+    }
 
     private void Consume(CancellationToken ct)
     {
@@ -58,7 +61,7 @@ public sealed class ShippingConsumerWorker(
                     return;
                 }
 
-                logger.LogError(ex, 
+                logger.LogError(ex,
                     "FakeShipping sent MessageId {MessageId} to DLQ after {RetryCount} retries",
                     delivery.BasicProperties.MessageId, retries);
 

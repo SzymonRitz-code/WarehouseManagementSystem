@@ -220,9 +220,11 @@ public class ShippingDocumentConfirmedConsumer : BackgroundService
         }
     }
 
-    private static bool IsProcessedMessageDuplicate(DbUpdateException exception) =>
-        exception.InnerException?.Message.Contains("IX_ProcessedMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
+    private static bool IsProcessedMessageDuplicate(DbUpdateException exception)
+    {
+        return exception.InnerException?.Message.Contains("IX_ProcessedMessages_Consumer_MessageId", StringComparison.OrdinalIgnoreCase) == true ||
         exception.InnerException?.Message.Contains("ProcessedMessages.Consumer, ProcessedMessages.MessageId", StringComparison.OrdinalIgnoreCase) == true;
+    }
 
     private static IBasicProperties CopyProperties(IModel channel, IBasicProperties source)
     {

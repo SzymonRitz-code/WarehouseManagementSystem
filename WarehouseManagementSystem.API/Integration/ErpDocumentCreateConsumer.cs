@@ -12,7 +12,13 @@ public sealed class ErpDocumentCreateConsumer(IServiceScopeFactory scopes, IRabb
 {
     private readonly MessagingOptions _options = options.Value;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
-    protected override Task ExecuteAsync(CancellationToken ct) => _options.Enabled ? Task.Run(() => Consume(ct), ct) : Task.CompletedTask;
+    protected override Task ExecuteAsync(CancellationToken ct)
+    {
+        return _options.Enabled
+            ? Task.Run(() => Consume(ct), ct)
+            : Task.CompletedTask;
+    }
+
     private void Consume(CancellationToken ct)
     {
         using var connection = connections.CreateConnection(); using var channel = connection.CreateModel();

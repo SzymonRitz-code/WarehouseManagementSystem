@@ -13,6 +13,8 @@ public static class OutboxMessageRetry
         message.NextAttemptAt = DateTimeOffset.UtcNow.AddSeconds(retryDelaySeconds);
         message.Status = message.RetryCount >= maxAttempts ? OutboxMessageStatus.Abandoned : OutboxMessageStatus.Failed;
         if (message.Status == OutboxMessageStatus.Abandoned)
+        {
             message.NextAttemptAt = null;
+        }
     }
 }

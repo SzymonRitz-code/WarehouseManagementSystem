@@ -55,11 +55,16 @@ public sealed class ErpOutboxPublisher(
             {
                 using var s = scopes.CreateScope();
                 var db = s.ServiceProvider.GetRequiredService<ErpDbContext>();
-                using var c = rabbit.Connect(); using var ch = c.CreateModel();
-                var o = options.Value; ch.ExchangeDeclare(o.CommandsExchange, ExchangeType.Direct, true); ch.ConfirmSelect();
-                foreach (var m in await db.OutboxMessages
+                using var c = rabbit.Connect();
+                using var ch = c.CreateModel();
+
+                var o = options.Value;
+                ch.ExchangeDeclare(o.CommandsExchange, ExchangeType.Direct, true);
+                ch.ConfirmSelect();
+                var messages = await db.OutboxMessages
                     .Where(x => x.Status == "Pending" || x.Status == "Failed")
-                    .Where(x => x.NextAttemptAt == null || x.NextAttemptAt <= DateTimeOffset.UtcNow).Take(20).ToListAsync(ct))
+                    .Where(x => x.NextAttemptAt == null || x.NextAttemptAt <= DateTimeOffset.UtcNow).Take(20).ToListAsync(ct);
+                foreach (var m in messages)
                 {
                     try
                     {
@@ -79,11 +84,23 @@ public sealed class ErpOutboxPublisher(
                         m.Status = "Published";
                         m.PublishedAt = DateTimeOffset.UtcNow;
                     }
-                    catch (Exception ex) { m.RetryCount++; m.LastError = ex.Message; m.Status = m.RetryCount >= 3 ? "Abandoned" : "Failed"; m.NextAttemptAt = DateTimeOffset.UtcNow.AddSeconds(30); }
+                    catch (Exception ex)
+                    {
+                        m.RetryCount++;
+                        m.LastError = ex.Message;
+                        m.Status = m.RetryCount >= 3
+                            ? "Abandoned"
+                            : "Failed";
+                        m.NextAttemptAt = DateTimeOffset.UtcNow.AddSeconds(30);
+                    }
                 }
                 await db.SaveChangesAsync(ct);
             }
-            catch (Exception ex) { logger.LogError(ex, "ERP outbox iteration failed"); }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "ERP outbox iteration failed");
+            }
+
             await Task.Delay(TimeSpan.FromSeconds(5), ct);
         }
     }

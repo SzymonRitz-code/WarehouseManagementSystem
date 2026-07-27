@@ -90,8 +90,10 @@ public class StockRepositoryTests : IAsyncLifetime
     }
 
     /// <summary>Creates a fresh UserSnapshot instance to avoid EF owned-entity tracking conflicts.</summary>
-    private static UserSnapshot NewUser() =>
-        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir");
+    private static UserSnapshot NewUser()
+    {
+        return new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Testomir.Testowski@gmail.com", "Testomir");
+    }
 
     /// <summary>
     /// Tests the GetByProductAndWarehouseAsync method of the StockRepository to ensure it returns the correct stock based on product and warehouse identifiers.

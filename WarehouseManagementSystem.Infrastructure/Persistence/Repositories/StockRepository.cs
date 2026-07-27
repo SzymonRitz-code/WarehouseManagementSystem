@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Interfaces.Repositories;
@@ -21,17 +21,35 @@ public class StockRepository : IStockRepository
 
     #region Command Methods
 
-    public void Add(Stock entity) => _context.Stocks.Add(entity);
+    public void Add(Stock entity)
+    {
+        _context.Stocks.Add(entity);
+    }
 
-    public Stock Update(Stock entity) => _context.Stocks.Update(entity).Entity;
+    public Stock Update(Stock entity)
+    {
+        return _context.Stocks.Update(entity).Entity;
+    }
 
-    public void UpdateRange(IEnumerable<Stock> entities) => _context.Stocks.UpdateRange(entities);
+    public void UpdateRange(IEnumerable<Stock> entities)
+    {
+        _context.Stocks.UpdateRange(entities);
+    }
 
-    public void Delete(Stock entity) => _context.Remove(entity);
+    public void Delete(Stock entity)
+    {
+        _context.Remove(entity);
+    }
 
-    public async Task<Stock> FindAsync(Guid id) => await _context.Stocks.FindAsync(id);
+    public async Task<Stock> FindAsync(Guid id)
+    {
+        return await _context.Stocks.FindAsync(id);
+    }
 
-    public Stock Find(Guid id) => _context.Stocks.Find(id);
+    public Stock Find(Guid id)
+    {
+        return _context.Stocks.Find(id);
+    }
 
     public async Task<Stock?> GetByProductAndWarehouseAsync(Guid productId, Guid warehouseId, Guid warehouseZoneId, Guid? batchId)
     {
