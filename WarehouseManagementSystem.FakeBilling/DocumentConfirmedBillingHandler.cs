@@ -3,13 +3,13 @@ using WarehouseManagementSystem.Contracts;
 
 namespace WarehouseManagementSystem.FakeBilling;
 
-public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger<DocumentConfirmedBillingHandler> logger)
+public sealed class DocumentConfirmedBillingHandler(BillingDbContext billingDbContext, ILogger<DocumentConfirmedBillingHandler> logger)
 {
     public const string ConsumerName = "FakeBilling.DocumentConfirmed";
 
     public async Task<BillingDecision> HandleAsync(DocumentConfirmedIntegrationEvent message, CancellationToken ct)
     {
-        if (await db.ProcessedMessages.AnyAsync(x => x.Consumer == ConsumerName && x.MessageId == message.MessageId, ct))
+        if (await billingDbContext.ProcessedMessages.AnyAsync(x => x.Consumer == ConsumerName && x.MessageId == message.MessageId, ct))
         {
             logger.LogInformation(
                 "FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
@@ -17,30 +17,30 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
             return BillingDecision.Duplicate;
         }
 
-        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        await using var billingTransaction = await billingDbContext.Database.BeginTransactionAsync(ct);
         if (message.DocumentType != "WZ")
         {
-            db.ProcessedMessages.Add(Processed(message));
-            await db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
+            billingDbContext.ProcessedMessages.Add(Processed(message));
+            await billingDbContext.SaveChangesAsync(ct);
+            await billingTransaction.CommitAsync(ct);
             logger.LogInformation(
                 "FakeBilling decision ignored. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
                 message.MessageId, message.CorrelationId, message.DocumentId);
             return BillingDecision.Ignored;
         }
 
-        if (await db.FakeInvoices.AnyAsync(x => x.SourceDocumentId == message.DocumentId, ct))
+        if (await billingDbContext.FakeInvoices.AnyAsync(x => x.SourceDocumentId == message.DocumentId, ct))
         {
-            db.ProcessedMessages.Add(Processed(message));
-            await db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
+            billingDbContext.ProcessedMessages.Add(Processed(message));
+            await billingDbContext.SaveChangesAsync(ct);
+            await billingTransaction.CommitAsync(ct);
             logger.LogInformation(
                 "FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
                 message.MessageId, message.CorrelationId, message.DocumentId);
             return BillingDecision.Duplicate;
         }
 
-        db.FakeInvoices.Add(new FakeInvoice
+        billingDbContext.FakeInvoices.Add(new FakeInvoice
         {
             Id = Guid.NewGuid(),
             SourceDocumentId = message.DocumentId,
@@ -50,11 +50,11 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
             CreatedAt = DateTimeOffset.UtcNow,
             InvoiceNumber = $"FB/{message.DocumentNumber}"
         });
-        db.ProcessedMessages.Add(Processed(message));
+        billingDbContext.ProcessedMessages.Add(Processed(message));
         try
         {
-            await db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
+            await billingDbContext.SaveChangesAsync(ct);
+            await billingTransaction.CommitAsync(ct);
             logger.LogInformation(
                 "FakeBilling decision created. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
                 message.MessageId, message.CorrelationId, message.DocumentId);
@@ -62,8 +62,8 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
         }
         catch (DbUpdateException ex) when (BillingConflict.IsDuplicate(ex))
         {
-            await transaction.RollbackAsync(ct);
-            db.ChangeTracker.Clear();
+            await billingTransaction.RollbackAsync(ct);
+            billingDbContext.ChangeTracker.Clear();
             logger.LogInformation(
                 "FakeBilling decision duplicate. MessageId {MessageId}, CorrelationId {CorrelationId}, SourceDocumentId {SourceDocumentId}",
                 message.MessageId, message.CorrelationId, message.DocumentId);

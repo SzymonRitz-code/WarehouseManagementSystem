@@ -11,9 +11,9 @@ builder.Services.AddScoped<DocumentConfirmedHandler>();
 builder.Services.AddHostedService<ShippingConsumerWorker>();
 
 var host = builder.Build();
-using (var scope = host.Services.CreateScope())
+using (var shippingScope = host.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ShippingDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    var shippingDbContext = shippingScope.ServiceProvider.GetRequiredService<ShippingDbContext>();
+    await shippingDbContext.Database.EnsureCreatedAsync();
 }
 await host.RunAsync();

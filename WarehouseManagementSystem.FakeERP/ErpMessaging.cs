@@ -30,18 +30,18 @@ public sealed class ErpRabbit(IOptions<ErpMessagingOptions> options)
 {
     public IConnection Connect()
     {
-        var o = options.Value;
+        var messagingOptions = options.Value;
         return new ConnectionFactory
         {
-            HostName = o.HostName,
-            Port = o.Port,
-            UserName = o.UserName,
-            Password = o.Password
+            HostName = messagingOptions.HostName,
+            Port = messagingOptions.Port,
+            UserName = messagingOptions.UserName,
+            Password = messagingOptions.Password
         }.CreateConnection();
     }
 }
 public sealed class ErpOutboxPublisher(
-    IServiceScopeFactory scopes,
+    IServiceScopeFactory scopeFactory,
     ErpRabbit rabbit,
     IOptions<ErpMessagingOptions> options,
     ILogger<ErpOutboxPublisher> logger) : BackgroundService
@@ -53,48 +53,48 @@ public sealed class ErpOutboxPublisher(
         {
             try
             {
-                using var s = scopes.CreateScope();
-                var db = s.ServiceProvider.GetRequiredService<ErpDbContext>();
-                using var c = rabbit.Connect();
-                using var ch = c.CreateModel();
+                using var publishingScope = scopeFactory.CreateScope();
+                var erpDbContext = publishingScope.ServiceProvider.GetRequiredService<ErpDbContext>();
+                using var rabbitConnection = rabbit.Connect();
+                using var commandChannel = rabbitConnection.CreateModel();
 
-                var o = options.Value;
-                ch.ExchangeDeclare(o.CommandsExchange, ExchangeType.Direct, true);
-                ch.ConfirmSelect();
-                var messages = await db.OutboxMessages
+                var messagingOptions = options.Value;
+                commandChannel.ExchangeDeclare(messagingOptions.CommandsExchange, ExchangeType.Direct, true);
+                commandChannel.ConfirmSelect();
+                var pendingOutboxMessages = await erpDbContext.OutboxMessages
                     .Where(x => x.Status == "Pending" || x.Status == "Failed")
                     .Where(x => x.NextAttemptAt == null || x.NextAttemptAt <= DateTimeOffset.UtcNow).Take(20).ToListAsync(ct);
-                foreach (var m in messages)
+                foreach (var outboxMessage in pendingOutboxMessages)
                 {
                     try
                     {
-                        var p = ch.CreateBasicProperties();
-                        p.Persistent = true;
-                        p.MessageId = m.MessageId.ToString();
-                        p.CorrelationId = m.CorrelationId.ToString();
-                        p.Type = nameof(CreateWarehouseDocumentCommand);
+                        var publishProperties = commandChannel.CreateBasicProperties();
+                        publishProperties.Persistent = true;
+                        publishProperties.MessageId = outboxMessage.MessageId.ToString();
+                        publishProperties.CorrelationId = outboxMessage.CorrelationId.ToString();
+                        publishProperties.Type = nameof(CreateWarehouseDocumentCommand);
 
-                        ch.BasicPublish(o.CommandsExchange, o.CommandsRoutingKey, p, Encoding.UTF8.GetBytes(m.Payload));
+                        commandChannel.BasicPublish(messagingOptions.CommandsExchange, messagingOptions.CommandsRoutingKey, publishProperties, Encoding.UTF8.GetBytes(outboxMessage.Payload));
 
-                        if (!ch.WaitForConfirms(TimeSpan.FromSeconds(10)))
+                        if (!commandChannel.WaitForConfirms(TimeSpan.FromSeconds(10)))
                         {
                             throw new InvalidOperationException("Broker did not confirm publish.");
                         }
 
-                        m.Status = "Published";
-                        m.PublishedAt = DateTimeOffset.UtcNow;
+                        outboxMessage.Status = "Published";
+                        outboxMessage.PublishedAt = DateTimeOffset.UtcNow;
                     }
                     catch (Exception ex)
                     {
-                        m.RetryCount++;
-                        m.LastError = ex.Message;
-                        m.Status = m.RetryCount >= 3
+                        outboxMessage.RetryCount++;
+                        outboxMessage.LastError = ex.Message;
+                        outboxMessage.Status = outboxMessage.RetryCount >= 3
                             ? "Abandoned"
                             : "Failed";
-                        m.NextAttemptAt = DateTimeOffset.UtcNow.AddSeconds(30);
+                        outboxMessage.NextAttemptAt = DateTimeOffset.UtcNow.AddSeconds(30);
                     }
                 }
-                await db.SaveChangesAsync(ct);
+                await erpDbContext.SaveChangesAsync(ct);
             }
             catch (Exception ex)
             {
@@ -106,7 +106,7 @@ public sealed class ErpOutboxPublisher(
     }
 }
 public sealed class ErpConfirmedConsumer(
-    IServiceScopeFactory scopes, ErpRabbit rabbit,
+    IServiceScopeFactory scopeFactory, ErpRabbit rabbit,
     IOptions<ErpMessagingOptions> options,
     ILogger<ErpConfirmedConsumer> logger)
     : BackgroundService
@@ -118,48 +118,48 @@ public sealed class ErpConfirmedConsumer(
 
     private void Run(CancellationToken ct)
     {
-        using var c = rabbit.Connect(); using var ch = c.CreateModel();
-        var o = options.Value; ch.ExchangeDeclare(o.EventExchange, ExchangeType.Direct, true);
-        ch.ExchangeDeclare(o.RetryExchange, ExchangeType.Direct, true);
-        ch.ExchangeDeclare(o.DeadLetterExchange, ExchangeType.Direct, true);
-        ch.QueueDeclare(o.DeadLetterQueue, true, false, false);
-        ch.QueueBind(o.DeadLetterQueue, o.DeadLetterExchange, "document.confirmed");
-        ch.QueueDeclare(o.RetryQueue, true, false, false, new Dictionary<string, object> {
-            { "x-message-ttl", o.RetryDelaySeconds * 1000 },
-            { "x-dead-letter-exchange", o.EventExchange },
+        using var rabbitConnection = rabbit.Connect(); using var confirmedDocumentChannel = rabbitConnection.CreateModel();
+        var messagingOptions = options.Value; confirmedDocumentChannel.ExchangeDeclare(messagingOptions.EventExchange, ExchangeType.Direct, true);
+        confirmedDocumentChannel.ExchangeDeclare(messagingOptions.RetryExchange, ExchangeType.Direct, true);
+        confirmedDocumentChannel.ExchangeDeclare(messagingOptions.DeadLetterExchange, ExchangeType.Direct, true);
+        confirmedDocumentChannel.QueueDeclare(messagingOptions.DeadLetterQueue, true, false, false);
+        confirmedDocumentChannel.QueueBind(messagingOptions.DeadLetterQueue, messagingOptions.DeadLetterExchange, "document.confirmed");
+        confirmedDocumentChannel.QueueDeclare(messagingOptions.RetryQueue, true, false, false, new Dictionary<string, object> {
+            { "x-message-ttl", messagingOptions.RetryDelaySeconds * 1000 },
+            { "x-dead-letter-exchange", messagingOptions.EventExchange },
             { "x-dead-letter-routing-key", "document.confirmed" }
         });
-        ch.QueueBind(o.RetryQueue, o.RetryExchange, "document.confirmed");
-        ch.QueueDeclare(o.Queue, true, false, false, new Dictionary<string, object> {
-            { "x-dead-letter-exchange", o.DeadLetterExchange },
+        confirmedDocumentChannel.QueueBind(messagingOptions.RetryQueue, messagingOptions.RetryExchange, "document.confirmed");
+        confirmedDocumentChannel.QueueDeclare(messagingOptions.Queue, true, false, false, new Dictionary<string, object> {
+            { "x-dead-letter-exchange", messagingOptions.DeadLetterExchange },
             { "x-dead-letter-routing-key", "document.confirmed" }
         });
-        ch.QueueBind(o.Queue, o.EventExchange, "document.confirmed");
-        var consumer = new EventingBasicConsumer(ch);
-        consumer.Received += (_, d) =>
+        confirmedDocumentChannel.QueueBind(messagingOptions.Queue, messagingOptions.EventExchange, "document.confirmed");
+        var confirmationConsumer = new EventingBasicConsumer(confirmedDocumentChannel);
+        confirmationConsumer.Received += (_, delivery) =>
         {
             try
             {
-                var m = JsonSerializer.Deserialize<DocumentConfirmedIntegrationEvent>(
-                    Encoding.UTF8.GetString(d.Body.ToArray()),
+                var documentConfirmedEvent = JsonSerializer.Deserialize<DocumentConfirmedIntegrationEvent>(
+                    Encoding.UTF8.GetString(delivery.Body.ToArray()),
                     new JsonSerializerOptions(JsonSerializerDefaults.Web)) ?? throw new InvalidOperationException();
 
-                using var s = scopes.CreateScope();
+                using var consumerScope = scopeFactory.CreateScope();
 
-                s.ServiceProvider.GetRequiredService<DocumentConfirmedHandler>()
-                    .HandleAsync(m, ct)
+                consumerScope.ServiceProvider.GetRequiredService<DocumentConfirmedHandler>()
+                    .HandleAsync(documentConfirmedEvent, ct)
                     .GetAwaiter()
                     .GetResult();
 
-                ch.BasicAck(d.DeliveryTag, false);
+                confirmedDocumentChannel.BasicAck(delivery.DeliveryTag, false);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "ERP confirmation failed");
-                ch.BasicNack(d.DeliveryTag, false, false);
+                confirmedDocumentChannel.BasicNack(delivery.DeliveryTag, false, false);
             }
         };
-        ch.BasicConsume(o.Queue, false, consumer); 
+        confirmedDocumentChannel.BasicConsume(messagingOptions.Queue, false, confirmationConsumer); 
         ct.WaitHandle.WaitOne();
     }
 }

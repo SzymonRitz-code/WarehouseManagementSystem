@@ -3,28 +3,28 @@ using WarehouseManagementSystem.Contracts;
 
 namespace WarehouseManagementSystem.FakeERP;
 
-public sealed class DocumentConfirmedHandler(ErpDbContext db, ILogger<DocumentConfirmedHandler> logger)
+public sealed class DocumentConfirmedHandler(ErpDbContext erpDbContext, ILogger<DocumentConfirmedHandler> logger)
 {
     public const string ConsumerName = "FakeERP.DocumentConfirmed";
     public async Task HandleAsync(DocumentConfirmedIntegrationEvent message, CancellationToken ct)
     {
-        if (await db.ProcessedMessages.AnyAsync(x => x.Consumer == ConsumerName && x.MessageId == message.MessageId, ct))
+        if (await erpDbContext.ProcessedMessages.AnyAsync(x => x.Consumer == ConsumerName && x.MessageId == message.MessageId, ct))
         {
             return;
         }
 
-        await using var tx = db.Database.IsRelational()
-            ? await db.Database.BeginTransactionAsync(ct)
+        await using var confirmationTransaction = erpDbContext.Database.IsRelational()
+            ? await erpDbContext.Database.BeginTransactionAsync(ct)
             : null;
 
-        var order = await db.WarehouseOrders.SingleOrDefaultAsync(x => x.CorrelationId == message.CorrelationId, ct)
+        var warehouseOrder = await erpDbContext.WarehouseOrders.SingleOrDefaultAsync(x => x.CorrelationId == message.CorrelationId, ct)
             ?? throw new InvalidOperationException($"No ERP order matches CorrelationId {message.CorrelationId}.");
 
-        order.Status = "Confirmed";
-        order.WmsDocumentId = message.DocumentId;
-        order.ConfirmedAt = message.ConfirmedAt;
+        warehouseOrder.Status = "Confirmed";
+        warehouseOrder.WmsDocumentId = message.DocumentId;
+        warehouseOrder.ConfirmedAt = message.ConfirmedAt;
 
-        db.ProcessedMessages.Add(new ErpProcessedMessage
+        erpDbContext.ProcessedMessages.Add(new ErpProcessedMessage
         {
             Id = Guid.NewGuid(),
             Consumer = ConsumerName,
@@ -34,8 +34,8 @@ public sealed class DocumentConfirmedHandler(ErpDbContext db, ILogger<DocumentCo
         });
         try
         {
-            await db.SaveChangesAsync(ct); if (tx is not null) { await tx.CommitAsync(ct); }
-            logger.LogInformation("ERP confirmed order {ExternalOrderId}, CorrelationId {CorrelationId}", order.ExternalOrderId, message.CorrelationId);
+            await erpDbContext.SaveChangesAsync(ct); if (confirmationTransaction is not null) { await confirmationTransaction.CommitAsync(ct); }
+            logger.LogInformation("ERP confirmed order {ExternalOrderId}, CorrelationId {CorrelationId}", warehouseOrder.ExternalOrderId, message.CorrelationId);
         }
         catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("Consumer", StringComparison.OrdinalIgnoreCase) == true)
         {

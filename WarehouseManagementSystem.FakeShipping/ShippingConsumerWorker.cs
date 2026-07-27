@@ -8,14 +8,14 @@ using WarehouseManagementSystem.Contracts;
 namespace WarehouseManagementSystem.FakeShipping;
 
 public sealed class ShippingConsumerWorker(
-    IServiceScopeFactory scopes,
-    ShippingRabbitMqConnectionFactory connections,
-    ShippingRabbitMqTopology topology,
+    IServiceScopeFactory scopeFactory,
+    ShippingRabbitMqConnectionFactory rabbitConnectionFactory,
+    ShippingRabbitMqTopology rabbitTopology,
     IOptions<ShippingMessagingOptions> options,
     ILogger<ShippingConsumerWorker> logger) : BackgroundService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private readonly ShippingMessagingOptions _options = options.Value;
+    private readonly ShippingMessagingOptions _messagingOptions = options.Value;
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -24,51 +24,51 @@ public sealed class ShippingConsumerWorker(
 
     private void Consume(CancellationToken ct)
     {
-        using var connection = connections.CreateConnection();
-        using var channel = connection.CreateModel();
-        topology.EnsureTopology(channel);
-        channel.BasicQos(0, _options.PrefetchCount, false);
-        var consumer = new EventingBasicConsumer(channel);
-        consumer.Received += (_, delivery) =>
+        using var rabbitConnection = rabbitConnectionFactory.CreateConnection();
+        using var rabbitChannel = rabbitConnection.CreateModel();
+        rabbitTopology.EnsureTopology(rabbitChannel);
+        rabbitChannel.BasicQos(0, _messagingOptions.PrefetchCount, false);
+        var shippingConsumer = new EventingBasicConsumer(rabbitChannel);
+        shippingConsumer.Received += (_, delivery) =>
         {
             try
             {
-                var message = JsonSerializer.Deserialize<DocumentConfirmedIntegrationEvent>(Encoding.UTF8.GetString(delivery.Body.ToArray()), JsonOptions)
+                var documentConfirmedEvent = JsonSerializer.Deserialize<DocumentConfirmedIntegrationEvent>(Encoding.UTF8.GetString(delivery.Body.ToArray()), JsonOptions)
                     ?? throw new InvalidOperationException("DocumentConfirmed message is empty.");
-                using var scope = scopes.CreateScope();
-                scope.ServiceProvider.GetRequiredService<DocumentConfirmedHandler>().HandleAsync(message, ct).GetAwaiter().GetResult();
-                channel.BasicAck(delivery.DeliveryTag, false);
+                using var consumerScope = scopeFactory.CreateScope();
+                consumerScope.ServiceProvider.GetRequiredService<DocumentConfirmedHandler>().HandleAsync(documentConfirmedEvent, ct).GetAwaiter().GetResult();
+                rabbitChannel.BasicAck(delivery.DeliveryTag, false);
             }
             catch (Exception ex)
             {
-                var retries = ShippingConsumerRetryPolicy.GetRetryCount(delivery.BasicProperties.Headers);
-                var policy = new ShippingConsumerRetryPolicy(_options.MaxRetryAttempts);
+                var completedRetries = ShippingConsumerRetryPolicy.GetRetryCount(delivery.BasicProperties.Headers);
+                var retryPolicy = new ShippingConsumerRetryPolicy(_messagingOptions.MaxRetryAttempts);
 
-                if (policy.ShouldRetry(retries))
+                if (retryPolicy.ShouldRetry(completedRetries))
                 {
-                    var properties = CopyProperties(channel, delivery.BasicProperties);
-                    properties.Headers[ShippingConsumerRetryPolicy.RetryCountHeader] = policy.NextRetryCount(retries);
-                    properties.Headers[ShippingConsumerRetryPolicy.LastErrorHeader] = ex.Message;
-                    properties.Headers[ShippingConsumerRetryPolicy.LastAttemptAtHeader] = DateTimeOffset.UtcNow.ToString("O");
+                    var retryMessageProperties = CopyProperties(rabbitChannel, delivery.BasicProperties);
+                    retryMessageProperties.Headers[ShippingConsumerRetryPolicy.RetryCountHeader] = retryPolicy.NextRetryCount(completedRetries);
+                    retryMessageProperties.Headers[ShippingConsumerRetryPolicy.LastErrorHeader] = ex.Message;
+                    retryMessageProperties.Headers[ShippingConsumerRetryPolicy.LastAttemptAtHeader] = DateTimeOffset.UtcNow.ToString("O");
 
-                    channel.BasicPublish(_options.RetryExchange, _options.RoutingKey, properties, delivery.Body);
-                    channel.BasicAck(delivery.DeliveryTag, false);
+                    rabbitChannel.BasicPublish(_messagingOptions.RetryExchange, _messagingOptions.RoutingKey, retryMessageProperties, delivery.Body);
+                    rabbitChannel.BasicAck(delivery.DeliveryTag, false);
 
                     logger.LogWarning(ex,
                         "FakeShipping scheduled retry {RetryCount} for MessageId {MessageId}",
-                        policy.NextRetryCount(retries), delivery.BasicProperties.MessageId);
+                        retryPolicy.NextRetryCount(completedRetries), delivery.BasicProperties.MessageId);
 
                     return;
                 }
 
                 logger.LogError(ex,
                     "FakeShipping sent MessageId {MessageId} to DLQ after {RetryCount} retries",
-                    delivery.BasicProperties.MessageId, retries);
+                    delivery.BasicProperties.MessageId, completedRetries);
 
-                channel.BasicNack(delivery.DeliveryTag, false, requeue: false);
+                rabbitChannel.BasicNack(delivery.DeliveryTag, false, requeue: false);
             }
         };
-        channel.BasicConsume(_options.Queue, autoAck: false, consumer);
+        rabbitChannel.BasicConsume(_messagingOptions.Queue, autoAck: false, shippingConsumer);
         ct.WaitHandle.WaitOne();
     }
 
@@ -108,8 +108,8 @@ public sealed class ShippingRabbitMqConnectionFactory(IOptions<ShippingMessaging
 {
     public IConnection CreateConnection()
     {
-        var o = options.Value;
-        return new ConnectionFactory { HostName = o.HostName, Port = o.Port, UserName = o.UserName, Password = o.Password }.CreateConnection();
+        var messagingOptions = options.Value;
+        return new ConnectionFactory { HostName = messagingOptions.HostName, Port = messagingOptions.Port, UserName = messagingOptions.UserName, Password = messagingOptions.Password }.CreateConnection();
     }
 }
 
@@ -117,26 +117,26 @@ public sealed class ShippingRabbitMqTopology(IOptions<ShippingMessagingOptions> 
 {
     public void EnsureTopology(IModel channel)
     {
-        var o = options.Value;
-        channel.ExchangeDeclare(o.Exchange, ExchangeType.Direct, durable: true);
-        channel.ExchangeDeclare(o.RetryExchange, ExchangeType.Direct, durable: true);
-        channel.ExchangeDeclare(o.DeadLetterExchange, ExchangeType.Direct, durable: true);
-        channel.QueueDeclare(o.DeadLetterQueue, durable: true, exclusive: false, autoDelete: false);
-        channel.QueueBind(o.DeadLetterQueue, o.DeadLetterExchange, o.RoutingKey);
-        channel.QueueDeclare(o.RetryQueue, durable: true, exclusive: false, autoDelete: false,
+        var messagingOptions = options.Value;
+        channel.ExchangeDeclare(messagingOptions.Exchange, ExchangeType.Direct, durable: true);
+        channel.ExchangeDeclare(messagingOptions.RetryExchange, ExchangeType.Direct, durable: true);
+        channel.ExchangeDeclare(messagingOptions.DeadLetterExchange, ExchangeType.Direct, durable: true);
+        channel.QueueDeclare(messagingOptions.DeadLetterQueue, durable: true, exclusive: false, autoDelete: false);
+        channel.QueueBind(messagingOptions.DeadLetterQueue, messagingOptions.DeadLetterExchange, messagingOptions.RoutingKey);
+        channel.QueueDeclare(messagingOptions.RetryQueue, durable: true, exclusive: false, autoDelete: false,
             arguments: new Dictionary<string, object>
             {
-                ["x-message-ttl"] = o.RetryDelaySeconds * 1000,
-                ["x-dead-letter-exchange"] = o.Exchange,
-                ["x-dead-letter-routing-key"] = o.RoutingKey
+                ["x-message-ttl"] = messagingOptions.RetryDelaySeconds * 1000,
+                ["x-dead-letter-exchange"] = messagingOptions.Exchange,
+                ["x-dead-letter-routing-key"] = messagingOptions.RoutingKey
             });
-        channel.QueueBind(o.RetryQueue, o.RetryExchange, o.RoutingKey);
-        channel.QueueDeclare(o.Queue, durable: true, exclusive: false, autoDelete: false,
+        channel.QueueBind(messagingOptions.RetryQueue, messagingOptions.RetryExchange, messagingOptions.RoutingKey);
+        channel.QueueDeclare(messagingOptions.Queue, durable: true, exclusive: false, autoDelete: false,
             arguments: new Dictionary<string, object>
             {
-                ["x-dead-letter-exchange"] = o.DeadLetterExchange,
-                ["x-dead-letter-routing-key"] = o.RoutingKey
+                ["x-dead-letter-exchange"] = messagingOptions.DeadLetterExchange,
+                ["x-dead-letter-routing-key"] = messagingOptions.RoutingKey
             });
-        channel.QueueBind(o.Queue, o.Exchange, o.RoutingKey);
+        channel.QueueBind(messagingOptions.Queue, messagingOptions.Exchange, messagingOptions.RoutingKey);
     }
 }
