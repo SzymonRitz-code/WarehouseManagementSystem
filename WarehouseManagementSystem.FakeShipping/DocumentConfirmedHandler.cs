@@ -17,14 +17,20 @@ public sealed class DocumentConfirmedHandler(ShippingDbContext db, ILogger<Docum
 
         db.Shipments.Add(new FakeShipment
         {
-            Id = Guid.NewGuid(), MessageId = message.MessageId, DocumentId = message.DocumentId,
-            DocumentNumber = message.DocumentNumber, CorrelationId = message.CorrelationId,
+            Id = Guid.NewGuid(),
+            MessageId = message.MessageId,
+            DocumentId = message.DocumentId,
+            DocumentNumber = message.DocumentNumber,
+            CorrelationId = message.CorrelationId,
             CreatedAt = DateTimeOffset.UtcNow
         });
         db.ProcessedMessages.Add(new ProcessedMessage
         {
-            Id = Guid.NewGuid(), Consumer = ConsumerName, MessageId = message.MessageId,
-            MessageType = nameof(DocumentConfirmedIntegrationEvent), CorrelationId = message.CorrelationId,
+            Id = Guid.NewGuid(),
+            Consumer = ConsumerName,
+            MessageId = message.MessageId,
+            MessageType = nameof(DocumentConfirmedIntegrationEvent),
+            CorrelationId = message.CorrelationId,
             ProcessedAt = DateTimeOffset.UtcNow
         });
 

@@ -36,8 +36,12 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
 
         db.FakeInvoices.Add(new FakeInvoice
         {
-            Id = Guid.NewGuid(), SourceDocumentId = message.DocumentId, SourceDocumentNumber = message.DocumentNumber,
-            SourceMessageId = message.MessageId, CorrelationId = message.CorrelationId, CreatedAt = DateTimeOffset.UtcNow,
+            Id = Guid.NewGuid(),
+            SourceDocumentId = message.DocumentId,
+            SourceDocumentNumber = message.DocumentNumber,
+            SourceMessageId = message.MessageId,
+            CorrelationId = message.CorrelationId,
+            CreatedAt = DateTimeOffset.UtcNow,
             InvoiceNumber = $"FB/{message.DocumentNumber}"
         });
         db.ProcessedMessages.Add(Processed(message));
@@ -59,8 +63,12 @@ public sealed class DocumentConfirmedBillingHandler(BillingDbContext db, ILogger
 
     private static ProcessedMessage Processed(DocumentConfirmedIntegrationEvent message) => new()
     {
-        Id = Guid.NewGuid(), Consumer = ConsumerName, MessageId = message.MessageId,
-        MessageType = nameof(DocumentConfirmedIntegrationEvent), CorrelationId = message.CorrelationId, ProcessedAt = DateTimeOffset.UtcNow
+        Id = Guid.NewGuid(),
+        Consumer = ConsumerName,
+        MessageId = message.MessageId,
+        MessageType = nameof(DocumentConfirmedIntegrationEvent),
+        CorrelationId = message.CorrelationId,
+        ProcessedAt = DateTimeOffset.UtcNow
     };
 }
 

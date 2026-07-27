@@ -1,5 +1,3 @@
-using WarehouseManagementSystem.Infrastructure.Integration;
-
 namespace WarehouseManagementSystem.API.Integration;
 
 /// <summary>

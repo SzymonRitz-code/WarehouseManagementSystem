@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Model.CatalogDomain;
 using WarehouseManagementSystem.Tests.Support;
@@ -190,4 +190,4 @@ public class ProductTests(DomainTestFixture fixture) : IClassFixture<DomainTestF
         decimal volume = 0.75m,
         string? description = "Description")
         => new(sku, name, unit, requiresBatch, fixture.User, weight, volume, description);
-    }
+}

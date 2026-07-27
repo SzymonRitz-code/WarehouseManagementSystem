@@ -1,8 +1,8 @@
+using System.Collections.Concurrent;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using System.Collections.Concurrent;
 using WarehouseManagementSystem.API.Caching;
 
 namespace WarehouseManagementSystem.Tests.Services.Queries;

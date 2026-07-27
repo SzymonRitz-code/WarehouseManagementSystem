@@ -32,7 +32,7 @@ public class OutboxPublisherWorker : BackgroundService
         _options = options.Value;
         _logger = logger;
     }
-    
+
     /// <summary>
     /// Executes the background service.
     /// </summary>

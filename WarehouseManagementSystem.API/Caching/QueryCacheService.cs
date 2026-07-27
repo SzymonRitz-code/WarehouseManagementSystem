@@ -65,7 +65,7 @@ public sealed class QueryCacheService : IQueryCacheService
         var key = _keyBuilder.Build(_options.InstancePrefix, region, contractVersion, generation, parameters);
 
         var redisReadWatch = Stopwatch.StartNew();
-        var cached = await TryReadAsync<T>(key, ct); 
+        var cached = await TryReadAsync<T>(key, ct);
         redisReadWatch.Stop();
 
         if (cached.Found)

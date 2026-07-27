@@ -1,4 +1,4 @@
- namespace WarehouseManagementSystem.Infrastructure.Integration;
+namespace WarehouseManagementSystem.Infrastructure.Integration;
 
 public class ShippingShipment
 {

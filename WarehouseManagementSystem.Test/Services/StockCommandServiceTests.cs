@@ -1,8 +1,7 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using WarehouseManagementSystem.API.Caching;
-using WarehouseManagementSystem.API.Services.Stocks;
 using WarehouseManagementSystem.API.Services.Stocks.Command;
 using WarehouseManagementSystem.API.Services.User;
 using WarehouseManagementSystem.Domain.Enums;

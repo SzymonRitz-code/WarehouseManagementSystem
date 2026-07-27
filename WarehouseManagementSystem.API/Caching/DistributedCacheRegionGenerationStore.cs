@@ -1,6 +1,6 @@
+using System.Globalization;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
-using System.Globalization;
 
 namespace WarehouseManagementSystem.API.Caching;
 

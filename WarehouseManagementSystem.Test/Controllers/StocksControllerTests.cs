@@ -112,11 +112,11 @@ public class StocksControllerTests
     /// <returns>A paged result of StockDto.</returns>
     private static PagedResult<StockDto> CreatePagedStocksResult(int page, int pageSize) => new()
     {
-            Items = [],
-            Page = page,
-            PageSize = pageSize,
-            TotalItems = 0
-        };
+        Items = [],
+        Page = page,
+        PageSize = pageSize,
+        TotalItems = 0
+    };
     /// <summary>
     /// Creates a sample StockDto object for testing purposes.
     /// </summary>
@@ -136,4 +136,4 @@ public class StocksControllerTests
         Guid.NewGuid(),
         "Picking",
         "Piece");
-    }
+}

@@ -1,7 +1,7 @@
 using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.DTO;
-using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.AuditLogs;
+using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.Domain.Interfaces;
 using WarehouseManagementSystem.Domain.Model.WarehouseDomain;
 using WarehouseManagementSystem.Domain.ValueObjects;

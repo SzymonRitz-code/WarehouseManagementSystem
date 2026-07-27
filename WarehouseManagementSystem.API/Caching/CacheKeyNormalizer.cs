@@ -60,7 +60,7 @@ public static class CacheKeyNormalizer
             ? value.Value.ToString().ToLowerInvariant()
             : "<null>";
     }
-    
+
     /// <summary>
     /// Converts an enum to its invariant integer representation.
     /// </summary>
@@ -73,7 +73,7 @@ public static class CacheKeyNormalizer
             ? Convert.ToInt32(value.Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture)
             : "<null>";
     }
-    
+
     /// <summary>
     /// Formats an integer using invariant culture.
     /// </summary>
@@ -83,7 +83,7 @@ public static class CacheKeyNormalizer
     {
         return value.ToString(CultureInfo.InvariantCulture);
     }
-    
+
     /// <summary>
     /// Formats a decimal using invariant culture so key generation is locale independent.
     /// </summary>

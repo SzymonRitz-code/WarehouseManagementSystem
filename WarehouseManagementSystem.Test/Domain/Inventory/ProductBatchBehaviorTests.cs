@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Tests.Support;
 
@@ -209,5 +209,5 @@ namespace WarehouseManagementSystem.Tests.Domain.InventoryDomain
                         fixture.User,
                         manufacturedDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
                         expirationDate ?? DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)));
-        }
     }
+}

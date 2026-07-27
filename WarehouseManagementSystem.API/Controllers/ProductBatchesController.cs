@@ -1,8 +1,8 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WarehouseManagementSystem.API.DTO;
-  using WarehouseManagementSystem.API.Services.ProductBatches.Command;
+using WarehouseManagementSystem.API.Services.ProductBatches.Command;
 using WarehouseManagementSystem.API.Services.ProductBatches.Query;
 using WarehouseManagementSystem.API.Services.User;
 

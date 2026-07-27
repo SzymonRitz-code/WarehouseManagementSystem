@@ -131,7 +131,7 @@ public class ShippingDocumentConfirmedConsumer : BackgroundService
     private async Task<bool> HandleMessageAsync(BasicDeliverEventArgs args, CancellationToken ct)
     {
         try
-        { 
+        {
             // MESSAGE: args.Body to konkretna wiadomość odebrana z queue przez consumera.
             var payload = Encoding.UTF8.GetString(args.Body.ToArray());
             var message = JsonSerializer.Deserialize<DocumentConfirmedIntegrationEvent>(payload, SerializerOptions)

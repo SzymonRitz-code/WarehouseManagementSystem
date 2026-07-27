@@ -15,7 +15,7 @@ public interface IAuditLogQueryService
     /// <param name="performedById">Optional user identifier filter.</param>
     /// <returns>Audit logs matching provided filters.</returns>
     Task<IReadOnlyList<AuditLogDto>> GetFilteredAsync(string? entityName, Guid? entityId, Guid? performedById, CancellationToken ct = default);
-    
+
     /// <summary>
     /// Gets audit log by identifier.
     /// </summary>

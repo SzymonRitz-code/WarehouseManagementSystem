@@ -1,13 +1,14 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WarehouseManagementSystem.API.Caching;
 using WarehouseManagementSystem.API.Integration;
-using WarehouseManagementSystem.Contracts;
 using WarehouseManagementSystem.API.Services.AuditLogs.Command;
 using WarehouseManagementSystem.API.Services.Documents.Command;
+using WarehouseManagementSystem.API.Services.Stocks.Command;
 using WarehouseManagementSystem.API.Services.User;
+using WarehouseManagementSystem.Contracts;
 using WarehouseManagementSystem.Domain.Enums;
 using WarehouseManagementSystem.Domain.Exceptions;
 using WarehouseManagementSystem.Domain.Interfaces;
@@ -17,7 +18,6 @@ using WarehouseManagementSystem.Domain.Model.InventoryDomain;
 using WarehouseManagementSystem.Domain.Services;
 using WarehouseManagementSystem.Domain.ValueObjects;
 using WarehouseManagementSystem.Infrastructure.Services;
-using WarehouseManagementSystem.API.Services.Stocks.Command;
 
 namespace WarehouseManagementSystem.Tests.Services;
 
