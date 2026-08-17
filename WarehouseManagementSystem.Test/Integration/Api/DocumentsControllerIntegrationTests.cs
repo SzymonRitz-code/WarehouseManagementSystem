@@ -16,9 +16,9 @@ public class DocumentsControllerIntegrationTests
 {
     private readonly HttpClient _client;
 
-    public DocumentsControllerIntegrationTests(WmsApiFactory factory)
+    public DocumentsControllerIntegrationTests(ApiFixture fixture)
     {
-        _client = factory.CreateClient();
+        _client = fixture.Factory.CreateClient();
     }
 
     [Fact]
