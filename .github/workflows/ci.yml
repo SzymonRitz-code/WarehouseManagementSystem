@@ -13,17 +13,6 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
-          cache: true
-          cache-dependency-path: |
-            WarehouseManagementSystem.API/packages.lock.json
-            WarehouseManagementSystem.Contracts/packages.lock.json
-            WarehouseManagementSystem.Domain/packages.lock.json
-            WarehouseManagementSystem.FakeBilling/packages.lock.json
-            WarehouseManagementSystem.FakeERP/packages.lock.json
-            WarehouseManagementSystem.FakeShipping/packages.lock.json
-            WarehouseManagementSystem.Idp/packages.lock.json
-            WarehouseManagementSystem.Infrastructure/packages.lock.json
-            WarehouseManagementSystem.Test/packages.lock.json
       - run: dotnet restore WarehouseManagementSystem.sln --locked-mode
       - run: dotnet build WarehouseManagementSystem.sln --configuration Release --no-restore
       - run: dotnet test WarehouseManagementSystem.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
