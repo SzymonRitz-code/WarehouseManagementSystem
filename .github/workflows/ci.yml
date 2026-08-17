@@ -2,17 +2,21 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
   pull_request:
 
 jobs:
-  backend:
+  build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v6
+
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 8.0.x
+          global-json-file: global.json
+
       - run: dotnet restore WarehouseManagementSystem.sln --locked-mode
+
       - run: dotnet build WarehouseManagementSystem.sln --configuration Release --no-restore
+
       - run: dotnet test WarehouseManagementSystem.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
