@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.Tests.Integration.Api;
@@ -16,6 +18,11 @@ public sealed class WmsApiFactory(string connectionString) : WebApplicationFacto
     {
         builder.ConfigureServices(services =>
         {
+            // The API's production background services connect to RabbitMQ and perform scheduled work.
+            // Integration tests exercise HTTP endpoints only, so running them would stop the test host
+            // when those external services are unavailable on the test runner.
+            services.RemoveAll<IHostedService>();
+
             // Replace real DbContext with Testcontainer SQL Server
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<WarehouseManagementSystemDbContext>));
