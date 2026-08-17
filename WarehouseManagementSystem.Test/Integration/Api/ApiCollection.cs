@@ -8,17 +8,16 @@ public sealed class ApiFixture : IAsyncLifetime
         .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
         .Build();
 
-    public WmsApiFactory Factory { get; private set; } = null!;
+    public string ConnectionString { get; private set; } = string.Empty;
 
     public async Task InitializeAsync()
     {
         await _sqlContainer.StartAsync();
-        Factory = new WmsApiFactory(_sqlContainer.GetConnectionString());
+        ConnectionString = _sqlContainer.GetConnectionString();
     }
 
     public async Task DisposeAsync()
     {
-        await Factory.DisposeAsync();
         await _sqlContainer.DisposeAsync();
     }
 }

@@ -12,13 +12,21 @@ namespace WarehouseManagementSystem.Tests.Integration.Api;
 /// These tests verify HTTP-level contract: routing, auth middleware, validation pipeline, and response shapes.
 /// </summary>
 [Collection("Api")]
-public class DocumentsControllerIntegrationTests
+public class DocumentsControllerIntegrationTests : IDisposable
 {
+    private readonly WmsApiFactory _factory;
     private readonly HttpClient _client;
 
     public DocumentsControllerIntegrationTests(ApiFixture fixture)
     {
-        _client = fixture.Factory.CreateClient();
+        _factory = new WmsApiFactory(fixture.ConnectionString);
+        _client = _factory.CreateClient();
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
+        _factory.Dispose();
     }
 
     [Fact]
