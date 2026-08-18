@@ -1,74 +1,78 @@
-# WarehouseManagementSystem
+# Warehouse Management System
 
 [![CI](https://github.com/SzymonRitz-code/WarehouseManagementSystem/actions/workflows/ci.yml/badge.svg)](https://github.com/SzymonRitz-code/WarehouseManagementSystem/actions/workflows/ci.yml)
 
-Architecture decisions are recorded in [docs/adr](docs/adr/README.md). Messaging operations are described in [docs/messaging-operations.md](docs/messaging-operations.md).
+Portfolio implementation of a warehouse-management system, built around domain modelling, reliable asynchronous integration and a production-oriented ASP.NET Core API.
 
-## Backend stabilization
+## License
 
-Current stabilization scope:
+This repository is available exclusively for recruitment and non-commercial educational use. Commercial use and redistribution are prohibited. See [LICENSE](LICENSE) for the full terms.
 
-- `CancelDocumentAsync` runs in a serializable transaction so reservation release, document cancellation, audit log entry and save commit as one unit.
-- The old standalone transfer endpoint is not exposed. Transfer remains a domain workflow state for documents.
-- Stock availability is exposed by `GET /api/stocks/availability` and linked from the main client navigation.
-- Demo/placeholder entries were removed from the main sidebar/header navigation.
-- Backend and frontend test/build commands should stay green before seeding or workload tests.
+## Recruiter quick tour
 
-## Seeder profiles
+1. Start with the [architecture](#architecture) section below.
+2. Review the document workflow in `WarehouseManagementSystem.Domain/Model/Documents` and `WarehouseManagementSystem.API/Services/Documents`.
+3. Follow the reliable messaging path: [`ADR-002`](docs/adr/ADR-002-transactional-outbox.md), [`messaging operations`](docs/messaging-operations.md), `OutboxPublisherWorker`, and the FakeShipping/FakeBilling consumers.
+4. Inspect the executable specifications in `WarehouseManagementSystem.Test`.
+5. Run the system through [Docker Compose](#run-with-docker-compose) and open Swagger.
 
-Database seeding is disabled by default.
+## Highlights
 
-```json
-"Seeding": {
-  "Enabled": false,
-  "Profile": "Medium"
-}
+- ASP.NET Core 8 API with a separate Angular client and Duende IdentityServer.
+- Modular-monolith structure with explicit domain, infrastructure, contracts and API layers.
+- CQRS-style split: command services change aggregate state; query services serve read models.
+- Warehouse, zone, product, batch, stock, reservation and PZ/WZ/MM document workflows.
+- Transactional outbox with RabbitMQ publisher confirms; idempotent FakeShipping, FakeBilling and ERP inbox flows.
+- SQL Server persistence through EF Core, Redis-backed query cache, audit log, health checks and Serilog logging.
+- FluentValidation automatic API validation with RFC 7807-style `422 Unprocessable Entity` responses.
+- xUnit, FluentAssertions, Moq and Testcontainers-based API/repository/performance coverage.
+
+## Architecture
+
+```text
+Angular client ── OIDC ──> IdentityServer
+      │
+      └── HTTPS/JWT ──> ASP.NET Core API
+                            │
+        Domain aggregates + command/query services
+                            │
+                    EF Core / SQL Server
+                            │
+                  Transactional Outbox
+                            │
+                        RabbitMQ
+                  ┌─────────┴─────────┐
+             FakeShipping         FakeBilling
+                  │
+               FakeERP ──> WMS Inbox
 ```
 
-Available profiles:
+The system intentionally uses a modular monolith: it keeps domain transactions simple while preserving explicit integration boundaries for possible future extraction. See the [ADR index](docs/adr/README.md) for the decision record.
 
-- `Demo`: small local smoke-test data.
-- `Medium`: first realistic workload pass.
-- `Stress`: larger dataset for bottleneck discovery.
-- `Extreme`: keeps the existing 10,000,000 movement-item seed volume.
+## Repository layout
 
-Operational order:
+| Path | Responsibility |
+| --- | --- |
+| `WarehouseManagementSystem.Domain` | Aggregates, value objects, domain rules, repository contracts and domain exceptions. |
+| `WarehouseManagementSystem.Infrastructure` | EF Core persistence, repository implementations and background reservation processing. |
+| `WarehouseManagementSystem.Contracts` | Integration-message contracts shared with external simulators. |
+| `WarehouseManagementSystem.API` | Controllers, command/query services, validation, authentication, cache and messaging publisher/consumers. |
+| `WarehouseManagementSystem.Idp` | Local Duende IdentityServer for the development OIDC flow. |
+| `WarehouseManagementSystem.FakeShipping` | Idempotent downstream shipping consumer. |
+| `WarehouseManagementSystem.FakeBilling` | Idempotent downstream billing consumer. |
+| `WarehouseManagementSystem.FakeERP` | ERP outbox and WMS inbox demonstration. |
+| `WarehouseManagementSystem.Test` | Unit, controller, repository, API-integration and query-performance tests. |
+| `WarehouseManagementSystemClient` | Angular single-page client. |
+| `docs` | Architecture and operations documentation. |
 
-1. Seed master data: warehouses, zones, products, product batches, stock.
-2. Seed operational data: PZ/WZ/MM documents and document items.
-3. Start with `Medium`, then `Stress`, then `Extreme` only when the system is ready for long-running tests.
+## Run with Docker Compose
 
-## Workload screens
+### Prerequisites
 
-Primary screens for workload and regression checks:
+- Docker Desktop (or another Docker Engine) running.
+- A trusted local .NET HTTPS certificate.
 
-- Document list
-- Pending documents
-- Stock list
-- Stock availability
-- Product batch list
-- Audit log list
-
-Track SQL duration, logical reads, payload size, API P50/P95, Angular render time, runtime memory and number of SQL queries per screen.
-
-Likely first bottlenecks:
-
-- `CountAsync` plus page query on large lists.
-- `Contains` search patterns over large text fields.
-- Document item joins and audit payload size on high-volume data.
-
-## Docker quick start
-
-Minimal development stack contains:
-
-- `client`: Angular SPA served by Nginx, exposed at `https://localhost:4201`.
-- `api`: WMS ASP.NET Core API, exposed at `https://localhost:8081`.
-- `idp`: Duende IdentityServer, exposed at `https://localhost:8091`.
-- `sqlserver`: SQL Server 2022, exposed on host port `14333`.
-
-Useful commands:
-
-Create and trust the shared localhost certificate once before starting the stack:
+Create the shared development certificate once:
 
 ```powershell
 dotnet dev-certs https --trust
@@ -77,80 +81,109 @@ dotnet dev-certs https -ep .certs\localhost.pfx -p wms-local-dev
 dotnet dev-certs https -ep .certs\localhost.pem --format Pem --no-password
 ```
 
-The PEM export creates both `.certs\localhost.pem` and `.certs\localhost.key`.
+Then build and start the complete local environment:
 
 ```powershell
 docker compose up -d --build
 ```
 
-Builds API and IDP images, starts SQL Server, waits until SQL Server is healthy, then starts the API.
+| Service | Address |
+| --- | --- |
+| Angular client | `https://localhost:4201` |
+| API / Swagger | `https://localhost:8081/swagger/index.html` |
+| API health check | `https://localhost:8081/health` |
+| IdentityServer discovery | `https://localhost:8091/.well-known/openid-configuration` |
+| RabbitMQ management | `http://localhost:15672` (`guest` / `guest`) |
+| SQL Server | `localhost,14333` |
+
+Useful commands:
 
 ```powershell
 docker compose ps
-```
-
-Shows running containers and published ports.
-
-```powershell
 docker compose logs -f api
-docker compose logs -f idp
-```
-
-Streams logs for the selected service.
-
-```powershell
 docker compose down
 ```
 
-Stops and removes containers, keeping the SQL Server volume.
+`docker compose down -v` also removes the local database and simulator volumes.
+
+## Database seeding
+
+Seeding is performed by a hosted service when the API starts. It creates master data first (warehouses, zones, products, batches and stock), then operational documents and their items. It is disabled in `appsettings.json`; Docker Compose enables it explicitly.
+
+| Profile | Recommended use | Operational volume |
+| --- | --- | --- |
+| `Demo` | Recruiter walkthrough, local smoke test and UI exploration. | 1,000 movement items |
+| `Medium` | First realistic local workload. | 20,000 movement items |
+| `Stress` | Query and capacity investigation. | 500,000 movement items |
+| `Extreme` | Deliberate long-running stress experiment only. | 10,000,000 movement items |
+
+The repository has also been exercised with the `Extreme` profile to validate the high-volume seeding and workload-oriented screens. It remains intentionally unsuitable for a first local startup.
+
+Recommended workflow:
+
+1. Use `Demo` for normal development and presentations.
+2. Move to `Medium`, then `Stress`, only when measuring a specific query or screen.
+3. Run `Extreme` only on a disposable database with enough disk, memory and time; it is not suitable for a first startup.
+4. The seeder skips a stage when its target data already exists. To seed a different profile, start with a clean development database rather than mixing profiles.
+
+For Docker, set `Seeding__Profile` to `Demo` (or the required profile) in `docker-compose.yml` before the first startup. To rebuild a disposable local database, run:
 
 ```powershell
 docker compose down -v
+docker compose up -d --build
 ```
 
-Stops containers and removes the SQL Server volume. Use this only when you want a clean development database.
+This removes the SQL Server and simulator volumes. For a non-Docker API run, enable the seeder and select a profile through environment variables:
 
-Smoke-test URLs:
+```powershell
+$env:Seeding__Enabled = "true"
+$env:Seeding__Profile = "Demo"
+dotnet run --project WarehouseManagementSystem.API
+```
 
-- Angular client: `https://localhost:4201`
-- API Swagger: `https://localhost:8081/swagger/index.html`
-- IDP discovery: `https://localhost:8091/.well-known/openid-configuration`
+## API and validation
 
-Ports `4200`, `8080`, and `8090` are HTTP entry points used for automatic redirects to the HTTPS addresses above. All containers mount the same host-trusted development certificate from `.certs`, so the browser does not show a certificate warning.
+All controller routes require authentication by default. Swagger is available in Development and supports a Bearer token. Main resource areas are warehouses and zones, products and batches, stock and reservations, documents/items, audit logs, and integration diagnostics.
 
-### Docker HTTPS and login fix
+Request validators are registered automatically from `WarehouseManagementSystem.API/Validators`. FluentValidation failures are returned as `application/problem+json` with HTTP `422`; the exception middleware uses the same problem-details format for domain and application errors.
 
-The Docker setup previously mixed browser-visible addresses with Docker-internal service names and sent plain HTTP traffic to HTTPS-only ports. This caused Nginx `400 Bad Request`, empty API/IDP responses, rejected JWT issuers, and an OIDC login flow that did not return reliably to the Angular application.
+## Messaging demonstration
 
-The current setup separates HTTP redirect ports from HTTPS application ports, uses one trusted `localhost` certificate for Nginx and Kestrel, configures the public IdentityServer issuer independently from its internal Docker address, permits the Docker client origin in CORS/OIDC, and completes `checkAuth()` on the Angular callback route before navigation.
+Confirming a document records the document change and its integration event in one SQL transaction. A background worker publishes pending outbox rows to `wms.events`; downstream consumers use durable queues, retry/DLQ topology and persistent processed-message records to tolerate at-least-once delivery.
 
-`Database__MigrateOnStartup` is disabled in Docker Compose because the current EF migration chain fails on a clean SQL Server database while dropping `PK_Users` before removing the dependent `FK_Documents_Users_TransferStartedById` foreign key.
+- `FakeShipping` creates a shipping projection.
+- `FakeBilling` only invoices eligible `WZ` documents and also guards against duplicate source documents.
+- `FakeERP` demonstrates the inverse direction: ERP outbox → RabbitMQ → WMS inbox → WMS document.
+- Inspect recent WMS outbox rows through authenticated `GET /api/integration/outbox`.
 
-## Development auth workaround
+For operational details and delivery guarantees, see [Messaging operations](docs/messaging-operations.md) and [ERP inbox flow](docs/erp-inbox-flow.md).
 
-The API has a development-only JWT/certificate workaround for IdentityServer.
+## Tests
 
-Known technical debt:
+Run all tests:
 
-- local Docker auth settings are provided through environment variables in `docker-compose.yml`;
-- JWKS keys are resolved manually;
-- local certificate validation is bypassed in development;
-- auth diagnostics still use console output.
+```powershell
+dotnet test WarehouseManagementSystem.sln --configuration Release
+```
 
-Before production hardening, move auth values to configuration, remove the certificate bypass, replace console diagnostics with structured logging and prefer the standard JWT bearer metadata/JWKS flow where possible.
+Docker must be running: repository, API-integration and performance tests use Testcontainers with SQL Server. The CI workflow restores in locked mode, builds Release and runs the same test suite with coverage collection.
 
-## Event-driven learning slice: WMS to FakeShipping and FakeBilling
+Tests use xUnit and FluentAssertions. Coverage includes domain invariants, command/query services, controller behaviour, outbox/retry/idempotency flows, repositories, API authorization and query-count/performance guardrails.
 
-`docker compose up -d --build` now starts SQL Server, RabbitMQ (management UI: http://localhost:15672, `guest` / `guest`), the WMS API, `fake-shipping` and `fake-billing`. The fake consumers have separate SQLite volumes (`shipping-data`, `billing-data`) and never use the WMS database.
+## Documentation
 
-Flow: confirm a document in WMS -> one SQL transaction saves the document and `OutboxMessages` -> WMS publisher sends a durable `document.confirmed` message to `wms.events` -> RabbitMQ routes a copy to both durable queues -> FakeShipping writes `FakeShipments`; FakeBilling writes `FakeInvoices`; both write their local `ProcessedMessages` before ACK.
+- [Architecture comparison](docs/ARCHITECTURE_COMPARISON.md)
+- [Messaging operations](docs/messaging-operations.md)
+- [ERP inbox flow](docs/erp-inbox-flow.md)
+- [Architecture Decision Records (ADR)](docs/adr/README.md)
+  - [ADR-001: Modular monolith](docs/adr/ADR-001-modular-monolith.md)
+  - [ADR-002: Transactional outbox](docs/adr/ADR-002-transactional-outbox.md)
+  - [ADR-003: Domain events vs integration events](docs/adr/ADR-003-domain-events-vs-integration-events.md)
+  - [ADR-004: At-least-once delivery and idempotent consumers](docs/adr/ADR-004-at-least-once-delivery-and-idempotent-consumers.md)
+  - [ADR-005: Avoid a universal generic repository](docs/adr/ADR-005-avoid-universal-generic-repository.md)
+  - [ADR-006: Restrict repository capabilities with IReadOnlyRepository](docs/adr/ADR-006-restrict-repository-capabilities-with-ireadonlyrepository.md)
+  - [ADR-007: Isolate API integration tests from production background services](docs/adr/ADR-007-isolate-api-integration-tests-from-background-services.md)
 
-- Inspect the WMS outbox with authenticated `GET /api/integration/outbox` (latest 100 messages, including status, retry count and error).
-- Inspect RabbitMQ queues and the DLQ in the management UI.
-- For a local, non-Docker run start RabbitMQ/SQL with Compose, then run `dotnet run --project WarehouseManagementSystem.FakeShipping`, `dotnet run --project WarehouseManagementSystem.FakeBilling` and the API. The worker configuration is in each project's `appsettings.json`.
-- To demonstrate duplicate delivery, republish the same JSON payload in RabbitMQ with the original `MessageId`; FakeShipping logs a duplicate and leaves exactly one `FakeShipments` row.
+## Current limitations
 
-The delivery guarantee is at-least-once, not exactly-once: a crash after a broker confirm but before WMS records `Published` can produce a duplicate. Billing additionally has a unique `SourceDocumentId`, so even a new event ID cannot bill the same WMS document twice.
-# ERP Inbox demonstration
-
-Run `fake-erp` with `--demo-order` to create the deterministic `ERP-DEMO-001` only when it does not already exist. It writes the ERP order and a command outbox row atomically, then publishes `erp.document.create`. The command requires real seeded WMS warehouse/product/zone identifiers; the demonstration payload deliberately uses placeholders so it is safe to inspect and amend before sending in a real environment.
+This is a portfolio/development environment, not a production deployment. Development credentials and local certificate settings are intentionally present in Compose; production configuration must use a secret store and hardened TLS/authentication settings. The code also marks follow-up work directly around messaging resilience (connection reuse/reconnect, multi-instance outbox claiming, retention/metrics and further failure-injection tests).

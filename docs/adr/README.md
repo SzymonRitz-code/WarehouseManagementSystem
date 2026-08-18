@@ -6,3 +6,4 @@
 - [ADR-004: At-least-once delivery and idempotent consumers](ADR-004-at-least-once-delivery-and-idempotent-consumers.md)
 - [ADR-005: Avoid a universal generic repository](ADR-005-avoid-universal-generic-repository.md)
 - [ADR-006: Restrict repository capabilities with IReadOnlyRepository](ADR-006-restrict-repository-capabilities-with-ireadonlyrepository.md)
+- [ADR-007: Isolate API integration tests from production background services](ADR-007-isolate-api-integration-tests-from-background-services.md)
