@@ -424,6 +424,11 @@ testem.log
 typings/
 __screenshots__/
 
+# Playwright
+playwright/.auth/
+playwright-report/
+test-results/
+
 # System
 .DS_Store
 Thumbs.db
