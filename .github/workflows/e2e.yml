@@ -1,0 +1,55 @@
+name: WMS end-to-end tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'WarehouseManagementSystemClient/**'
+      - 'WarehouseManagementSystem.API/**'
+      - 'WarehouseManagementSystem.Domain/**'
+      - 'WarehouseManagementSystem.Infrastructure/**'
+      - 'WarehouseManagementSystem.Idp/**'
+
+jobs:
+  e2e:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: WarehouseManagementSystemClient/package-lock.json
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+
+      - name: Restore and build .NET solution
+        run: dotnet build WarehouseManagementSystem.sln --configuration Release
+
+      - name: Install Angular dependencies
+        working-directory: WarehouseManagementSystemClient
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: WarehouseManagementSystemClient
+        run: npx playwright install chromium
+
+      - name: Build Angular application
+        working-directory: WarehouseManagementSystemClient
+        run: npm run build
+
+      - name: Run Playwright tests
+        working-directory: WarehouseManagementSystemClient
+        run: npx playwright test --grep "should report the failed OIDC discovery request"
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            WarehouseManagementSystemClient/playwright-report
+            WarehouseManagementSystemClient/test-results
