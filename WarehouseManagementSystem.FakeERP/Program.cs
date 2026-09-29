@@ -3,7 +3,9 @@ using WarehouseManagementSystem.Contracts;
 using WarehouseManagementSystem.FakeERP;
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.Configure<ErpMessagingOptions>(builder.Configuration.GetSection(ErpMessagingOptions.SectionName));
-builder.Services.AddDbContext<ErpDbContext>(databaseOptions => databaseOptions.UseSqlite(builder.Configuration.GetConnectionString("Erp") ?? "Data Source=fake-erp.db"));
+builder.Services.AddDbContext<ErpDbContext>(
+    databaseOptions => databaseOptions.UseSqlite(builder.Configuration.GetConnectionString("Erp") ?? "Data Source=fake-erp.db")
+    );
 builder.Services.AddSingleton<ErpRabbit>();
 builder.Services.AddScoped<DocumentConfirmedHandler>();
 builder.Services.AddHostedService<ErpOutboxPublisher>();

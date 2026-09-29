@@ -34,8 +34,12 @@ public sealed class DocumentConfirmedHandler(ErpDbContext erpDbContext, ILogger<
         });
         try
         {
-            await erpDbContext.SaveChangesAsync(ct); if (confirmationTransaction is not null) { await confirmationTransaction.CommitAsync(ct); }
-            logger.LogInformation("ERP confirmed order {ExternalOrderId}, CorrelationId {CorrelationId}", warehouseOrder.ExternalOrderId, message.CorrelationId);
+            await erpDbContext.SaveChangesAsync(ct);
+            if (confirmationTransaction is not null)
+            { await confirmationTransaction.CommitAsync(ct); }
+            logger.LogInformation(
+                "ERP confirmed order {ExternalOrderId}, CorrelationId {CorrelationId}",
+                warehouseOrder.ExternalOrderId, message.CorrelationId);
         }
         catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("Consumer", StringComparison.OrdinalIgnoreCase) == true)
         {

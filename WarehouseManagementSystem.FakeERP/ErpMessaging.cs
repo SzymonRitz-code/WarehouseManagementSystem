@@ -74,7 +74,11 @@ public sealed class ErpOutboxPublisher(
                         publishProperties.CorrelationId = outboxMessage.CorrelationId.ToString();
                         publishProperties.Type = nameof(CreateWarehouseDocumentCommand);
 
-                        commandChannel.BasicPublish(messagingOptions.CommandsExchange, messagingOptions.CommandsRoutingKey, publishProperties, Encoding.UTF8.GetBytes(outboxMessage.Payload));
+                        commandChannel.BasicPublish(
+                            messagingOptions.CommandsExchange,
+                            messagingOptions.CommandsRoutingKey,
+                            publishProperties,
+                            Encoding.UTF8.GetBytes(outboxMessage.Payload));
 
                         if (!commandChannel.WaitForConfirms(TimeSpan.FromSeconds(10)))
                         {
@@ -118,24 +122,68 @@ public sealed class ErpConfirmedConsumer(
 
     private void Run(CancellationToken ct)
     {
-        using var rabbitConnection = rabbit.Connect(); using var confirmedDocumentChannel = rabbitConnection.CreateModel();
-        var messagingOptions = options.Value; confirmedDocumentChannel.ExchangeDeclare(messagingOptions.EventExchange, ExchangeType.Direct, true);
-        confirmedDocumentChannel.ExchangeDeclare(messagingOptions.RetryExchange, ExchangeType.Direct, true);
-        confirmedDocumentChannel.ExchangeDeclare(messagingOptions.DeadLetterExchange, ExchangeType.Direct, true);
-        confirmedDocumentChannel.QueueDeclare(messagingOptions.DeadLetterQueue, true, false, false);
-        confirmedDocumentChannel.QueueBind(messagingOptions.DeadLetterQueue, messagingOptions.DeadLetterExchange, "document.confirmed");
-        confirmedDocumentChannel.QueueDeclare(messagingOptions.RetryQueue, true, false, false, new Dictionary<string, object> {
-            { "x-message-ttl", messagingOptions.RetryDelaySeconds * 1000 },
-            { "x-dead-letter-exchange", messagingOptions.EventExchange },
-            { "x-dead-letter-routing-key", "document.confirmed" }
-        });
-        confirmedDocumentChannel.QueueBind(messagingOptions.RetryQueue, messagingOptions.RetryExchange, "document.confirmed");
-        confirmedDocumentChannel.QueueDeclare(messagingOptions.Queue, true, false, false, new Dictionary<string, object> {
-            { "x-dead-letter-exchange", messagingOptions.DeadLetterExchange },
-            { "x-dead-letter-routing-key", "document.confirmed" }
-        });
-        confirmedDocumentChannel.QueueBind(messagingOptions.Queue, messagingOptions.EventExchange, "document.confirmed");
+        using var rabbitConnection = rabbit.Connect();
+        using var confirmedDocumentChannel = rabbitConnection.CreateModel();
+        var messagingOptions = options.Value;
+
+        confirmedDocumentChannel.ExchangeDeclare(
+            exchange: messagingOptions.EventExchange,
+            type: ExchangeType.Direct,
+            durable: true);
+
+        confirmedDocumentChannel.ExchangeDeclare(
+            exchange: messagingOptions.RetryExchange,
+            type: ExchangeType.Direct,
+            durable: true);
+
+        confirmedDocumentChannel.ExchangeDeclare(
+            exchange: messagingOptions.DeadLetterExchange,
+            type: ExchangeType.Direct,
+            durable: true);
+
+        confirmedDocumentChannel.QueueDeclare(
+            queue: messagingOptions.DeadLetterQueue,
+            durable: true,
+            exclusive: false,
+            autoDelete: false);
+
+        confirmedDocumentChannel.QueueBind(
+            queue: messagingOptions.DeadLetterQueue,
+            exchange: messagingOptions.DeadLetterExchange,
+            routingKey: "document.confirmed");
+
+        confirmedDocumentChannel.QueueDeclare(
+            queue: messagingOptions.RetryQueue,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: new Dictionary<string, object> {
+                { "x-message-ttl", messagingOptions.RetryDelaySeconds * 1000 },
+                { "x-dead-letter-exchange", messagingOptions.EventExchange },
+                { "x-dead-letter-routing-key", "document.confirmed" }
+            });
+
+        confirmedDocumentChannel.QueueBind(
+            queue: messagingOptions.RetryQueue,
+            exchange: messagingOptions.RetryExchange,
+            routingKey: "document.confirmed");
+
+        confirmedDocumentChannel.QueueDeclare(
+            queue: messagingOptions.Queue,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: new Dictionary<string, object> {
+                { "x-dead-letter-exchange", messagingOptions.DeadLetterExchange },
+                { "x-dead-letter-routing-key", "document.confirmed" }
+            });
+        confirmedDocumentChannel.QueueBind(
+            queue: messagingOptions.Queue, 
+            exchange: messagingOptions.EventExchange, 
+            routingKey: "document.confirmed");
+        
         var confirmationConsumer = new EventingBasicConsumer(confirmedDocumentChannel);
+
         confirmationConsumer.Received += (_, delivery) =>
         {
             try
@@ -159,7 +207,10 @@ public sealed class ErpConfirmedConsumer(
                 confirmedDocumentChannel.BasicNack(delivery.DeliveryTag, false, false);
             }
         };
-        confirmedDocumentChannel.BasicConsume(messagingOptions.Queue, false, confirmationConsumer); 
+        confirmedDocumentChannel.BasicConsume(
+            queue: messagingOptions.Queue,
+            autoAck: false, 
+            consumer: confirmationConsumer);
         ct.WaitHandle.WaitOne();
     }
 }
