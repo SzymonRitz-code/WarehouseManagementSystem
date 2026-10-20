@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
@@ -7,157 +9,150 @@ using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Integration;
 
-/// <summary>
-/// Background service that publishes pending outbox messages to RabbitMQ.
-/// </summary>
-public class OutboxPublisherWorker : BackgroundService
+/// <summary>Publishes committed integration events with broker confirmation and exclusive batch ownership.</summary>
+public sealed class OutboxPublisherWorker(
+    IServiceScopeFactory scopes, IRabbitMqConnectionFactory connections,
+    IRabbitMqTopologyConfigurator topology, IOptions<MessagingOptions> options,
+    ILogger<OutboxPublisherWorker> logger) : BackgroundService
 {
-    // PUBLISHER: ten worker pełni rolę publishera i wysyła wiadomości do brokera.
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IRabbitMqConnectionFactory _connectionFactory;
-    private readonly IRabbitMqTopologyConfigurator _topologyConfigurator;
-    private readonly MessagingOptions _options;
-    private readonly ILogger<OutboxPublisherWorker> _logger;
+    private readonly MessagingOptions _options = options.Value;
+    private IConnection? _connection;
+    private IModel? _channel;
+    private static readonly Meter Meter = new("Wms.Outbox");
+    private static readonly Histogram<double> PublishTime = Meter.CreateHistogram<double>("wms.outbox.publish.duration", "ms");
+    private static readonly Histogram<double> OldestAge = Meter.CreateHistogram<double>("wms.outbox.oldest.age", "s");
+    private static readonly Histogram<int> Backlog = Meter.CreateHistogram<int>("wms.outbox.backlog", "messages");
+    private static readonly Counter<int> Failures = Meter.CreateCounter<int>("wms.outbox.failures");
 
-    public OutboxPublisherWorker(
-        IServiceScopeFactory scopeFactory,
-        IRabbitMqConnectionFactory connectionFactory,
-        IRabbitMqTopologyConfigurator topologyConfigurator,
-        IOptions<MessagingOptions> options,
-        ILogger<OutboxPublisherWorker> logger)
-    {
-        _scopeFactory = scopeFactory;
-        _connectionFactory = connectionFactory;
-        _topologyConfigurator = topologyConfigurator;
-        _options = options.Value;
-        _logger = logger;
-    }
-
-    /// <summary>
-    /// Executes the background service.
-    /// </summary>
-    /// <param name="stoppingToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A task that represents the background service execution.</returns>
+    /// <summary>Reuses the broker session and reconnects with bounded exponential delay after an outage.</summary>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_options.Enabled)
+        if (!_options.Enabled) return;
+        var failures = 0;
+        try
         {
-            _logger.LogInformation("Messaging is disabled. Outbox publisher will not start.");
-            return;
-        }
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await PublishPendingMessagesAsync(stoppingToken);
+                try { failures = await PublishPendingMessagesAsync(stoppingToken) ? 0 : failures + 1; }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
+                catch (Exception ex)
+                {
+                    failures++;
+                    CloseBroker();
+                    logger.LogError(ex, "Outbox iteration failed; reconnect attempt {Attempt}.", failures);
+                }
+                await Task.Delay(TimeSpan.FromSeconds(failures == 0
+                    ? Math.Max(1, _options.PublishPollIntervalSeconds)
+                    : Math.Min(60, Math.Pow(2, Math.Min(failures, 6))) * (0.8 + Random.Shared.NextDouble() * 0.4)), stoppingToken);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Outbox publisher iteration failed.");
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(_options.PublishPollIntervalSeconds), stoppingToken);
         }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+        finally { CloseBroker(); }
     }
+
     /// <summary>
-    /// Publishes pending outbox messages to RabbitMQ.
+    /// Locks a SQL Server batch until its result is committed, preventing concurrent publishers from
+    /// selecting the same rows. A crash releases the transaction locks and leaves the rows retryable.
+    /// Broker confirmation precedes the database commit, so consumers must tolerate redelivery.
     /// </summary>
-    /// <param name="ct">A token to monitor for cancellation requests.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    private async Task PublishPendingMessagesAsync(CancellationToken ct)
+    public async Task<bool> PublishPendingMessagesAsync(CancellationToken ct)
     {
-        // BROKER CONNECTION: tutaj publisher łączy się z brokerem RabbitMQ.
-        // TODO(RECRUITMENT): Utrzymuj dlugowieczne polaczenie/kanal i dodaj reconnect z backoffem.
-        // Tworzenie ich przy kazdym pollingu jest kosztowne, a chwilowa awaria brokera konczy cala iteracje.
-        using var connection = _connectionFactory.CreateConnection();
-        using var channel = connection.CreateModel();
-        _topologyConfigurator.EnsureTopology(channel);
-        channel.ConfirmSelect();
+        using var scope = scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<WarehouseManagementSystemDbContext>();
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        var now = DateTimeOffset.UtcNow;
+        var messages = await db.OutboxMessages.FromSqlInterpolated($"""
+            SELECT TOP ({Math.Max(1, _options.PublishBatchSize)}) * FROM OutboxMessages WITH (UPDLOCK, READPAST, READCOMMITTEDLOCK)
+            WHERE Status IN ('Pending', 'Failed') AND (NextAttemptAt IS NULL OR NextAttemptAt <= {now})
+            ORDER BY OccurredAt, Id
+            """).ToListAsync(ct);
 
-        // TODO(RECRUITMENT): Wlacz publisher confirms i oznaczaj rekord jako Published dopiero po ACK brokera.
-        // BasicPublish moze zakonczyc sie bez wyjatku, mimo ze broker nie utrwalil wiadomosci. Dodaj tez
-        // mandatory=true + BasicReturn, bo brak pasujacego bindingu moze po cichu zgubic unroutable message.
-
-        using var scope = _scopeFactory.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<WarehouseManagementSystemDbContext>();
-
-        var messages = await dbContext.OutboxMessages
-            .Where(x => (x.Status == OutboxMessageStatus.Pending || x.Status == OutboxMessageStatus.Failed) &&
-                        (x.NextAttemptAt == null || x.NextAttemptAt <= DateTimeOffset.UtcNow))
-            // TODO(RECRUITMENT): Przy wielu instancjach atomowo claimuj rekordy (np. Processing + lease,
-            // SELECT ... FOR UPDATE SKIP LOCKED albo optimistic concurrency). Sam SELECT pozwala dwom
-            // publisherom pobrac i opublikowac ten sam batch.
-            // Publikujemy w kolejności OccurredAt, żeby maksymalnie zachować porządek biznesowy
-            // w obrębie jednego publishera. To nie daje globalnej gwarancji ordering między wszystkimi
-            // konsumentami i partycjami - jeśli na rozmowie padnie temat strict ordering, to tu właśnie
-            // zaczyna się ograniczenie obecnej implementacji.
-            .OrderBy(x => x.OccurredAt)
-            .Take(_options.PublishBatchSize)
-            .ToListAsync(ct);
-
+        var publicationFailed = false;
         foreach (var message in messages)
         {
+            ct.ThrowIfCancellationRequested();
+            var watch = Stopwatch.StartNew();
             try
             {
-                // Tworzy nowy obiekt BasicProperties, który pozwala ustawić różne właściwości wiadomości, takie jak:
-                //  trwałość, identyfikator wiadomości, typ, identyfikator korelacji i znacznik czasu.
+                var channel = GetChannel();
                 var properties = channel.CreateBasicProperties();
                 properties.Persistent = true;
                 properties.MessageId = message.MessageId.ToString();
                 properties.Type = message.Type;
                 properties.CorrelationId = message.CorrelationId?.ToString();
                 properties.Timestamp = new AmqpTimestamp(message.OccurredAt.ToUnixTimeSeconds());
-                // MessageId i CorrelationId lecą w nagłówkach brokera, żeby downstream mógł:
-                // 1) wykrywać duplikaty,
-                // 2) wiązać logi i skutki biznesowe z jednym procesem end-to-end.
-
-                var body = System.Text.Encoding.UTF8.GetBytes(message.Payload);
-                // PUBLISH: to jest właściwy publish do exchange w brokerze.
-                // EXCHANGE: _options.Exchanges.WmsEvents
-                // ROUTING KEY: message.RoutingKey
-                channel.BasicPublish(
-                    exchange: _options.Exchanges.WmsEvents,
-                    routingKey: message.RoutingKey,
-                    basicProperties: properties,
-                    body: body);
-
-                // BasicPublish only writes to the client channel. A publisher confirm is the
-                // broker acknowledgement that lets us safely move the outbox row forward.
-                channel.WaitForConfirmsOrDie(TimeSpan.FromSeconds(_options.PublishConfirmTimeoutSeconds));
-
+                var returned = false;
+                void OnReturn(object? sender, RabbitMQ.Client.Events.BasicReturnEventArgs args) => returned = true;
+                channel.BasicReturn += OnReturn;
+                try
+                {
+                    channel.BasicPublish(_options.Exchanges.WmsEvents, message.RoutingKey, true, properties,
+                        System.Text.Encoding.UTF8.GetBytes(message.Payload));
+                    channel.WaitForConfirmsOrDie(TimeSpan.FromSeconds(_options.PublishConfirmTimeoutSeconds));
+                    if (returned) throw new InvalidOperationException("Broker returned an unroutable outbox message.");
+                }
+                finally { channel.BasicReturn -= OnReturn; }
                 message.Status = OutboxMessageStatus.Published;
                 message.PublishedAt = DateTimeOffset.UtcNow;
                 message.LastError = null;
                 message.NextAttemptAt = null;
-
-                _logger.LogInformation("Published outbox message {MessageId} ({Type}).", message.MessageId, message.Type);
             }
             catch (Exception ex)
             {
+                publicationFailed = true;
+                CloseBroker();
+                Failures.Add(1);
                 OutboxMessageRetry.MarkFailed(message, ex, _options.MaxPublishAttempts, _options.PublishRetryDelaySeconds);
-                // TODO(RECRUITMENT): Dodaj exponential backoff z jitterem, NextAttemptAt, MaxRetryCount
-                // oraz stan Dead/Abandoned. Po przekroczeniu progu wyslij alert zamiast retry bez konca.
-                // Prosty retry policy na poziomie outboxa: wiadomość zostaje w bazie jako Failed
-                // i kolejna iteracja workera spróbuje opublikować ją ponownie. Nie ma tu jeszcze backoffu,
-                // limitu prób ani eskalacji do alertu - to jest miejsce, gdzie naturalnie dochodzi się do
-                // pytań o stuck messages i operacyjne monitorowanie.
-
-                _logger.LogWarning(ex, "Failed to publish outbox message {MessageId}; attempt {RetryCount}, status {Status}.", message.MessageId, message.RetryCount, message.Status);
+                if (message.Status == OutboxMessageStatus.Abandoned)
+                    logger.LogError(ex, "Outbox message {MessageId} exhausted retries and requires operator action.", message.MessageId);
+                else logger.LogWarning(ex, "Outbox publication failed for {MessageId}.", message.MessageId);
+                // Avoid opening one connection per remaining row during a broker outage.
+                break;
             }
+            finally { PublishTime.Record(watch.Elapsed.TotalMilliseconds); }
         }
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
 
-        if (messages.Count > 0)
-        {
-            // Uwaga rekrutacyjna: jeśli publish do RabbitMQ się uda, a proces padnie przed tym SaveChanges,
-            // broker może dostarczyć tę samą wiadomość drugi raz po ponownym uruchomieniu workera.
-            // To dlatego downstream musi zakładać at-least-once delivery i być idempotentny.
-            await dbContext.SaveChangesAsync(ct);
-        }
+        var pending = db.OutboxMessages.Where(x => x.Status == OutboxMessageStatus.Pending || x.Status == OutboxMessageStatus.Failed);
+        Backlog.Record(await pending.CountAsync(ct));
+        var oldest = await pending.MinAsync(x => (DateTimeOffset?)x.OccurredAt, ct);
+        if (oldest.HasValue) OldestAge.Record(Math.Max(0, (DateTimeOffset.UtcNow - oldest.Value).TotalSeconds));
+        // Delete only confirmed publications, in bounded batches. Failed/abandoned rows remain available for replay.
+        var cutoff = now.AddDays(-Math.Max(1, _options.PublishedRetentionDays));
+        await db.OutboxMessages.Where(x => x.Status == OutboxMessageStatus.Published && x.PublishedAt < cutoff)
+            .OrderBy(x => x.PublishedAt).Take(500).ExecuteDeleteAsync(ct);
+        return !publicationFailed;
+    }
 
-        // TODO(RECRUITMENT): Dodaj retencje/archiwizacje Published oraz metryki wieku najstarszej wiadomosci,
-        // liczby Pending/Failed i czasu publikacji. To pozwala odroznic zwykly backlog od outage'u.
-        // TODO(RECRUITMENT): Dodaj testy failure injection dla awarii przed publish, po publish przed
-        // SaveChanges i po SaveChanges. W ten sposob udowodnisz at-least-once zamiast tylko je deklarowac.
+    /// <summary>Reuses a healthy confirmed channel, recreating it after a broken connection.</summary>
+    private IModel GetChannel()
+    {
+        if (_connection?.IsOpen == true && _channel?.IsOpen == true) return _channel;
+        CloseBroker();
+        _connection = connections.CreateConnection();
+        _channel = _connection.CreateModel();
+        topology.EnsureTopology(_channel);
+        _channel.ConfirmSelect();
+        return _channel;
+    }
+
+    /// <summary>Releases a broker session also when the worker is disposed before it starts.</summary>
+    public override void Dispose()
+    {
+        CloseBroker();
+        base.Dispose();
+    }
+
+    private void CloseBroker()
+    {
+        var channel = _channel;
+        var connection = _connection;
+        _channel = null;
+        _connection = null;
+        try { channel?.Dispose(); }
+        catch (Exception ex) { logger.LogDebug(ex, "Failed to dispose a broken broker channel."); }
+        try { connection?.Dispose(); }
+        catch (Exception ex) { logger.LogDebug(ex, "Failed to dispose a broken broker connection."); }
     }
 }

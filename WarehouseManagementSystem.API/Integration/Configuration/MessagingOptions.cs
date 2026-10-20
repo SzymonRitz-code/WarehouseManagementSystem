@@ -15,9 +15,15 @@ public class MessagingOptions
     /// </summary>
     public bool Enabled { get; set; }
 
+    /// <summary>Enables an additional in-process demonstration projection with its own queue.</summary>
+    public bool LocalShippingProjectionEnabled { get; set; }
+
     /// <summary>
-    /// Gets or sets the batch size for publishing messages.
+    /// Gets or sets the retention period for confirmed outbox payloads; failed records are retained.
     /// </summary>
+    public int PublishedRetentionDays { get; set; } = 30;
+
+    /// <summary>Gets or sets the maximum number of rows locked and published per transaction.</summary>
     public int PublishBatchSize { get; set; } = 20;
 
     /// <summary>
