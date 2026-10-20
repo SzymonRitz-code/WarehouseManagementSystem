@@ -186,4 +186,4 @@ Tests use xUnit and FluentAssertions. Coverage includes domain invariants, comma
 
 ## Current limitations
 
-This is a portfolio/development environment, not a production deployment. Development credentials and local certificate settings are intentionally present in Compose; production configuration must use a secret store and hardened TLS/authentication settings. The code also marks follow-up work directly around messaging resilience (connection reuse/reconnect, multi-instance outbox claiming, retention/metrics and further failure-injection tests).
+This is a portfolio/development environment, not a production deployment. Development credentials and local certificate settings are intentionally present in Compose; production configuration must use a secret store and hardened TLS/authentication settings. Messaging includes connection reuse/reconnect, SQL Server batch locking, bounded retries, retention and metrics. See [the implementation review](docs/implementation-review.md) for the completed task audit and [messaging operations](docs/messaging-operations.md) for guarantees and operational limits.
