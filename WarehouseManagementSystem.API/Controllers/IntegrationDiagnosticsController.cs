@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WarehouseManagementSystem.Infrastructure.Persistence;
 
 namespace WarehouseManagementSystem.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/integration/outbox")]
+[Route("api/internal/integration/outbox")]
 public sealed class IntegrationDiagnosticsController(WarehouseManagementSystemDbContext db) : ControllerBase
 {
     /// <summary>Small operational view of outbox state; it deliberately is not a dashboard.</summary>
