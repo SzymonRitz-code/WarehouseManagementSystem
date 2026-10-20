@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace WarehouseManagementSystem.API.Extensions;
 
-public static class ApiBehaviorExtensions // dodanie niestandardowego zachowania dla błędów walidacji w API, aby zwracać odpowiedź 422 Unprocessable Entity zamiast domyślnej odpowiedzi 400 Bad Request.
+public static class ApiBehaviorExtensions
 {
     /// <summary>
     /// Adds custom API behavior for handling validation errors in the WMS application. 
