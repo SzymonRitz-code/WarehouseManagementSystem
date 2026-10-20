@@ -68,7 +68,7 @@ public class ProductBatchesController : ControllerBase
     }
 
     /// <summary>
-    /// Gets the list of all product batches.
+    /// Gets product batches with stock totals and available quantities required by the batch-list UI.
     /// </summary>
     /// <param name="ct">Operation cancellation token.</param>
     /// <returns>Product batch list.</returns>
@@ -80,9 +80,8 @@ public class ProductBatchesController : ControllerBase
         var batches = await _productBatchQueryService.GetBatchesAsync(ct);
         return Ok(batches);
     }
-    // TODO : Finish Get Batches to be consistent with UI implementation
     /// <summary>
-    /// Gets a product batch by identifier.
+    /// Gets a batch list item, including aggregated stock quantities, for the batch-details UI.
     /// </summary>
     /// <param name="batchId">Unique product batch identifier.</param>
     /// <param name="ct">Operation cancellation token.</param>

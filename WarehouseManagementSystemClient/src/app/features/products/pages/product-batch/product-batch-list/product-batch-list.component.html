@@ -5,8 +5,6 @@
         <ng-container *ngIf="product$ | async as product">
         <div class="space-y-6">
             <div>
-                <!-- TODO sprawdzić jak rozwiązać problem z ?. gdy product jest undefined. 
-                 Chodzi mi o to że przy obsevable dane mogą spłynąć później niż element się pojawi-->
                 <app-label for="productName">Name</app-label>
                 <app-input-detail id="productName" [value]="product.name">
                 </app-input-detail>
