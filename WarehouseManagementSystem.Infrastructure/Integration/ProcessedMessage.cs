@@ -9,7 +9,7 @@ public class ProcessedMessage
     public Guid? CorrelationId { get; set; }
     public DateTimeOffset ProcessedAt { get; set; }
 
-    // TODO(RECRUITMENT): Ustalić retencje deduplikacji. Bez cleanupu tabela rosnie bez konca; po cleanupie
-    // bardzo stary replay moze ponownie wykonac efekt. Okres musi wynikac z okna redelivery/replay albo
-    // idempotencje trzeba dodatkowo oprzec o klucz biznesowy.
+    // Retention policy: keep deduplication identifiers indefinitely. Arbitrarily old operator replays
+    // are supported, so deleting these rows would weaken idempotency. Payloads are not stored here.
+    // Shipping also has a permanent unique DocumentId business key. Published outbox payloads expire separately.
 }

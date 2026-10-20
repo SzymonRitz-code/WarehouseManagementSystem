@@ -3,6 +3,9 @@ namespace WarehouseManagementSystem.Contracts;
 /// <summary>Stable integration contract published after a WMS document is confirmed.</summary>
 public sealed class DocumentConfirmedIntegrationEvent
 {
+    // A document has one immutable confirmation; future lifecycle versions require a separate contract.
+    public int SchemaVersion { get; init; } = 1;
+    public int AggregateVersion { get; init; } = 1;
     public Guid MessageId { get; init; }
     public Guid CorrelationId { get; init; }
     public DateTimeOffset OccurredAt { get; init; }

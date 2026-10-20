@@ -34,12 +34,14 @@ public class RabbitMqConnectionFactory : IRabbitMqConnectionFactory
             UserName = _options.RabbitMq.UserName,
             Password = _options.RabbitMq.Password,
             VirtualHost = _options.RabbitMq.VirtualHost,
-            DispatchConsumersAsync = false
+            DispatchConsumersAsync = true,
+            AutomaticRecoveryEnabled = true,
+            TopologyRecoveryEnabled = true,
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(5),
+            RequestedHeartbeat = TimeSpan.FromSeconds(30),
+            ClientProvidedName = "wms-api"
         };
 
-        // TODO(RECRUITMENT): Po przejsciu na async consumer ustaw DispatchConsumersAsync=true i skonfiguruj
-        // automatic recovery, heartbeat oraz client-provided connection name. Zerwane polaczenie powinno
-        // byc wykrywalne, odnawialne i latwe do znalezienia w panelu RabbitMQ.
 
         return factory.CreateConnection();
     }
