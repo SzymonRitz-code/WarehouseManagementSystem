@@ -1,11 +1,10 @@
 import { CommonModule } from '@angular/common';
 import {
   Component,
-  ElementRef,
-  EventEmitter,
+  effect,
   HostListener,
-  Input,
-  Output
+  input,
+  output
 } from '@angular/core';
 
 @Component({
@@ -17,31 +16,24 @@ import {
   styles: ``
 })
 export class ModalComponent {
+  readonly isOpen = input(false);
+  readonly close = output<void>();
+  readonly className = input('');
+  readonly showCloseButton = input(true);
+  readonly isFullscreen = input(false);
 
-  @Input() isOpen = false;
-  @Output() close = new EventEmitter<void>();
-  @Input() className = '';
-  @Input() showCloseButton = true;
-  @Input() isFullscreen = false;
-
-  constructor(private el: ElementRef) {}
-
-  ngOnInit() {
-    if (this.isOpen) {
-      document.body.style.overflow = 'hidden';
-    }
+  constructor() {
+    effect(() => {
+      document.body.style.overflow = this.isOpen() ? 'hidden' : 'unset';
+    });
   }
 
   ngOnDestroy() {
     document.body.style.overflow = 'unset';
   }
 
-  ngOnChanges() {
-    document.body.style.overflow = this.isOpen ? 'hidden' : 'unset';
-  }
-
   onBackdropClick(event: MouseEvent) {
-    if (!this.isFullscreen) {
+    if (!this.isFullscreen()) {
       this.close.emit();
     }
   }
@@ -52,7 +44,7 @@ export class ModalComponent {
 
  @HostListener('document:keydown.escape')
   onEscape() {
-    if (this.isOpen) {
+    if (this.isOpen()) {
       this.close.emit();
     }
   }

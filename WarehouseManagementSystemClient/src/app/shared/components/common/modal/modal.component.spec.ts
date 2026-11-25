@@ -20,13 +20,13 @@ describe('ModalComponent', () => {
   });
 
   it('locks body scroll while open and restores it when closed', () => {
-    component.isOpen = true;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('isOpen', true);
+    fixture.detectChanges();
 
     expect(document.body.style.overflow).toBe('hidden');
 
-    component.isOpen = false;
-    component.ngOnChanges();
+    fixture.componentRef.setInput('isOpen', false);
+    fixture.detectChanges();
 
     expect(document.body.style.overflow).toBe('unset');
   });
@@ -34,7 +34,7 @@ describe('ModalComponent', () => {
   it('emits close on backdrop click in regular mode', () => {
     const close = vi.fn();
     component.close.subscribe(close);
-    component.isFullscreen = false;
+    fixture.componentRef.setInput('isFullscreen', false);
 
     component.onBackdropClick(new MouseEvent('click'));
 
@@ -44,7 +44,7 @@ describe('ModalComponent', () => {
   it('does not emit close on backdrop click in fullscreen mode', () => {
     const close = vi.fn();
     component.close.subscribe(close);
-    component.isFullscreen = true;
+    fixture.componentRef.setInput('isFullscreen', true);
 
     component.onBackdropClick(new MouseEvent('click'));
 
@@ -55,10 +55,10 @@ describe('ModalComponent', () => {
     const close = vi.fn();
     component.close.subscribe(close);
 
-    component.isOpen = false;
+    fixture.componentRef.setInput('isOpen', false);
     component.onEscape();
 
-    component.isOpen = true;
+    fixture.componentRef.setInput('isOpen', true);
     component.onEscape();
 
     expect(close).toHaveBeenCalledTimes(1);
