@@ -1,9 +1,9 @@
 <div class="mt-6 flex justify-between gap-3">
   <app-button variant="outline" size="sm" (btnClick)="back.emit()">
-    {{ backLabel }}
+    {{ backLabel() }}
   </app-button>
 
-  <app-button type="submit" size="sm" [disabled]="!!disabled" (btnClick)="submit.emit()">
-    {{ actionLabel }}
+  <app-button type="submit" size="sm" [disabled]="!!disabled()" (btnClick)="submit.emit()">
+    {{ displayedActionLabel() }}
   </app-button>
 </div>

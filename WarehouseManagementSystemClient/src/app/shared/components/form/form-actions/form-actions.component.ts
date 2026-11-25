@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { ButtonComponent } from '../../../ui/button/button.component';
 
 @Component({
@@ -7,12 +7,12 @@ import { ButtonComponent } from '../../../ui/button/button.component';
   templateUrl: './form-actions.component.html'
 })
 export class FormActionsComponent {
-  @Input() backLabel = 'Back';
-  @Input() actionLabel = 'Save';
-  @Input() set saveLabel(value: string) {
-    this.actionLabel = value;
-  }
-  @Input() disabled: boolean | null = true;
-  @Output() back = new EventEmitter();
-  @Output() submit = new EventEmitter();
+  readonly backLabel = input('Back');
+  readonly actionLabel = input('Save');
+  readonly saveLabel = input<string>();
+  readonly disabled = input<boolean | null>(true);
+  readonly displayedActionLabel = computed(() => this.saveLabel() ?? this.actionLabel());
+
+  readonly back = output<void>();
+  readonly submit = output<void>();
 }
