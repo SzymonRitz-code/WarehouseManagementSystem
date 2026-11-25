@@ -27,7 +27,7 @@ describe('DetailActionsComponent', () => {
     const buttons = fixture.nativeElement.querySelectorAll('app-button');
 
     expect(buttons).toHaveLength(2);
-    expect(component.disabled).toBe(false);
+    expect(component.disabled()).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('Back');
     expect(fixture.nativeElement.textContent).toContain('Edit');
   });
