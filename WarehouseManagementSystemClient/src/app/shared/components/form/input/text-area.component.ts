@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/core';
+import { Component, input, linkedSignal, output, forwardRef } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, ReactiveFormsModule, ValidationErrors, Validator } from '@angular/forms';
 
 
@@ -22,18 +22,18 @@ import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_V
   template: `
     <div class="relative">
       <textarea
-        [placeholder]="placeholder"
-        [rows]="rows"
-        [value]="value"
+        [placeholder]="placeholder()"
+        [rows]="rows()"
+        [value]="valueState()"
         (input)="onInput($event)"
-        [disabled]="disabled"
+        [disabled]="disabledState()"
         [ngClass]="textareaClasses"
       ></textarea>
-      @if (hint) {
+      @if (hint()) {
       <p
         class="mt-2 text-sm"
-        [ngClass]="error ? 'text-error-500' : 'text-gray-500 dark:text-gray-400'">
-        {{ hint }}
+        [ngClass]="errorState() ? 'text-error-500' : 'text-gray-500 dark:text-gray-400'">
+        {{ hint() }}
       </p>
       }
     </div>
@@ -42,23 +42,26 @@ import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_V
 })
 export class TextAreaComponent implements ControlValueAccessor, Validator {
 
-  @Input() placeholder = 'Enter your message';
-  @Input() rows = 3;
-  @Input() value = '';
-  @Input() className = '';
-  @Input() disabled = false;
-  @Input() error = false;
-  @Input() hint = '';
-  @Input() required = false;
+  readonly placeholder = input('Enter your message');
+  readonly rows = input(3);
+  readonly value = input('');
+  readonly valueState = linkedSignal(() => this.value());
+  readonly className = input('');
+  readonly disabled = input(false);
+  readonly disabledState = linkedSignal(() => this.disabled());
+  readonly error = input(false);
+  readonly errorState = linkedSignal(() => this.error());
+  readonly hint = input('');
+  readonly required = input(false);
 
-  @Output() valueChange = new EventEmitter<string>();
+  readonly valueChange = output<string>();
   onChange: (value: any) => void = () => { };
   onTouched: () => void = () => { };
   private _onValidatorChange?: () => void;
 
   onInput(event: Event) {
     const val = (event.target as HTMLTextAreaElement).value;
-    this.value = val;
+    this.valueState.set(val);
     this.onChange(val);
     this.onTouched();
     this.valueChange.emit(val);
@@ -66,7 +69,7 @@ export class TextAreaComponent implements ControlValueAccessor, Validator {
   }
 
   writeValue(obj: any): void {
-    this.value = obj?.val ?? obj ?? '';
+    this.valueState.set(obj?.val ?? obj ?? '');
   }
 
   registerOnChange(fn: any): void {
@@ -77,17 +80,17 @@ export class TextAreaComponent implements ControlValueAccessor, Validator {
     this.onTouched = fn;
   }
 
-  setDisabledState?(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+  setDisabledState(isDisabled: boolean): void {
+    this.disabledState.set(isDisabled);
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
     const errors: ValidationErrors = {};
-    if (this.required && !control.value?.trim()) {
+    if (this.required() && !control.value?.trim()) {
       errors['required'] = true;
-      this.error = true;  // ustawia klasę do czerwonej obramówki
+      this.errorState.set(true);
     } else {
-      this.error = false;
+      this.errorState.set(false);
     }
     return Object.keys(errors).length ? errors : null;
   }
@@ -97,10 +100,10 @@ export class TextAreaComponent implements ControlValueAccessor, Validator {
   }
 
   get textareaClasses(): string {
-    let base = `ui-control-sm w-full px-4 py-2.5 ${this.className} `;
-    if (this.disabled) {
+    let base = `ui-control-sm w-full px-4 py-2.5 ${this.className()} `;
+    if (this.disabledState()) {
       base += 'cursor-not-allowed opacity-60';
-    } else if (this.error) {
+    } else if (this.errorState()) {
       base += 'focus:border-error-300 focus:ring-error-500/10 dark:focus:border-error-800';
     } else {
       base += 'dark:text-white/90';
