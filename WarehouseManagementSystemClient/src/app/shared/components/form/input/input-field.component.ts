@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, forwardRef, input, linkedSignal } from '@angular/core';
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -30,18 +30,18 @@ import {
   template: `
     <div class="relative">
       <input
-        [type]="type"
-        [id]="id"
-        [name]="name"
-        [placeholder]="placeholder"
+        [type]="type()"
+        [id]="id()"
+        [name]="name()"
+        [placeholder]="placeholder()"
         [ngClass]="inputClasses"
         [value]="value"
-        [disabled]="disabled"
+        [disabled]="disabledState()"
         (input)="onValueChange($event.target.value)"
         (blur)="onTouched()"
-        [required]="required"
-        [attr.minlength]="minlength"
-        [attr.maxlength]="maxlength"
+        [required]="required()"
+        [attr.minlength]="minlength()"
+        [attr.maxlength]="maxlength()"
       />
 
       <p *ngIf="errorMessages.length" class="mt-1.5 text-xs text-error-500">
@@ -51,14 +51,15 @@ import {
   `,
 })
 export class InputFieldComponent implements ControlValueAccessor, Validator {
-  @Input() type: string = 'text';
-  @Input() id?: string = '';
-  @Input() name: string = '';
-  @Input() placeholder?: string = '';
-  @Input() required: boolean = false;
-  @Input() minlength?: number;
-  @Input() maxlength?: number;
-  @Input() disabled: boolean = false;
+  readonly type = input('text');
+  readonly id = input('');
+  readonly name = input('');
+  readonly placeholder = input('');
+  readonly required = input(false);
+  readonly minlength = input<number>();
+  readonly maxlength = input<number>();
+  readonly disabled = input(false);
+  readonly disabledState = linkedSignal(() => this.disabled());
 
   value: string | number = '';
 
@@ -88,7 +89,7 @@ export class InputFieldComponent implements ControlValueAccessor, Validator {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+    this.disabledState.set(isDisabled);
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
@@ -109,17 +110,19 @@ export class InputFieldComponent implements ControlValueAccessor, Validator {
 
     const val = value?.toString() ?? '';
 
-    if (this.required && !val) {
+    if (this.required() && !val) {
       errors['required'] = true;
       this.errorMessages.push('This field is required.');
     }
-    if (this.minlength && val.length < this.minlength) {
-      errors['minlength'] = { requiredLength: this.minlength, actualLength: val.length };
-      this.errorMessages.push(`Minimum length is ${this.minlength} characters.`);
+    const minlength = this.minlength();
+    if (minlength && val.length < minlength) {
+      errors['minlength'] = { requiredLength: minlength, actualLength: val.length };
+      this.errorMessages.push(`Minimum length is ${minlength} characters.`);
     }
-    if (this.maxlength && val.length > this.maxlength) {
-      errors['maxlength'] = { requiredLength: this.maxlength, actualLength: val.length };
-      this.errorMessages.push(`Maximum length is ${this.maxlength} characters.`);
+    const maxlength = this.maxlength();
+    if (maxlength && val.length > maxlength) {
+      errors['maxlength'] = { requiredLength: maxlength, actualLength: val.length };
+      this.errorMessages.push(`Maximum length is ${maxlength} characters.`);
     }
 
     return Object.keys(errors).length ? errors : null;

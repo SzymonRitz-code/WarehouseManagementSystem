@@ -1,20 +1,27 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl } from '@angular/forms';
 import { InputFieldComponent } from './input-field.component';
 
 describe('InputFieldComponent', () => {
-  it('writes nullish values as an empty string', () => {
-    const component = new InputFieldComponent();
+  let component: InputFieldComponent;
+  let fixture: ComponentFixture<InputFieldComponent>;
 
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [InputFieldComponent] }).compileComponents();
+    fixture = TestBed.createComponent(InputFieldComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('writes nullish values as an empty string', () => {
     component.writeValue(null);
 
     expect(component.value).toBe('');
   });
 
   it('notifies Reactive Forms and refreshes validation on value change', () => {
-    const component = new InputFieldComponent();
     const onChange = vi.fn();
-    component.required = true;
-    component.minlength = 3;
+    fixture.componentRef.setInput('required', true);
+    fixture.componentRef.setInput('minlength', 3);
     component.registerOnChange(onChange);
 
     component.onValueChange('ab');
@@ -25,10 +32,9 @@ describe('InputFieldComponent', () => {
   });
 
   it('returns required, minlength and maxlength validation errors', () => {
-    const component = new InputFieldComponent();
-    component.required = true;
-    component.minlength = 2;
-    component.maxlength = 4;
+    fixture.componentRef.setInput('required', true);
+    fixture.componentRef.setInput('minlength', 2);
+    fixture.componentRef.setInput('maxlength', 4);
 
     expect(component.validate(new FormControl(''))).toEqual({
       required: true,
@@ -41,10 +47,8 @@ describe('InputFieldComponent', () => {
   });
 
   it('tracks disabled state from Reactive Forms', () => {
-    const component = new InputFieldComponent();
-
     component.setDisabledState(true);
 
-    expect(component.disabled).toBe(true);
+    expect(component.disabledState()).toBe(true);
   });
 });
