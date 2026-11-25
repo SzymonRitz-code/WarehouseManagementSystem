@@ -23,7 +23,7 @@ describe('DropdownComponent', () => {
     const outside = document.createElement('button');
     document.body.appendChild(outside);
     component.close.subscribe(close);
-    component.isOpen = true;
+    fixture.componentRef.setInput('isOpen', true);
     fixture.detectChanges();
 
     outside.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
@@ -36,7 +36,7 @@ describe('DropdownComponent', () => {
   it('keeps open when click happens inside the dropdown', () => {
     const close = vi.fn();
     component.close.subscribe(close);
-    component.isOpen = true;
+    fixture.componentRef.setInput('isOpen', true);
     fixture.detectChanges();
 
     const dropdown = fixture.nativeElement.querySelector('div');
@@ -51,7 +51,7 @@ describe('DropdownComponent', () => {
     toggle.className = 'dropdown-toggle';
     document.body.appendChild(toggle);
     component.close.subscribe(close);
-    component.isOpen = true;
+    fixture.componentRef.setInput('isOpen', true);
     fixture.detectChanges();
 
     toggle.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));

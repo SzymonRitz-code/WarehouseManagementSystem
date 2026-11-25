@@ -1,7 +1,7 @@
-@if (isOpen) {
+@if (isOpen()) {
 <div
   #dropdownRef
-  [ngClass]="'absolute z-40 right-0 mt-2 ui-dropdown-panel ' + className"
+  [ngClass]="'absolute z-40 right-0 mt-2 ui-dropdown-panel ' + className()"
 >
   <ng-content></ng-content>
 </div>

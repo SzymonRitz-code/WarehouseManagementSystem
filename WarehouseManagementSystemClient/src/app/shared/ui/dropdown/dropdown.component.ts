@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, input, output } from '@angular/core';
 
 @Component({
   selector: 'app-dropdown',
@@ -7,15 +7,15 @@ import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, AfterVie
   imports:[CommonModule]
 })
 export class DropdownComponent implements AfterViewInit, OnDestroy {
-  @Input() isOpen = false;
-  @Output() close = new EventEmitter<void>();
-  @Input() className = '';
+  readonly isOpen = input(false);
+  readonly close = output<void>();
+  readonly className = input('');
 
   @ViewChild('dropdownRef') dropdownRef!: ElementRef<HTMLDivElement>;
 
   private handleClickOutside = (event: MouseEvent) => {
     if (
-      this.isOpen &&
+      this.isOpen() &&
       this.dropdownRef &&
       this.dropdownRef.nativeElement &&
       !this.dropdownRef.nativeElement.contains(event.target as Node) &&
