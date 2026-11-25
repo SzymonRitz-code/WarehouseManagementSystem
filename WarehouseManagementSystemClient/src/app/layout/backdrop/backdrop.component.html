@@ -1,4 +1,4 @@
-@if (isMobileOpen$ | async) {
+@if (isMobileOpen()) {
 <div
   class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden"
   (click)="closeSidebar()"

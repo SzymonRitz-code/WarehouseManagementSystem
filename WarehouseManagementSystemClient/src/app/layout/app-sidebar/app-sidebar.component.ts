@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { combineLatest, Subscription } from 'rxjs';
-import { SidebarService } from '../../features/services/sidebar-service';
+import { Subscription } from 'rxjs';
+import { SidebarStore } from '../../features/services/sidebar-store';
 import { SafeHtmlPipe } from '../../pipe/safe-html.pipe';
 
 interface NavSubItem {
@@ -122,20 +122,20 @@ export class AppSidebarComponent {
   subMenuHeights: { [key: string]: number } = {};
   @ViewChildren('subMenu') subMenuRefs!: QueryList<ElementRef>;
 
-  readonly isExpanded$;
-  readonly isMobileOpen$;
-  readonly isHovered$;
+  readonly isExpanded;
+  readonly isMobileOpen;
+  readonly isHovered;
 
   private subscription: Subscription = new Subscription();
 
   constructor(
-    public sidebarService: SidebarService,
+    public sidebarStore: SidebarStore,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {
-    this.isExpanded$ = this.sidebarService.isExpanded$;
-    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
-    this.isHovered$ = this.sidebarService.isHovered$;
+    this.isExpanded = this.sidebarStore.isExpanded;
+    this.isMobileOpen = this.sidebarStore.isMobileOpen;
+    this.isHovered = this.sidebarStore.isHovered;
   }
 
   ngOnInit() {
@@ -145,16 +145,6 @@ export class AppSidebarComponent {
           this.setActiveMenuFromRoute(this.router.url);
         }
       })
-    );
-
-    this.subscription.add(
-      combineLatest([this.isExpanded$, this.isMobileOpen$, this.isHovered$]).subscribe(
-        ([isExpanded, isMobileOpen, isHovered]) => {
-          if (!isExpanded && !isMobileOpen && !isHovered) {
-            this.cdr.detectChanges();
-          }
-        }
-      )
     );
 
     this.setActiveMenuFromRoute(this.router.url);
@@ -196,11 +186,9 @@ export class AppSidebarComponent {
   }
 
   onSidebarMouseEnter() {
-    this.isExpanded$.subscribe(expanded => {
-      if (!expanded) {
-        this.sidebarService.setHovered(true);
-      }
-    }).unsubscribe();
+    if (!this.isExpanded()) {
+      this.sidebarStore.setHovered(true);
+    }
   }
 
   private setActiveMenuFromRoute(currentUrl: string) {
@@ -236,10 +224,8 @@ export class AppSidebarComponent {
   }
 
   onSubmenuClick() {
-    this.isMobileOpen$.subscribe(isMobile => {
-      if (isMobile) {
-        this.sidebarService.setMobileOpen(false);
-      }
-    }).unsubscribe();
+    if (this.isMobileOpen()) {
+      this.sidebarStore.setMobileOpen(false);
+    }
   }
 }

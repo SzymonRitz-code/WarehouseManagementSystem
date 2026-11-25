@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { AppHeaderComponent } from '../app-header/app-header.component';
 import { AppSidebarComponent } from '../app-sidebar/app-sidebar.component';
 import { BackdropComponent } from '../backdrop/backdrop.component';
-import { SidebarService } from '../../features/services/sidebar-service';
+import { SidebarStore } from '../../features/services/sidebar-store';
 
 @Component({
   selector: 'app-layout',
@@ -19,14 +19,14 @@ import { SidebarService } from '../../features/services/sidebar-service';
 })
 
 export class AppLayoutComponent {
-  readonly isExpanded$;
-  readonly isHovered$;
-  readonly isMobileOpen$;
+  readonly isExpanded;
+  readonly isHovered;
+  readonly isMobileOpen;
 
-  constructor(public sidebarService: SidebarService) {
-    this.isExpanded$ = this.sidebarService.isExpanded$;
-    this.isHovered$ = this.sidebarService.isHovered$;
-    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+  constructor(public sidebarStore: SidebarStore) {
+    this.isExpanded = this.sidebarStore.isExpanded;
+    this.isHovered = this.sidebarStore.isHovered;
+    this.isMobileOpen = this.sidebarStore.isMobileOpen;
   }
 
   get containerClasses() {
@@ -35,8 +35,8 @@ export class AppLayoutComponent {
       'transition-all',
       'duration-300',
       'ease-in-out',
-      (this.isExpanded$ || this.isHovered$) ? 'xl:ml-[290px]' : 'xl:ml-[90px]',
-      this.isMobileOpen$ ? 'ml-0' : ''
+      (this.isExpanded() || this.isHovered()) ? 'xl:ml-[290px]' : 'xl:ml-[90px]',
+      this.isMobileOpen() ? 'ml-0' : ''
     ];
   }
 

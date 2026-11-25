@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { SidebarService } from '../../features/services/sidebar-service';
+import { SidebarStore } from '../../features/services/sidebar-store';
 import { ThemeToggleComponent } from "../../shared/components/common/theme-toggle/theme-toggle.component";
 import { UserDropdownComponent } from '../../shared/components/header/user-dropdown/user-dropdown.component';
 
@@ -17,19 +17,19 @@ import { UserDropdownComponent } from '../../shared/components/header/user-dropd
 })
 export class AppHeaderComponent {
   isApplicationMenuOpen = false;
-  readonly isMobileOpen$;
+  readonly isMobileOpen;
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
-  constructor(public sidebarService: SidebarService) {
-    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+  constructor(public sidebarStore: SidebarStore) {
+    this.isMobileOpen = this.sidebarStore.isMobileOpen;
   }
 
   handleToggle() {
     if (window.innerWidth >= 1280) {
-      this.sidebarService.toggleExpanded();
+      this.sidebarStore.toggleExpanded();
     } else {
-      this.sidebarService.toggleMobileOpen();
+      this.sidebarStore.toggleMobileOpen();
     }
   }
 

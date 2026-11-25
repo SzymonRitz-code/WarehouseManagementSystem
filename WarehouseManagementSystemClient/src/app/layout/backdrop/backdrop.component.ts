@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SidebarService } from '../../features/services/sidebar-service';
+import { SidebarStore } from '../../features/services/sidebar-store';
 
 @Component({
   selector: 'app-backdrop',
@@ -11,13 +11,13 @@ import { SidebarService } from '../../features/services/sidebar-service';
 })
 
 export class BackdropComponent {
-  readonly isMobileOpen$;
+  readonly isMobileOpen;
 
-  constructor(private sidebarService: SidebarService) {
-    this.isMobileOpen$ = this.sidebarService.isMobileOpen$;
+  constructor(private sidebarStore: SidebarStore) {
+    this.isMobileOpen = this.sidebarStore.isMobileOpen;
   }
 
   closeSidebar() {
-    this.sidebarService.setMobileOpen(false);
+    this.sidebarStore.setMobileOpen(false);
   }
 }

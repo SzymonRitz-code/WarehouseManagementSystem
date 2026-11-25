@@ -1,6 +1,6 @@
 import { NavigationEnd } from '@angular/router';
 import { Subject } from 'rxjs';
-import { SidebarService } from '../../features/services/sidebar-service';
+import { SidebarStore } from '../../features/services/sidebar-store';
 import { AppSidebarComponent } from './app-sidebar.component';
 
 describe('AppSidebarComponent', () => {
@@ -16,7 +16,7 @@ describe('AppSidebarComponent', () => {
     };
 
     component = new AppSidebarComponent(
-      new SidebarService(),
+      new SidebarStore(),
       router as any,
       { detectChanges: vi.fn() } as any
     );

@@ -1,23 +1,18 @@
 <aside
   class="fixed flex flex-col top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 dark:text-gray-300 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200"
   [ngClass]="{
-    'w-[290px]':
-      (isExpanded$ | async) || (isMobileOpen$ | async) || (isHovered$ | async),
-    'w-[90px]': !(
-      (isExpanded$ | async) ||
-      (isMobileOpen$ | async) ||
-      (isHovered$ | async)
-    ),
-    'translate-x-0': isMobileOpen$ | async,
-    '-translate-x-full': !(isMobileOpen$ | async),
+    'w-[290px]': isExpanded() || isMobileOpen() || isHovered(),
+    'w-[90px]': !(isExpanded() || isMobileOpen() || isHovered()),
+    'translate-x-0': isMobileOpen(),
+    '-translate-x-full': !isMobileOpen(),
     'xl:translate-x-0': true
-  }" (mouseenter)="onSidebarMouseEnter()" (mouseleave)="sidebarService.setHovered(false)">
+  }" (mouseenter)="onSidebarMouseEnter()" (mouseleave)="sidebarStore.setHovered(false)">
   <div class="py-8 flex" [ngClass]="{
-      'xl:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
-      'justify-start': (isExpanded$ | async) || (isHovered$ | async)
+      'xl:justify-center': !(isExpanded() || isHovered()),
+      'justify-start': isExpanded() || isHovered()
     }">
     <a routerLink="/">
-      @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+      @if (isExpanded() || isHovered() || isMobileOpen()) {
       <img class="dark:hidden" src="/images/logo/logo.svg" alt="Logo" width="150" height="40" />
       <img class="hidden dark:block" src="/images/logo/logo-dark.svg" alt="Logo" width="150" height="40" />
       } @else {
@@ -31,10 +26,10 @@
       <div class="flex flex-col gap-4">
         <div>
           <h2 class="mb-4 text-xs uppercase flex leading-[20px] text-gray-400" [ngClass]="{
-        'xl:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
-        'justify-start': (isExpanded$ | async) || (isHovered$ | async)
+        'xl:justify-center': !(isExpanded() || isHovered()),
+        'justify-start': isExpanded() || isHovered()
       }">
-            @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+            @if (isExpanded() || isHovered() || isMobileOpen()) {
             Menu
             } @else {
             <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -55,14 +50,14 @@
               <button (click)="toggleSubmenu('main', i)" class="menu-item group cursor-pointer"
                 [class.menu-item-active]="openSubmenu === 'main-' + i"
                 [class.menu-item-inactive]="openSubmenu !== 'main-' + i" [ngClass]="{
-                    'xl:justify-center': !((isExpanded$ | async) || (isHovered$ | async)),
-                    'xl:justify-start': (isExpanded$ | async) || (isHovered$ | async)
+                    'xl:justify-center': !(isExpanded() || isHovered()),
+                    'xl:justify-start': isExpanded() || isHovered()
                   }">
                 <span class="menu-item-icon-size" [class.menu-item-icon-active]="openSubmenu === 'main-' + i"
                   [class.menu-item-icon-inactive]="openSubmenu !== 'main-' + i"
                   [innerHTML]="nav.icon | safeHtml"></span>
 
-                @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+                @if (isExpanded() || isHovered() || isMobileOpen()) {
                 <span class="menu-item-text">{{ nav.name }}</span>
 
                 <svg [ngClass]="{
@@ -77,7 +72,7 @@
 
               <!-- ===== SUBMENU ===== -->
               <div class="overflow-hidden transition-all duration-300" [id]="'main-' + i" [style.display]="
-                  (isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async) 
+                  isExpanded() || isHovered() || isMobileOpen()
                     ? 'block' 
                     : 'none'
                 " [ngStyle]="{
@@ -130,7 +125,7 @@
                   [class.menu-item-icon-active]="isActive(nav.path)"
                   [class.menu-item-icon-inactive]="!isActive(nav.path)">
                 </span>
-                @if ((isExpanded$ | async) || (isHovered$ | async) || (isMobileOpen$ | async)) {
+                @if (isExpanded() || isHovered() || isMobileOpen()) {
                 <span class="menu-item-text">{{ nav.name }}</span>
                 }
               </a>
