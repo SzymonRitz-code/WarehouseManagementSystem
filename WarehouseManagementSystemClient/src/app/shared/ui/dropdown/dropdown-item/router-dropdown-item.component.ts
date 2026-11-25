@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -8,8 +8,8 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, RouterModule],
   template: `
     <a
-      [routerLink]="to"
-      [ngClass]="combinedClasses"
+      [routerLink]="to()"
+      [ngClass]="combinedClasses()"
       (click)="handleClick()"
     >
       <ng-content></ng-content>
@@ -17,15 +17,13 @@ import { RouterModule } from '@angular/router';
   `,
 })
 export class RouterDropdownItemComponent {
-  @Input() to!: string; // Required route path
-  @Input() baseClassName = 'ui-dropdown-item';
-  @Input() className = '';
-  @Output() itemClick = new EventEmitter<void>();
-  @Output() click = new EventEmitter<void>();
+  readonly to = input('');
+  readonly baseClassName = input('ui-dropdown-item');
+  readonly className = input('');
+  readonly itemClick = output<void>();
+  readonly click = output<void>();
 
-  get combinedClasses(): string {
-    return `${this.baseClassName} ${this.className}`.trim();
-  }
+  readonly combinedClasses = computed(() => `${this.baseClassName()} ${this.className()}`.trim());
 
   handleClick() {
     this.click.emit();
