@@ -1,29 +1,30 @@
-import { Component, Input } from "@angular/core";
+import { Component, computed, input } from "@angular/core";
 
 @Component({
   selector: 'app-input-detail',
   template: `
     <input 
-      [value]="displayValue" 
+      [value]="displayValue()" 
       disabled
-      [class]="'ui-control-readonly ' + className"
+      [class]="'ui-control-readonly ' + className()"
     />
   `
 })
 export class InputDetailComponent {
-  @Input() value: any;
-  @Input() type: 'text' | 'boolean' | 'date' | 'enum' = 'text';
-  @Input() className = '';
+  readonly value = input<unknown>();
+  readonly type = input<'text' | 'boolean' | 'date' | 'enum'>('text');
+  readonly className = input('');
 
-  get displayValue(): string {
-    if (typeof this.value === 'boolean') {
-      return this.value ? 'Yes' : 'No';
+  readonly displayValue = computed(() => {
+    const value = this.value();
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
     }
 
-    if (this.value instanceof Date) {
-      return this.value.toDateString();
+    if (value instanceof Date) {
+      return value.toDateString();
     }
 
-    return this.value ?? '';
-  }
+    return value == null ? '' : String(value);
+  });
 }
