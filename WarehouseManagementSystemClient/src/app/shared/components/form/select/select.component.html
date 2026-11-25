@@ -1,20 +1,20 @@
 <select
   class="ui-control w-full appearance-none px-4 py-2.5 pr-11
-    {{ value ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400' }} {{ className }}"
-  [value]="value"
+    {{ valueState() ? 'text-gray-800 dark:text-white/90' : 'text-gray-400 dark:text-gray-400' }} {{ className() }}"
+  [value]="valueState()"
   (change)="onChange($event)"
 >
   <!-- Placeholder option -->
   <option
     value=""
     disabled
-    [selected]="!value"
+    [selected]="!valueState()"
     class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
   >
-    {{ placeholder }}
+    {{ placeholder() }}
   </option>
   <!-- Map over options -->
-  @for (option of options; track $index) {
+  @for (option of options(); track $index) {
   <option
     [value]="option.value"
     class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"

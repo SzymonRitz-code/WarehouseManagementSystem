@@ -1,5 +1,5 @@
 
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, input, linkedSignal, output, OnInit } from '@angular/core';
 
 export interface Option {
   value: string;
@@ -13,23 +13,24 @@ export interface Option {
   templateUrl: './select.component.html',
 })
 export class SelectComponent implements OnInit {
-  @Input() options: Option[] = [];
-  @Input() placeholder: string = 'Select an option';
-  @Input() className: string = '';
-  @Input() defaultValue: string = '';
-  @Input() value: string = '';
+  readonly options = input<Option[]>([]);
+  readonly placeholder = input('Select an option');
+  readonly className = input('');
+  readonly defaultValue = input('');
+  readonly value = input('');
+  readonly valueState = linkedSignal(() => this.value() || this.defaultValue());
 
-  @Output() valueChange = new EventEmitter<string>();
+  readonly valueChange = output<string>();
 
   ngOnInit() {
-    if (!this.value && this.defaultValue) {
-      this.value = this.defaultValue;
+    if (!this.valueState() && this.defaultValue()) {
+      this.valueState.set(this.defaultValue());
     }
   }
 
   onChange(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
-    this.value = value;
+    this.valueState.set(value);
     this.valueChange.emit(value);
   }
 }
