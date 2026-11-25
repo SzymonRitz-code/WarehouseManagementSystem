@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, forwardRef, input, linkedSignal } from '@angular/core';
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -21,17 +21,17 @@ import {
   template: `
   <label
     class="flex items-center space-x-3 group cursor-pointer"
-    [ngClass]="{ 'cursor-not-allowed opacity-60': disabled }"
+    [ngClass]="{ 'cursor-not-allowed opacity-60': disabledState() }"
   >
     <div class="relative w-5 h-5">
       <input
-        [id]="id"
+        [id]="id()"
         type="checkbox"
         class="w-5 h-5 appearance-none cursor-pointer dark:border-gray-700 border border-gray-300 checked:border-transparent rounded-md checked:bg-brand-500 disabled:opacity-60"
-        [ngClass]="className"
+        [ngClass]="className()"
         [checked]="value"
         (change)="onInputChange($event)"
-        [disabled]="disabled"
+        [disabled]="disabledState()"
       />
 
       @if (value) {
@@ -53,7 +53,7 @@ import {
       </svg>
       }
 
-      @if (disabled) {
+      @if (disabledState()) {
       <svg
         class="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
         xmlns="http://www.w3.org/2000/svg"
@@ -73,9 +73,9 @@ import {
       }
     </div>
 
-    @if (label) {
+    @if (label()) {
       <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-        {{ label }}
+        {{ label() }}
       </span>
     }
   </label>
@@ -83,10 +83,11 @@ import {
 })
 export class CheckboxComponent implements ControlValueAccessor {
 
-  @Input() label?: string;
-  @Input() className = '';
-  @Input() id?: string;
-  @Input() disabled = false;
+  readonly label = input<string>();
+  readonly className = input('');
+  readonly id = input<string>();
+  readonly disabled = input(false);
+  readonly disabledState = linkedSignal(() => this.disabled());
 
   value: boolean = false;
 
@@ -107,7 +108,7 @@ export class CheckboxComponent implements ControlValueAccessor {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+    this.disabledState.set(isDisabled);
   }
 
   /** UI -> Form */

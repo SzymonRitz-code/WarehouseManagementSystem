@@ -1,9 +1,17 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CheckboxComponent } from './checkbox.component';
 
 describe('CheckboxComponent', () => {
-  it('coerces written values to booleans', () => {
-    const component = new CheckboxComponent();
+  let component: CheckboxComponent;
+  let fixture: ComponentFixture<CheckboxComponent>;
 
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [CheckboxComponent] }).compileComponents();
+    fixture = TestBed.createComponent(CheckboxComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('coerces written values to booleans', () => {
     component.writeValue('truthy' as any);
     expect(component.value).toBe(true);
 
@@ -12,7 +20,6 @@ describe('CheckboxComponent', () => {
   });
 
   it('notifies Reactive Forms when checked state changes', () => {
-    const component = new CheckboxComponent();
     const onChange = vi.fn();
     const onTouched = vi.fn();
     component.registerOnChange(onChange);
@@ -27,10 +34,8 @@ describe('CheckboxComponent', () => {
   });
 
   it('tracks disabled state from Reactive Forms', () => {
-    const component = new CheckboxComponent();
-
     component.setDisabledState(true);
 
-    expect(component.disabled).toBe(true);
+    expect(component.disabledState()).toBe(true);
   });
 });
