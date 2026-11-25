@@ -1,10 +1,20 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormControl } from '@angular/forms';
 import { DatePickerComponent } from './date-picker.component';
 
 describe('DatePickerComponent', () => {
+  let component: DatePickerComponent;
+  let fixture: ComponentFixture<DatePickerComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [DatePickerComponent] }).compileComponents();
+    fixture = TestBed.createComponent(DatePickerComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('id', 'test-date');
+  });
+
   it('validates required date values', () => {
-    const component = new DatePickerComponent(null as any);
-    component.required = true;
+    fixture.componentRef.setInput('required', true);
 
     expect(component.validate(new FormControl(''))).toEqual({ required: true });
     expect(component.errorMessages).toEqual(['This field is required.']);
@@ -12,9 +22,8 @@ describe('DatePickerComponent', () => {
   });
 
   it('writes value to flatpickr instance when initialized', () => {
-    const component = new DatePickerComponent(null as any);
     const setDate = vi.fn();
-    (component as any).flatpickrInstance = { setDate };
+    (component as any).flatpickrInstance = { setDate, destroy: vi.fn() };
 
     component.writeValue('2026-06-22');
 
@@ -22,15 +31,12 @@ describe('DatePickerComponent', () => {
   });
 
   it('tracks disabled state from Reactive Forms', () => {
-    const component = new DatePickerComponent(null as any);
+    component.setDisabledState(true);
 
-    component.setDisabledState?.(true);
-
-    expect(component.disabled).toBe(true);
+    expect(component.disabledState()).toBe(true);
   });
 
   it('destroys flatpickr instance on destroy', () => {
-    const component = new DatePickerComponent(null as any);
     const destroy = vi.fn();
     (component as any).flatpickrInstance = { destroy };
 

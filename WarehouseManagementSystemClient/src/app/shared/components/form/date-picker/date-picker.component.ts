@@ -1,6 +1,5 @@
-import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, forwardRef, Optional, Self } from '@angular/core';
+import { Component, input, linkedSignal, output, ElementRef, ViewChild, Optional, Self } from '@angular/core';
 import flatpickr from 'flatpickr';
-import "flatpickr/dist/flatpickr.css";
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ReactiveFormsModule, ValidationErrors, Validator } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { LabelComponent } from "../label/label.component";
@@ -14,14 +13,15 @@ import { LabelComponent } from "../label/label.component";
 export class DatePickerComponent implements ControlValueAccessor, Validator {
 
 
-  @Input() id!: string;
-  @Input() mode: 'single' | 'multiple' | 'range' | 'time' = 'single';
-  @Input() defaultDate?: string | Date | string[] | Date[];
-  @Input() required: boolean = false;
-  @Input() label?: string;
-  @Input() placeholder?: string;
-  @Input() disabled: boolean = false;
-  @Output() dateChange = new EventEmitter<any>();
+  readonly id = input('');
+  readonly mode = input<'single' | 'multiple' | 'range' | 'time'>('single');
+  readonly defaultDate = input<string | Date | string[] | Date[]>();
+  readonly required = input(false);
+  readonly label = input<string>();
+  readonly placeholder = input<string>();
+  readonly disabled = input(false);
+  readonly disabledState = linkedSignal(() => this.disabled());
+  readonly dateChange = output<any>();
 
   constructor(@Optional() @Self() private ngControl: NgControl) {
     if (this.ngControl != null) {
@@ -45,11 +45,11 @@ export class DatePickerComponent implements ControlValueAccessor, Validator {
 
   ngAfterViewInit() {
     this.flatpickrInstance = flatpickr(this.dateInput.nativeElement, {
-      mode: this.mode,
+      mode: this.mode(),
       static: true,
       monthSelectorType: 'static',
       dateFormat: 'Y-m-d',
-      defaultDate: this.defaultDate,
+      defaultDate: this.defaultDate(),
       onChange: (selectedDates, dateStr, instance) => {
         this.onChange(dateStr);
         this.onTouched();
@@ -71,7 +71,7 @@ export class DatePickerComponent implements ControlValueAccessor, Validator {
     const errors: ValidationErrors = {};
     const val = value;
     this.errorMessages = [];
-    if (this.required && !val) {
+    if (this.required() && !val) {
       errors['required'] = true;
       this.errorMessages.push('This field is required.');
     }
@@ -83,8 +83,8 @@ export class DatePickerComponent implements ControlValueAccessor, Validator {
   registerOnTouched(fn: any): void {
     this.onTouched = fn;
   }
-  setDisabledState?(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+  setDisabledState(isDisabled: boolean): void {
+    this.disabledState.set(isDisabled);
   }
   validate(control: AbstractControl): ValidationErrors | null {
     return this.updateErrors(control.value);

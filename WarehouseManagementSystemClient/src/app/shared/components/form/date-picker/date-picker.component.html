@@ -1,13 +1,13 @@
 <div>
-  @if (label) {
-  <app-label [for]="id">{{ label }}</app-label>
+  @if (label()) {
+  <app-label [for]="id()">{{ label() }}</app-label>
   }
   <div class="relative">
     <input #dateInput 
-      [id]="id" 
-      [placeholder]="placeholder" 
-      [required]="required" 
-      [disabled]="disabled"
+      [id]="id()" 
+      [placeholder]="placeholder()" 
+      [required]="required()" 
+      [disabled]="disabledState()"
       [ngClass]="inputClasses"
       autocomplete="off" />
     <span class="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
