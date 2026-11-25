@@ -8,6 +8,11 @@ import { WarehouseService } from '../../../warehouses/services/warehouse-service
 import { DocumentList } from '../../model/document';
 import { DocumentService, PagedResult } from '../../services/document-service';
 import { DocumentListComponent } from './document-list.component';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { documentListReducer } from '../../../../store/documents/document-list.reducer';
+import { DocumentListEffects } from '../../../../store/documents/document-list.effects';
+import { DOCUMENT_LIST_FEATURE_KEY } from '../../../../store/documents/document-list.selectors';
 
 describe('DocumentListComponent', () => {
   let component: DocumentListComponent;
@@ -49,6 +54,8 @@ describe('DocumentListComponent', () => {
       providers: [
         { provide: DocumentService, useValue: documentService },
         { provide: WarehouseService, useValue: { getWarehouses: vi.fn().mockReturnValue(of([])) } },
+        provideStore({ [DOCUMENT_LIST_FEATURE_KEY]: documentListReducer }),
+        provideEffects(DocumentListEffects),
         provideRouter([])
       ]
     }).compileComponents();
@@ -84,9 +91,9 @@ describe('DocumentListComponent', () => {
 
   it('sends filters to backend and resets to first page', async () => {
     await firstDocumentsEmission();
+    component.onPageChange(2);
     documentService.getDocuments.mockReturnValue(of(pageResult([], 1, 10, 0)));
 
-    component.page.set(4);
     component.filters.search = ' DOC/001 ';
     component.filters.type = DocumentType.PZ;
     component.filters.status = DocumentStatus.Draft;

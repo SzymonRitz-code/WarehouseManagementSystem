@@ -1,20 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, Signal, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import {
-  BehaviorSubject,
-  catchError,
-  finalize,
-  map,
-  merge,
-  Observable,
-  of,
-  shareReplay,
-  Subject,
-  switchMap,
-  take
-} from 'rxjs';
+import { Observable, catchError, of, shareReplay } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { DocumentStatus } from '../../../../core/enums/documentStatus';
 import { DocumentType } from '../../../../core/enums/documentType';
 import { ComponentCardComponent } from '../../../../shared/components/common/component-card/component-card.component';
@@ -24,7 +14,16 @@ import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { WarehouseList } from '../../../warehouses/model/warehouse';
 import { WarehouseService } from '../../../warehouses/services/warehouse-service';
 import { DocumentList } from '../../model/document';
-import { DocumentListQuery, DocumentService } from '../../services/document-service';
+import { DocumentListQuery } from '../../services/document-service';
+import { DocumentListActions } from '../../../../store/documents/document-list.actions';
+import { defaultDocumentListQuery } from '../../../../store/documents/document-list.state';
+import {
+  selectDocumentItems,
+  selectDocumentListLoading,
+  selectDocumentListError,
+  selectDocumentQuery,
+  selectDocumentTotalItems,
+} from '../../../../store/documents/document-list.selectors';
 
 @Component({
   selector: 'app-document-list',
@@ -33,16 +32,16 @@ import { DocumentListQuery, DocumentService } from '../../services/document-serv
   templateUrl: './document-list.component.html'
 })
 export class DocumentListComponent implements OnInit {
-  documents$!: Observable<DocumentList[]>;
+  private readonly store = inject(Store);
+  documents$: Observable<DocumentList[]> = this.store.select(selectDocumentItems);
   warehouses$!: Observable<WarehouseList[]>;
 
-  readonly isLoading = signal(false);
-  readonly errorMessage = signal('');
-  readonly page = signal(1);
-  readonly pageSize = signal(10);
-  readonly totalItems = signal(0);
-  readonly sortBy = signal('createdAt');
-  readonly sortDirection = signal<'asc' | 'desc'>('desc');
+  readonly isLoading: Signal<boolean> = toSignal(this.store.select(selectDocumentListLoading), { initialValue: false });
+  readonly errorMessage: Signal<string> = toSignal(this.store.select(selectDocumentListError), { initialValue: '' });
+  private readonly query = this.store.selectSignal(selectDocumentQuery);
+  readonly page = computed(() => this.query().page);
+  readonly pageSize = computed(() => this.query().pageSize);
+  readonly totalItems = this.store.selectSignal(selectDocumentTotalItems);
 
   filters = {
     search: '',
@@ -55,9 +54,6 @@ export class DocumentListComponent implements OnInit {
 
   readonly documentTypes = Object.values(DocumentType);
   readonly documentStatuses = Object.values(DocumentStatus);
-
-  private readonly refreshDocuments$ = new Subject<void>();
-  private readonly queryState$ = new BehaviorSubject<DocumentListQuery>(this.buildQuery());
 
   columns = [
     { key: 'documentNumber', label: 'Document Number', sortable: true },
@@ -79,7 +75,6 @@ export class DocumentListComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private documentService: DocumentService,
     private warehouseService: WarehouseService
   ) {}
 
@@ -89,41 +84,15 @@ export class DocumentListComponent implements OnInit {
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    this.documents$ = merge(
-      this.queryState$,
-      this.refreshDocuments$.pipe(map(() => this.queryState$.value))
-    ).pipe(
-      switchMap((query) => {
-        this.isLoading.set(true);
-        this.errorMessage.set('');
-
-        return this.documentService.getDocuments(query).pipe(
-          catchError(() => {
-            this.errorMessage.set('Documents could not be loaded. Please try again.');
-            this.totalItems.set(0);
-            return of({
-              items: [],
-              page: this.page(),
-              pageSize: this.pageSize(),
-              totalItems: 0,
-              totalPages: 0
-            });
-          }),
-          finalize(() => this.isLoading.set(false))
-        );
-      }),
-      map(result => this.setPageResult(result)),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
+    this.commitQuery(defaultDocumentListQuery);
   }
 
   retry(): void {
-    this.refreshDocuments$.next();
+    this.commitQuery();
   }
 
   applyFilters(): void {
-    this.page.set(1);
-    this.commitQuery();
+    this.commitQuery({ ...this.query(), page: 1 });
   }
 
   resetFilters(): void {
@@ -135,28 +104,24 @@ export class DocumentListComponent implements OnInit {
       createdFrom: '',
       createdTo: ''
     };
-    this.page.set(1);
-    this.sortBy.set('createdAt');
-    this.sortDirection.set('desc');
-    this.commitQuery();
+    this.commitQuery({ ...defaultDocumentListQuery, pageSize: this.pageSize() });
   }
 
   onPageChange(page: number): void {
-    this.page.set(page);
-    this.commitQuery();
+    this.commitQuery({ ...this.query(), page });
   }
 
   onPageSizeChange(pageSize: number): void {
-    this.pageSize.set(pageSize);
-    this.page.set(1);
-    this.commitQuery();
+    this.commitQuery({ ...this.query(), page: 1, pageSize });
   }
 
   onSortChange(sort: { key: string; direction: 'asc' | 'desc' }): void {
-    this.sortBy.set(sort.key);
-    this.sortDirection.set(sort.direction);
-    this.page.set(1);
-    this.commitQuery();
+    this.commitQuery({
+      ...this.query(),
+      page: 1,
+      sortBy: sort.key,
+      sortDirection: sort.direction,
+    });
   }
 
   goToForm(): void {
@@ -177,17 +142,11 @@ export class DocumentListComponent implements OnInit {
   }
 
   onCancel(row: DocumentList): void {
-    this.documentService.cancelDocument(row).pipe(take(1)).subscribe({
-      next: () => this.retry(),
-      error: () => this.errorMessage.set('Document could not be cancelled. Please try again.')
-    });
+    this.store.dispatch(DocumentListActions.cancel({ document: row }));
   }
 
   onConfirm(row: DocumentList): void {
-    this.documentService.confirmDocument(row).pipe(take(1)).subscribe({
-      next: () => this.retry(),
-      error: () => this.errorMessage.set('Document could not be confirmed. Please try again.')
-    });
+    this.store.dispatch(DocumentListActions.confirm({ document: row }));
   }
 
   onDetails(row: DocumentList): void {
@@ -198,35 +157,23 @@ export class DocumentListComponent implements OnInit {
     this.router.navigateByUrl(`/documents/form/${document.id}`);
   }
 
-  private commitQuery(): void {
-    this.queryState$.next(this.buildQuery());
-  }
-
-  private buildQuery(): DocumentListQuery {
-    return {
-      page: this.page(),
-      pageSize: this.pageSize(),
-      search: this.emptyToUndefined(this.filters.search),
-      type: this.emptyToUndefined(this.filters.type),
-      status: this.emptyToUndefined(this.filters.status),
-      warehouseId: this.emptyToUndefined(this.filters.warehouseId),
-      createdFrom: this.emptyToUndefined(this.filters.createdFrom),
-      createdTo: this.emptyToUndefined(this.filters.createdTo),
-      sortBy: this.sortBy(),
-      sortDirection: this.sortDirection()
-    };
+  private commitQuery(query: DocumentListQuery = this.query()): void {
+    this.store.dispatch(DocumentListActions.load({
+      mode: 'all',
+      query: {
+        ...query,
+        search: this.emptyToUndefined(this.filters.search),
+        type: this.emptyToUndefined(this.filters.type),
+        status: this.emptyToUndefined(this.filters.status),
+        warehouseId: this.emptyToUndefined(this.filters.warehouseId),
+        createdFrom: this.emptyToUndefined(this.filters.createdFrom),
+        createdTo: this.emptyToUndefined(this.filters.createdTo),
+      },
+    }));
   }
 
   private emptyToUndefined(value: string): string | undefined {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : undefined;
-  }
-
-  private setPageResult(result: { items: DocumentList[]; page: number; pageSize: number; totalItems: number }): DocumentList[] {
-    this.page.set(result.page);
-    this.pageSize.set(result.pageSize);
-    this.totalItems.set(result.totalItems);
-
-    return result.items;
   }
 }

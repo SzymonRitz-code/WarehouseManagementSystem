@@ -7,6 +7,11 @@ import { firstValueFrom } from 'rxjs';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { environment } from './environments/environment';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { documentListReducer } from './store/documents/document-list.reducer';
+import { DocumentListEffects } from './store/documents/document-list.effects';
+import { DOCUMENT_LIST_FEATURE_KEY } from './store/documents/document-list.selectors';
 
 // Keep OIDC callbacks on the origin that actually served the SPA (local Angular or Docker).
 const clientOrigin = globalThis.location?.origin ?? 'https://localhost:4200';
@@ -48,6 +53,10 @@ export const appConfig: ApplicationConfig = {
         config: authConfig
       })
     ),
+    provideStore({
+      [DOCUMENT_LIST_FEATURE_KEY]: documentListReducer,
+    }),
+    provideEffects(DocumentListEffects),
     provideRouter(routes)
   ]
 };

@@ -8,6 +8,11 @@ import { WarehouseService } from '../../../warehouses/services/warehouse-service
 import { DocumentList } from '../../model/document';
 import { DocumentService, PagedResult } from '../../services/document-service';
 import { DocumentPendingListComponent } from './document-pending-list.component';
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { documentListReducer } from '../../../../store/documents/document-list.reducer';
+import { DocumentListEffects } from '../../../../store/documents/document-list.effects';
+import { DOCUMENT_LIST_FEATURE_KEY } from '../../../../store/documents/document-list.selectors';
 
 describe('DocumentPendingListComponent', () => {
   let component: DocumentPendingListComponent;
@@ -45,6 +50,8 @@ describe('DocumentPendingListComponent', () => {
       providers: [
         { provide: DocumentService, useValue: documentService },
         { provide: WarehouseService, useValue: { getWarehouses: vi.fn().mockReturnValue(of([])) } },
+        provideStore({ [DOCUMENT_LIST_FEATURE_KEY]: documentListReducer }),
+        provideEffects(DocumentListEffects),
         provideRouter([])
       ]
     }).compileComponents();
@@ -77,8 +84,6 @@ describe('DocumentPendingListComponent', () => {
   });
 
   it('opens confirm modal from row action and resets previous action error', () => {
-    component.actionError.set('Previous error');
-
     component.onDocumentAction({ row: pendingDocument, action: 'confirm' });
 
     expect(component.selectedDocument()).toBe(pendingDocument);
@@ -88,7 +93,9 @@ describe('DocumentPendingListComponent', () => {
 
   it('does not close action modal while command is pending', () => {
     component.openActionModal(pendingDocument, 'cancel');
-    component.isActionPending.set(true);
+    const request$ = new Subject<any>();
+    documentService.cancelDocument.mockReturnValue(request$);
+    component.confirmAction();
 
     component.closeActionModal();
 
@@ -102,6 +109,7 @@ describe('DocumentPendingListComponent', () => {
     documentService.confirmDocument.mockReturnValue(of({ id: pendingDocument.id }));
 
     component.confirmAction();
+    await fixture.whenStable();
 
     expect(documentService.confirmDocument).toHaveBeenCalledWith(pendingDocument);
     expect(component.selectedDocument()).toBeNull();
