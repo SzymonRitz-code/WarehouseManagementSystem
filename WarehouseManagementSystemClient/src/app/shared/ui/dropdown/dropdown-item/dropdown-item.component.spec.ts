@@ -1,16 +1,24 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DropdownItemComponent } from './dropdown-item.component';
 
 describe('DropdownItemComponent', () => {
-  it('combines base and custom classes without losing defaults', () => {
-    const component = new DropdownItemComponent();
-    component.baseClassName = 'base';
-    component.className = 'custom';
+  let component: DropdownItemComponent;
+  let fixture: ComponentFixture<DropdownItemComponent>;
 
-    expect(component.combinedClasses).toBe('base custom');
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [DropdownItemComponent] }).compileComponents();
+    fixture = TestBed.createComponent(DropdownItemComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('combines base and custom classes without losing defaults', () => {
+    fixture.componentRef.setInput('baseClassName', 'base');
+    fixture.componentRef.setInput('className', 'custom');
+
+    expect(component.combinedClasses()).toBe('base custom');
   });
 
   it('prevents default navigation and emits both click outputs', () => {
-    const component = new DropdownItemComponent();
     const click = vi.fn();
     const itemClick = vi.fn();
     const event = new MouseEvent('click');

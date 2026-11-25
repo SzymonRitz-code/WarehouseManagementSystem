@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -8,15 +8,13 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, RouterModule]
 })
 export class DropdownItemComponent {
-  @Input() to?: string;
-  @Input() baseClassName = 'ui-dropdown-item';
-  @Input() className = '';
-  @Output() itemClick = new EventEmitter<void>();
-  @Output() click = new EventEmitter<void>();
+  readonly to = input<string>();
+  readonly baseClassName = input('ui-dropdown-item');
+  readonly className = input('');
+  readonly itemClick = output<void>();
+  readonly click = output<void>();
 
-  get combinedClasses(): string {
-    return `${this.baseClassName} ${this.className}`.trim();
-  }
+  readonly combinedClasses = computed(() => `${this.baseClassName()} ${this.className()}`.trim());
 
   handleClick(event: Event) {
     event.preventDefault();
