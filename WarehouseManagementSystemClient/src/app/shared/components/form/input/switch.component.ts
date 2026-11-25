@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, input, output, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-switch',
@@ -9,14 +9,14 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
   template: `
    <label
       class="flex cursor-pointer select-none items-center gap-3 text-sm font-medium"
-      [ngClass]="disabled ? 'text-gray-400' : 'text-gray-700 dark:text-gray-400'"
+      [ngClass]="disabled() ? 'text-gray-400' : 'text-gray-700 dark:text-gray-400'"
       (click)="handleToggle()"
     >
       <div class="relative">
         <div
           class="block transition duration-150 ease-linear h-6 w-11 rounded-full"
           [ngClass]="
-            (disabled
+            (disabled()
               ? 'bg-gray-100 pointer-events-none dark:bg-gray-800'
               : switchColors.background)
           "
@@ -26,33 +26,32 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
           [ngClass]="switchColors.knob"
         ></div>
       </div>
-      {{ label }}
+      {{ label() }}
     </label>
   `
 })
-export class SwitchComponent {
+export class SwitchComponent implements OnInit {
+  readonly label = input('');
+  readonly defaultChecked = input(false);
+  readonly disabled = input(false);
+  readonly color = input<'blue' | 'gray'>('blue');
 
-  @Input() label!: string;
-  @Input() defaultChecked: boolean = false;
-  @Input() disabled: boolean = false;
-  @Input() color: 'blue' | 'gray' = 'blue';
-
-  @Output() valueChange = new EventEmitter<boolean>();
+  readonly valueChange = output<boolean>();
 
   isChecked: boolean = false;
 
   ngOnInit() {
-    this.isChecked = this.defaultChecked;
+    this.isChecked = this.defaultChecked();
   }
 
   handleToggle() {
-    if (this.disabled) return;
+    if (this.disabled()) return;
     this.isChecked = !this.isChecked;
     this.valueChange.emit(this.isChecked);
   }
 
   get switchColors() {
-    if (this.color === 'blue') {
+    if (this.color() === 'blue') {
       return {
         background: this.isChecked
           ? 'bg-brand-500'

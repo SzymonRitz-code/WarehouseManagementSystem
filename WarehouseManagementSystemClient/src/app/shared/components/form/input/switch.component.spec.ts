@@ -1,9 +1,19 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SwitchComponent } from './switch.component';
 
 describe('SwitchComponent', () => {
+  let component: SwitchComponent;
+  let fixture: ComponentFixture<SwitchComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SwitchComponent] }).compileComponents();
+    fixture = TestBed.createComponent(SwitchComponent);
+    component = fixture.componentInstance;
+    fixture.componentRef.setInput('label', 'Toggle');
+  });
+
   it('starts from defaultChecked value', () => {
-    const component = new SwitchComponent();
-    component.defaultChecked = true;
+    fixture.componentRef.setInput('defaultChecked', true);
 
     component.ngOnInit();
 
@@ -11,7 +21,6 @@ describe('SwitchComponent', () => {
   });
 
   it('toggles and emits the new value when enabled', () => {
-    const component = new SwitchComponent();
     const valueChange = vi.fn();
     component.valueChange.subscribe(valueChange);
 
@@ -22,9 +31,8 @@ describe('SwitchComponent', () => {
   });
 
   it('does not toggle when disabled', () => {
-    const component = new SwitchComponent();
     const valueChange = vi.fn();
-    component.disabled = true;
+    fixture.componentRef.setInput('disabled', true);
     component.valueChange.subscribe(valueChange);
 
     component.handleToggle();
@@ -34,8 +42,7 @@ describe('SwitchComponent', () => {
   });
 
   it('uses gray palette when configured', () => {
-    const component = new SwitchComponent();
-    component.color = 'gray';
+    fixture.componentRef.setInput('color', 'gray');
     component.isChecked = true;
 
     expect(component.switchColors.background).toContain('bg-gray-800');
