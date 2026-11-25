@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component,Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-label',
@@ -9,6 +9,6 @@ import { Component,Input } from '@angular/core';
   styles: ``
 })
 export class LabelComponent {
-  @Input() for?: string;
-  @Input() className = '';
+  readonly for = input<string>();
+  readonly className = input('');
 }
