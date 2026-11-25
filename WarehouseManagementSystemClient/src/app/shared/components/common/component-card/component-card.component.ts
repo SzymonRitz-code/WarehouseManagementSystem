@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'app-component-card',
@@ -8,8 +8,7 @@ import { Component, Input } from '@angular/core';
   styles: ``
 })
 export class ComponentCardComponent {
-
-  @Input() title!: string;
-  @Input() desc: string = '';
-  @Input() className: string = '';
+  readonly title = input('');
+  readonly desc = input('');
+  readonly className = input('');
 }

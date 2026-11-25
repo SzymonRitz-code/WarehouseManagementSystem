@@ -1,16 +1,16 @@
-<div class="ui-panel {{ className }}">
+<div class="ui-panel {{ className() }}">
   <!-- Card Header -->
 <div class="ui-panel-header">
   
   <!-- Lewa strona -->
   <div>
     <h3 class="ui-title">
-      {{ title }}
+      {{ title() }}
     </h3>
 
-    @if (desc) {
+    @if (desc()) {
       <p class="ui-muted mt-1">
-        {{ desc }}
+        {{ desc() }}
       </p>
     }
   </div>
