@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -11,5 +11,5 @@ import { RouterModule } from '@angular/router';
   styles: ``
 })
 export class PageBreadcrumbComponent {
-  @Input() pageTitle = 'Create Product';
+  readonly pageTitle = input('Create Product');
 }
