@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, forwardRef, input, linkedSignal } from '@angular/core';
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -23,20 +23,20 @@ export interface Option {
   template: `
   <div class="relative">
   <select
-    [id]="id"
-    [name]="name"
+    [id]="id()"
+    [name]="name()"
     [ngClass]="selectClasses"
     [value]="value"
     (change)="onValueChange($event)"
-    [disabled]="disabled"
+    [disabled]="disabledState()"
   >
     <!-- Placeholder -->
     <option value="" disabled [selected]="!value"
      class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-    >{{ placeholder }}</option>
+    >{{ placeholder() }}</option>
 
     <!-- Options -->
-    <option *ngFor="let option of options" [value]="option.value"
+    <option *ngFor="let option of options()" [value]="option.value"
     class="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
     >
       {{ option.label }}
@@ -62,13 +62,14 @@ export interface Option {
   ]
 })
 export class InputSelectComponent implements ControlValueAccessor, Validator {
-  @Input() id?: string = '';
-  @Input() name?: string = '';
-  @Input() options: Option[] = [];
-  @Input() placeholder: string = 'Select an option';
-  @Input() className: string = '';
-  @Input() required: boolean = false;
-  @Input() disabled: boolean = false;
+  readonly id = input('');
+  readonly name = input('');
+  readonly options = input<Option[]>([]);
+  readonly placeholder = input('Select an option');
+  readonly className = input('');
+  readonly required = input(false);
+  readonly disabled = input(false);
+  readonly disabledState = linkedSignal(() => this.disabled());
 
   value: string = '';
   errorMessages: string[] = [];
@@ -81,7 +82,7 @@ export class InputSelectComponent implements ControlValueAccessor, Validator {
     if (this.errorMessages.length) {
       base += ` border-error-500 focus:border-error-300 focus:ring-error-500/20`;
     }
-    return base + ` ${this.className}`;
+    return base + ` ${this.className()}`;
   }
 
   /** Reactive Forms */
@@ -99,7 +100,7 @@ export class InputSelectComponent implements ControlValueAccessor, Validator {
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.disabled = isDisabled;
+    this.disabledState.set(isDisabled);
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
@@ -123,7 +124,7 @@ export class InputSelectComponent implements ControlValueAccessor, Validator {
 
     const val = value?.toString() ?? '';
 
-    if (this.required && !val) {
+    if (this.required() && !val) {
       errors['required'] = true;
       this.errorMessages.push('This field is required.');
     }

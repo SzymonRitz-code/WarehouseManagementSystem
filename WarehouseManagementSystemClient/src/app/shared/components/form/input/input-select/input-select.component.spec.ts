@@ -43,7 +43,7 @@ describe('InputSelectComponent', () => {
   });
 
   it('validates required selection', () => {
-    component.required = true;
+    fixture.componentRef.setInput('required', true);
 
     expect(component.validate(new FormControl(''))).toEqual({ required: true });
     expect(component.errorMessages).toEqual(['This field is required.']);
@@ -53,6 +53,6 @@ describe('InputSelectComponent', () => {
   it('tracks disabled state from Reactive Forms', () => {
     component.setDisabledState(true);
 
-    expect(component.disabled).toBe(true);
+    expect(component.disabledState()).toBe(true);
   });
 });
