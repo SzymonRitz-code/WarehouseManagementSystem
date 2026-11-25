@@ -5,8 +5,8 @@
         <span class="ui-muted">Show</span>
 
         <select
-          [(ngModel)]="pageSize"
-          (ngModelChange)="onPageSizeChange()"
+          [ngModel]="pageSizeState()"
+          (ngModelChange)="onPageSizeChange($event)"
           class="ui-control-sm pr-8"
         >
           <option [value]="5">5</option>
@@ -23,7 +23,7 @@
       <thead class="ui-table-head">
         <tr>
           <th
-            *ngFor="let col of columns"
+            *ngFor="let col of columns()"
             (click)="col.sortable ? toggleSort(col.key) : null"
             [ngClass]="{
               'ui-table-th-active': sortKey === col.key,
@@ -42,7 +42,7 @@
             </div>
 
             <input
-              *ngIf="filterable"
+              *ngIf="filterable()"
               type="text"
               placeholder="Filter..."
               [(ngModel)]="filters[col.key]"
@@ -52,14 +52,14 @@
             />
           </th>
 
-          <th *ngIf="rowActions" class="ui-table-th w-40">Actions</th>
+          <th *ngIf="rowActions()" class="ui-table-th w-40">Actions</th>
         </tr>
       </thead>
 
       <tbody class="ui-table-body">
         <tr *ngFor="let row of paginatedData; trackBy: trackByFn" class="ui-table-row">
           <td
-            *ngFor="let col of columns"
+            *ngFor="let col of columns()"
             class="ui-table-cell whitespace-normal break-words"
           >
             <ng-container *ngIf="col.type === 'date'; else checkBoolean">
@@ -85,9 +85,9 @@
             </ng-template>
           </td>
 
-          <td *ngIf="rowActions" class="ui-table-cell">
+          <td *ngIf="rowActions()" class="ui-table-cell">
             <div class="flex flex-wrap gap-2">
-              <ng-container *ngFor="let action of rowActions">
+              <ng-container *ngFor="let action of rowActions()">
                 <button
                   type="button"
                   *ngIf="!action.visible || action.visible(row)"
@@ -103,7 +103,7 @@
 
         <tr *ngIf="displayedRecordCount === 0">
           <td
-            [attr.colspan]="columns.length + (rowActions ? 1 : 0)"
+            [attr.colspan]="columns().length + (rowActions() ? 1 : 0)"
             class="px-5 py-10 text-center text-sm text-gray-500 dark:text-gray-400"
           >
             No records to display.
@@ -117,8 +117,8 @@
     class="flex flex-col gap-3 border-t border-gray-100 px-5 py-4 dark:border-white/[0.05] sm:flex-row sm:items-center sm:justify-between"
   >
     <button
-      (click)="goToPageSafe(currentPage - 1)"
-      [disabled]="currentPage === 1"
+      (click)="goToPageSafe(currentPageState() - 1)"
+      [disabled]="currentPageState() === 1"
       class="ui-button-secondary"
     >
       Previous
@@ -129,8 +129,8 @@
         *ngFor="let page of visiblePages"
         (click)="goToPageSafe(page)"
         [ngClass]="{
-          'ui-button-page-active': currentPage === page,
-          'ui-button-page-default': currentPage !== page
+          'ui-button-page-active': currentPageState() === page,
+          'ui-button-page-default': currentPageState() !== page
         }"
         [disabled]="page === '...'"
         class="ui-button-page"
@@ -140,8 +140,8 @@
     </div>
 
     <button
-      (click)="goToPageSafe(currentPage + 1)"
-      [disabled]="currentPage >= totalPages"
+      (click)="goToPageSafe(currentPageState() + 1)"
+      [disabled]="currentPageState() >= totalPages"
       class="ui-button-secondary"
     >
       Next
