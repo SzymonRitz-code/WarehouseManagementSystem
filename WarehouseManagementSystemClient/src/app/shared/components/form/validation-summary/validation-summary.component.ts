@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 
 @Component({
@@ -9,5 +9,5 @@ import { FormGroup } from '@angular/forms';
   templateUrl: './validation-summary.component.html'
 })
 export class ValidationSummaryComponent {
-  @Input({ required: true }) form!: FormGroup;
+  readonly form = input.required<FormGroup>();
 }

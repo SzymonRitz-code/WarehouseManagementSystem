@@ -16,10 +16,11 @@ describe('ValidationSummaryComponent', () => {
   });
 
   it('renders server summary errors from the form', () => {
-    component.form = new FormGroup({
+    const form = new FormGroup({
       name: new FormControl('')
     });
-    component.form.setErrors({ serverSummary: 'Business rule failed.' });
+    form.setErrors({ serverSummary: 'Business rule failed.' });
+    fixture.componentRef.setInput('form', form);
 
     fixture.detectChanges();
 
@@ -28,9 +29,9 @@ describe('ValidationSummaryComponent', () => {
   });
 
   it('renders nothing when the form has no server summary', () => {
-    component.form = new FormGroup({
+    fixture.componentRef.setInput('form', new FormGroup({
       name: new FormControl('')
-    });
+    }));
 
     fixture.detectChanges();
 
