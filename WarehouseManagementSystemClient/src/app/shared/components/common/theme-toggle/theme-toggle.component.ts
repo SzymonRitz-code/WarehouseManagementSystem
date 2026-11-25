@@ -9,10 +9,10 @@ import { CommonModule } from '@angular/common';
 
 })
 export class ThemeToggleComponent {
-  theme$;
+  readonly theme;
 
   constructor(private themeService: ThemeService) {
-    this.theme$ = this.themeService.theme$;
+    this.theme = this.themeService.theme;
   }
 
   toggleTheme() {
