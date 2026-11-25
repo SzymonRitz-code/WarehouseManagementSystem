@@ -1,8 +1,17 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TimePickerComponent } from './time-picker.component';
 
 describe('TimePickerComponent', () => {
+  let component: TimePickerComponent;
+  let fixture: ComponentFixture<TimePickerComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [TimePickerComponent] }).compileComponents();
+    fixture = TestBed.createComponent(TimePickerComponent);
+    component = fixture.componentInstance;
+  });
+
   it('destroys flatpickr instance on destroy', () => {
-    const component = new TimePickerComponent();
     const destroy = vi.fn();
     (component as any).flatpickrInstance = { destroy };
 
@@ -12,8 +21,6 @@ describe('TimePickerComponent', () => {
   });
 
   it('does nothing on destroy when flatpickr was not initialized', () => {
-    const component = new TimePickerComponent();
-
     expect(() => component.ngOnDestroy()).not.toThrow();
   });
 });

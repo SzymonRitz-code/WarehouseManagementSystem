@@ -1,12 +1,12 @@
 
     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-      {{ label }}
+      {{ label() }}
     </label>
     <div class="relative">
       <input
         #timeInput
-        [id]="id"
-        [placeholder]="placeholder"
+        [id]="id()"
+        [placeholder]="placeholder()"
         class="ui-control w-full appearance-none bg-none pl-4 pr-11"
         autocomplete="off"
     />
